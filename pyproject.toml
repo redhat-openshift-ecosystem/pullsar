@@ -1,0 +1,26 @@
+[project]
+name = "pullsar"
+version = "0.1.0"
+
+description = "A tool for accessing, processing and gathering usage stats for Openshift operators."
+
+authors = [{name = "Jakub Durkac",email = "jakubdurkac@gmail.com"}]
+
+license = {text = "Apache-2.0"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.12.1"
+pytest = "^8.4.1"
+mypy = "^1.16.1"
+tox = "^4.27.0"
+pytest-cov = "^6.2.1"
+
