@@ -8,10 +8,10 @@ authors = [{name = "Jakub Durkac",email = "jakubdurkac@gmail.com"}]
 
 license = {text = "Apache-2.0"}
 readme = "README.md"
+packages = [{include = "pullsar", from = "src"}]
 requires-python = ">=3.10"
 dependencies = [
 ]
-
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -24,3 +24,5 @@ mypy = "^1.16.1"
 tox = "^4.27.0"
 pytest-cov = "^6.2.1"
 
+[tool.poetry.scripts]
+pullsar = "pullsar.main:main"
