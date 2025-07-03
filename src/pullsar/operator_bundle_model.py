@@ -5,35 +5,35 @@ def extract_image_attributes(
     image: str,
 ) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]:
     """
-    Parses image pullspec for attributes Quay registry, organization, repository and image sha/tag.
+    Parses image pullspec for attributes Quay registry, organization, repository and image digest/tag.
 
     Args:
-        image (str): Operator image pullspec of format: quay.io/org/repo@sha OR quay.io/org/repo:tag
+        image (str): Operator image pullspec of format: quay.io/org/repo@digest OR quay.io/org/repo:tag
 
     Returns:
         Tuple[Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]: in order,
-        Quay registry, organization, repository, image sha, image tag;
+        Quay registry, organization, repository, image digest, image tag;
         attributes can be None if they were not found or the input format was unexpected.
     """
     # TODO: translate registry.connect.redhat.com proxy to quay.io registry if needed
-    registry, org, repo, sha, tag = (None, None, None, None, None)
+    registry, org, repo, digest, tag = (None, None, None, None, None)
     registry_org_repo = image.split("/")
 
     if len(registry_org_repo) != 3:
-        return (registry, org, repo, sha, tag)
+        return (registry, org, repo, digest, tag)
 
     registry, org, repo_with_identifier = registry_org_repo
     if "@" in repo_with_identifier:
         repo_and_identifier = repo_with_identifier.split("@", 1)
-        sha = repo_and_identifier[1]
+        digest = repo_and_identifier[1]
     elif ":" in repo_with_identifier:
         repo_and_identifier = repo_with_identifier.split(":", 1)
         tag = repo_and_identifier[1]
     else:
-        return (registry, org, repo, sha, tag)
+        return (registry, org, repo, digest, tag)
 
     repo = repo_and_identifier[0]
-    return (registry, org, repo, sha, tag)
+    return (registry, org, repo, digest, tag)
 
 
 def extract_tag(name: str) -> Optional[str]:
@@ -51,38 +51,66 @@ def extract_tag(name: str) -> Optional[str]:
 
 class OperatorBundle:
     """
-    Represents an OLM operator bundle with getters for accessing important attributes.
+    Represents an OLM operator bundle with easy access to important properties.
     """
 
     def __init__(self, name: str, package: str, image: str):
-        self.name = name
-        self.package = package
-        self.image = image
-        self.tag = extract_tag(name)
-        (self.registry, self.org, self.repo, self.sha, _) = extract_image_attributes(
-            image
+        self._name = name
+        self._package = package
+        self._image = image
+        self._tag = extract_tag(name)
+        (self._registry, self._org, self._repo, self._digest, _) = (
+            extract_image_attributes(image)
         )
-        self.pull_count: Dict[str, int] = {}
+        self._pull_count: Dict[str, int] = {}
 
-    def get_name(self) -> str:
-        return self.name
+    @property
+    def name(self) -> str:
+        """The name of the operator bundle with version tag."""
+        return self._name
 
-    def get_package(self) -> str:
-        return self.package
+    @property
+    def package(self) -> str:
+        """The package name of the operator bundle."""
+        return self._package
 
-    def get_image(self) -> str:
-        return self.image
+    @property
+    def image(self) -> str:
+        """The full image pull spec of the operator bundle."""
+        return self._image
 
-    def get_registry(self) -> Optional[str]:
-        return self.registry
+    @property
+    def registry(self) -> Optional[str]:
+        """The registry of the operator bundle image, e.g. quay.io"""
+        return self._registry
 
-    def get_org(self) -> Optional[str]:
-        return self.org
+    @property
+    def org(self) -> Optional[str]:
+        """The Quay organization name of the operator bundle image."""
+        return self._org
 
-    def get_repo(self) -> Optional[str]:
-        return self.repo
+    @property
+    def repo(self) -> Optional[str]:
+        """The Quay repository name of the operator bundle image."""
+        return self._repo
 
-    def get_repo_path(self) -> Optional[str]:
+    @property
+    def tag(self) -> Optional[str]:
+        """The version tag of the operator bundle and its image."""
+        return self._tag
+
+    @property
+    def digest(self) -> Optional[str]:
+        """The manifest digest of the operator bundle image."""
+        return self._digest
+
+    @digest.setter
+    def digest(self, new_digest: str):
+        """Sets the manifest digest of the operator bundle image."""
+        self._digest = new_digest
+
+    @property
+    def repo_path(self) -> Optional[str]:
         """Accesses path to Quay repository of the operator bundle.
 
         Returns:
@@ -94,16 +122,8 @@ class OperatorBundle:
 
         return None
 
-    def get_tag(self) -> Optional[str]:
-        return self.tag
-
-    def get_sha(self) -> Optional[str]:
-        return self.sha
-
-    def set_sha(self, sha: str):
-        self.sha = sha
-
-    def get_pull_count(self) -> Dict[str, int]:
+    @property
+    def pull_count(self) -> Dict[str, int]:
         """
         Accesses pull counts of an operator bundle for specific dates.
 
@@ -112,15 +132,15 @@ class OperatorBundle:
             string formatted as: MM/DD/YYYY and value being an integer representing
             a number of pulls recorded for the operator bundle for that date.
         """
-        return self.pull_count
+        return self._pull_count
 
     def __str__(self) -> str:
-        return f"""Name: {self.get_name()}
-Package: {self.get_package()}
-Image: {self.get_image()}
-    Registry: {self.get_registry()}
-    Org: {self.get_org()}
-    Repo: {self.get_repo()}
-    Tag: {self.get_tag()}
-    SHA: {self.get_sha()}
-    Pull Count: {self.get_pull_count()}"""
+        return f"""Name: {self.name}
+Package: {self.package}
+Image: {self.image}
+    Registry: {self.registry}
+    Org: {self.org}
+    Repo: {self.repo}
+    Tag: {self.tag}
+    Digest: {self.digest}
+    Pull Count: {self.pull_count}"""

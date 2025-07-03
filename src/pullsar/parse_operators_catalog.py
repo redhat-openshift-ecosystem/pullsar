@@ -91,7 +91,7 @@ def create_repository_paths_map(
                     name=item["name"], package=item["package"], image=item["image"]
                 )
 
-                quay_repo_path = operator.get_repo_path()
+                quay_repo_path = operator.repo_path
                 if quay_repo_path:
                     repository_paths_map.setdefault(quay_repo_path, []).append(operator)
             else:
