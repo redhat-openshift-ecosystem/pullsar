@@ -48,6 +48,3 @@ class BaseConfig(object):
 
     # destination for output rendered JSON operators catalog files
     CATALOG_JSON_FILE = "operators_catalog.json"
-
-
-Config = BaseConfig()

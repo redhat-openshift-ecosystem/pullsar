@@ -1,6 +1,6 @@
 from typing import Optional, Dict, List
 
-from pullsar.config import Config
+from pullsar.config import BaseConfig
 from pullsar.parse_operators_catalog import (
     render_operator_catalog,
     create_repository_paths_map,
@@ -25,10 +25,10 @@ def update_operator_usage_stats(
         and value being a list of OperatorBundle objects, images of which are stored in the repository.
     """
     if catalog_image:
-        render_operator_catalog(catalog_image, Config.CATALOG_JSON_FILE)
+        render_operator_catalog(catalog_image, BaseConfig.CATALOG_JSON_FILE)
 
     repository_paths_map = create_repository_paths_map(
-        catalog_json_file or Config.CATALOG_JSON_FILE
+        catalog_json_file or BaseConfig.CATALOG_JSON_FILE
     )
 
     # TODO: scan repositories for usage logs and update pull counts for operator bundles
