@@ -94,9 +94,15 @@ def create_repository_paths_map(
                 quay_repo_path = operator.get_repo_path()
                 if quay_repo_path:
                     repository_paths_map.setdefault(quay_repo_path, []).append(operator)
+            else:
+                logger.warning(
+                    f"Item on line {line_num} is missing some of the attributes "
+                    "(expected: name, package, image). Skipping item..."
+                )
 
         logger.info(
-            f"Successfully identified {len(repository_paths_map)} repository paths and a list of their operator bundles from jq output."
+            f"Successfully identified {len(repository_paths_map)} repository paths "
+            "and a list of their operator bundles from jq output."
         )
         return repository_paths_map
 

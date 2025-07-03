@@ -20,7 +20,8 @@ def parse_arguments() -> ParsedArgs:
     )
 
     parser.add_argument("--debug", action="store_true", help="makes logs more verbose")
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "--catalog-json-file",
         dest="catalog_json_list",
         action="append",
@@ -28,7 +29,7 @@ def parse_arguments() -> ParsedArgs:
         help="path to pre-rendered catalog JSON file (repeatable)",
         metavar="CATALOG_JSON",
     )
-    parser.add_argument(
+    group.add_argument(
         "--catalog-image",
         dest="catalog_image_list",
         action="append",
