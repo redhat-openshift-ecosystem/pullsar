@@ -107,8 +107,8 @@ def create_repository_paths_map(
         return repository_paths_map
 
     except FileNotFoundError:
-        print(
-            f"Error: '{jq_command[0]}' command not found. Please, add it to your PATH. Terminating..."
+        logger.error(
+            f"'{jq_command[0]}' command not found. Please, add it to your PATH. Terminating..."
         )
         raise
     except subprocess.CalledProcessError as error:

@@ -20,10 +20,10 @@ def main() -> None:
     BaseConfig.QUAY_API_TOKENS = load_quay_api_tokens()
 
     for catalog_json_file in args.catalog_json_list:
-        update_operator_usage_stats(catalog_json_file=catalog_json_file)
+        update_operator_usage_stats(args.log_days, catalog_json_file=catalog_json_file)
 
     for catalog_image in args.catalog_image_list:
-        update_operator_usage_stats(catalog_image=catalog_image)
+        update_operator_usage_stats(args.log_days, catalog_image=catalog_image)
 
 
 if __name__ == "__main__":  # pragma: no cover

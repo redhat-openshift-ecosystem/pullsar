@@ -1,6 +1,8 @@
 import argparse
 from typing import NamedTuple, List
 
+from pullsar.config import BaseConfig
+
 
 class ParsedArgs(NamedTuple):
     """
@@ -8,6 +10,7 @@ class ParsedArgs(NamedTuple):
     """
 
     debug: bool
+    log_days: int
     catalog_json_list: List[str]
     catalog_image_list: List[str]
 
@@ -20,6 +23,12 @@ def parse_arguments() -> ParsedArgs:
     )
 
     parser.add_argument("--debug", action="store_true", help="makes logs more verbose")
+    parser.add_argument(
+        "--log_days",
+        type=int,
+        default=BaseConfig.LOG_DAYS_DEFAULT,
+        help="number of completed past days to include logs from (default: 7)",
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "--catalog-json-file",
@@ -41,6 +50,7 @@ def parse_arguments() -> ParsedArgs:
 
     return ParsedArgs(
         debug=args.debug,
+        log_days=args.log_days,
         catalog_json_list=args.catalog_json_list,
         catalog_image_list=args.catalog_image_list,
     )
