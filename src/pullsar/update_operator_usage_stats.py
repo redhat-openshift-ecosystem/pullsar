@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Tuple
 import json
 
 from pullsar.config import BaseConfig, logger
@@ -11,8 +11,11 @@ from pullsar.operator_bundle_model import OperatorBundle
 from pullsar.get_quay_repo_logs import get_quay_repo_logs, filter_pull_repo_logs
 from pullsar.get_quay_repo_tags import get_quay_repo_tags
 
+TagToOperatorBundleMap = Dict[str, OperatorBundle]
+DigestToOperatorBundleMap = Dict[str, OperatorBundle]
 
-def tag_in_tag_map(tag: str, tag_map: Dict[str, OperatorBundle]) -> str | None:
+
+def tag_in_tag_map(tag: str, tag_map: TagToOperatorBundleMap) -> str | None:
     """
     If map contains equivalent tag (the same tag, or tag with or without prefix 'v'),
     function finds it, so we can count pull actions for equivalent tags towards one
@@ -20,7 +23,7 @@ def tag_in_tag_map(tag: str, tag_map: Dict[str, OperatorBundle]) -> str | None:
 
     Args:
         tag (str): Operator image version tag, e.g. v1.2.3
-        tag_map (Dict[str, OperatorBundle]): Dictionary with pairs TAG:OPERATOR_BUNDLE
+        tag_map (TagToOperatorBundleMap): Dictionary with pairs TAG:OPERATOR_BUNDLE
 
     Returns:
         str: Tag equivalent used in the tag map if there is such, else None.
@@ -32,8 +35,37 @@ def tag_in_tag_map(tag: str, tag_map: Dict[str, OperatorBundle]) -> str | None:
     return equivalent_tag if equivalent_tag in tag_map else None
 
 
+def create_local_tag_digest_maps(
+    operator_bundles: List[OperatorBundle],
+) -> Tuple[TagToOperatorBundleMap, DigestToOperatorBundleMap]:
+    """
+    Create mappings between local tag/digest and respective operator bundle.
+
+    Args:
+        operator_bundles (List[OperatorBundle]): List of operator bundles belonging
+        to one repository (with unique tags and digests identifying a specific
+        operator bundle within that repository).
+
+    Returns:
+        Tuple[TagToOperatorBundleMap, DigestToOperatorBundleMap]: Two dictionaries
+        with key-value pairs, key being the identifier and value being OperatorBundle.
+        First dictionary - TAG:OPERATOR_BUNDLE
+        Second dictionary - MANIFEST_DIGEST:OPERATOR_BUNDLE
+    """
+    tag_to_operator_bundle: TagToOperatorBundleMap = {}
+    digest_to_operator_bundle: DigestToOperatorBundleMap = {}
+    for operator_bundle in operator_bundles:
+        if operator_bundle.tag:
+            tag_to_operator_bundle[operator_bundle.tag] = operator_bundle
+        if operator_bundle.digest:
+            digest_to_operator_bundle[operator_bundle.digest] = operator_bundle
+
+    return (tag_to_operator_bundle, digest_to_operator_bundle)
+
+
 def update_image_digests(repository_paths_map: RepositoryMap):
-    """Looks up and updates image digests of all the operator bundles defined
+    """
+    Looks up and updates image digests of all the operator bundles defined
     in the given repository paths map based on their defined tags using Quay API.
 
     Args:
@@ -45,11 +77,7 @@ def update_image_digests(repository_paths_map: RepositoryMap):
         repository_path,
         operator_bundles,
     ) in repository_paths_map.items():
-        tag_to_operator_bundle: Dict[str, OperatorBundle] = {}
-        for operator_bundle in operator_bundles:
-            if operator_bundle.tag:
-                tag_to_operator_bundle[operator_bundle.tag] = operator_bundle
-
+        tag_to_operator_bundle, _ = create_local_tag_digest_maps(operator_bundles)
         tag_objects = get_quay_repo_tags(repository_path)
         for tag_object in tag_objects:
             tag = tag_in_tag_map(tag_object["name"], tag_to_operator_bundle)
@@ -58,7 +86,8 @@ def update_image_digests(repository_paths_map: RepositoryMap):
 
 
 def update_image_pull_counts(repository_paths_map: RepositoryMap, log_days: int):
-    """Looks up and updates pull counts of all the operator bundles defined in the given
+    """
+    Looks up and updates pull counts of all the operator bundles defined in the given
     repository paths map based on their defined tags and digests using Quay API.
 
     Args:
@@ -76,14 +105,9 @@ def update_image_pull_counts(repository_paths_map: RepositoryMap, log_days: int)
         pull_logs = filter_pull_repo_logs(logs)
         logger.debug(f"\nPull logs:\n{json.dumps(pull_logs, indent=2)}")
 
-        # create mappings between local tag/digest and respective operator bundle
-        digest_to_operator_bundle: Dict[str, OperatorBundle] = {}
-        tag_to_operator_bundle: Dict[str, OperatorBundle] = {}
-        for operator_bundle in operator_bundles:
-            if operator_bundle.tag:
-                tag_to_operator_bundle[operator_bundle.tag] = operator_bundle
-            if operator_bundle.digest:
-                digest_to_operator_bundle[operator_bundle.digest] = operator_bundle
+        tag_to_operator_bundle, digest_to_operator_bundle = (
+            create_local_tag_digest_maps(operator_bundles)
+        )
 
         for log in pull_logs:
             if log.get("digest") and log["digest"] in digest_to_operator_bundle:
