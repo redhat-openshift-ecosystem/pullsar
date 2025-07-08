@@ -148,4 +148,5 @@ def filter_pull_repo_logs(logs: List[Dict[str, Any]]) -> List[Dict[str, str]]:
                     {"date": date, "digest": log["metadata"]["manifest_digest"]}
                 )
 
+    logger.info(f"Total pull log entries retrieved: {len(pull_logs)}")
     return pull_logs
