@@ -122,7 +122,7 @@ class QuayClient:
             log_days (int): Fetch logs from the last 'log_days' completed days.
 
         Returns:
-            List[Dict[str, any]]: All logs retrieved from Quay API.
+            List[QuayLog]: All logs retrieved from Quay API.
         """
         logger.info(f"Fetching logs for repository: {repo_path}")
 
@@ -148,7 +148,7 @@ class QuayClient:
             repo_path (str): Format: "organization/repository".
 
         Returns:
-            List[Dict[str, Any]]: All tags retrieved from Quay API in form
+            List[QuayTag]: All tags retrieved from Quay API in form
             of JSON objects, attributes we care for are tag 'name'
             and 'manifest_digest'.
         """
