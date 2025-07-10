@@ -24,7 +24,7 @@ def parse_arguments() -> ParsedArgs:
 
     parser.add_argument("--debug", action="store_true", help="makes logs more verbose")
     parser.add_argument(
-        "--log_days",
+        "--log-days",
         type=int,
         default=BaseConfig.LOG_DAYS_DEFAULT,
         help="number of completed past days to include logs from (default: 7)",
