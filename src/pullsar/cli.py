@@ -48,6 +48,12 @@ def parse_arguments() -> ParsedArgs:
     )
     args = parser.parse_args()
 
+    if not (BaseConfig.LOG_DAYS_MIN <= args.log_days <= BaseConfig.LOG_DAYS_MAX):
+        parser.error(
+            f"argument --log-days: must be between {BaseConfig.LOG_DAYS_MIN} "
+            f"and {BaseConfig.LOG_DAYS_MAX}"
+        )
+
     return ParsedArgs(
         debug=args.debug,
         log_days=args.log_days,

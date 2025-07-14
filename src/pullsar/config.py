@@ -49,3 +49,5 @@ class BaseConfig(object):
     # destination for output rendered JSON operators catalog files
     CATALOG_JSON_FILE = "operators_catalog.json"
     LOG_DAYS_DEFAULT = 7
+    LOG_DAYS_MIN = 1
+    LOG_DAYS_MAX = 30  # Quay limit
