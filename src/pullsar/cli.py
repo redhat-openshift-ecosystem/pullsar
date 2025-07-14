@@ -1,5 +1,5 @@
 import argparse
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Optional
 
 from pullsar.config import BaseConfig
 
@@ -15,7 +15,7 @@ class ParsedArgs(NamedTuple):
     catalog_image_list: List[str]
 
 
-def parse_arguments() -> ParsedArgs:
+def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
     parser = argparse.ArgumentParser(
         description="Script for retrieving latest pull counts for all the operators "
         "and their versions defined in the input operators catalogs "
@@ -46,7 +46,7 @@ def parse_arguments() -> ParsedArgs:
         help="catalog image pullspec to render (repeatable)",
         metavar="CATALOG_IMAGE",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not (BaseConfig.LOG_DAYS_MIN <= args.log_days <= BaseConfig.LOG_DAYS_MAX):
         parser.error(
