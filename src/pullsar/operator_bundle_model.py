@@ -86,12 +86,12 @@ class OperatorBundle:
 
     @property
     def org(self) -> Optional[str]:
-        """The Quay organization name of the operator bundle image."""
+        """The organization name of the operator bundle image."""
         return self._org
 
     @property
     def repo(self) -> Optional[str]:
-        """The Quay repository name of the operator bundle image."""
+        """The repository name of the operator bundle image."""
         return self._repo
 
     @property
@@ -115,9 +115,9 @@ class OperatorBundle:
 
         Returns:
             Optional[str]: path to Quay repository, e.g. org/repo
-            or None if org or repo is None.
+            or None if org or repo is None, or registry is not quay.io.
         """
-        if self.org and self.repo:
+        if self.registry == "quay.io" and self.org and self.repo:
             return f"{self.org}/{self.repo}"
 
         return None

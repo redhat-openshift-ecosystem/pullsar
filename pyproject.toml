@@ -25,6 +25,7 @@ mypy = "^1.16.1"
 tox = "^4.27.0"
 pytest-cov = "^6.2.1"
 types-requests = "^2.32.4.20250611"
+pytest-mock = "^3.14.1"
 
 [tool.poetry.scripts]
 pullsar = "pullsar.main:main"
