@@ -11,6 +11,7 @@ readme = "README.md"
 packages = [{include = "pullsar", from = "src"}]
 requires-python = ">=3.10"
 dependencies = [
+    "requests (>=2.32.4,<3.0.0)"
 ]
 
 [build-system]
@@ -23,6 +24,7 @@ pytest = "^8.4.1"
 mypy = "^1.16.1"
 tox = "^4.27.0"
 pytest-cov = "^6.2.1"
+types-requests = "^2.32.4.20250611"
 
 [tool.poetry.scripts]
 pullsar = "pullsar.main:main"

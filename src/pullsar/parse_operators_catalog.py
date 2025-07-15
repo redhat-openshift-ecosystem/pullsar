@@ -1,9 +1,11 @@
 import subprocess
 import json
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from pullsar.operator_bundle_model import OperatorBundle
 from pullsar.config import logger
+
+RepositoryMap = Dict[str, List[OperatorBundle]]
 
 
 def render_operator_catalog(catalog_image: str, output_file: str):
@@ -47,10 +49,11 @@ def render_operator_catalog(catalog_image: str, output_file: str):
         logger.info(f"Skipping catalog {catalog_image}...")
 
 
-def create_repository_paths_map(
+def create_repository_paths_maps(
     catalog_json_file: str,
-) -> Dict[str, List[OperatorBundle]]:
-    """Parses rendered JSON operators catalog and creates mappings between
+) -> Tuple[RepositoryMap, RepositoryMap]:
+    """
+    Parses rendered JSON operators catalog and creates mappings between
     all the Quay repository paths and lists of the operator bundle versions
     that are tied with these repositories.
 
@@ -58,11 +61,15 @@ def create_repository_paths_map(
         catalog_json_file (str): Rendered JSON catalog of operators.
 
     Returns:
-        Dict[str, List[OperatorBundle]]: Dictionary of key-value pairs, key being a Quay
-        repository path e.g. org/repo and value being a list of OperatorBundle objects,
-        images of which are available in these repositories.
+        Tuple[RepositoryMap, RepositoryMap]: Two dictionaries with key-value pairs,
+        key being a Quay repository path e.g. org/repo and value being a list
+        of OperatorBundle objects, images of which are available in these repositories.
+        First dictionary contains all repositories with all of their operator bundles
+        Second dictionary contains only repositories and their operator bundles with undefined digests
+        (digests for these need to be looked up using Quay API before moving on).
     """
-    repository_paths_map: Dict[str, List[OperatorBundle]] = {}
+    repository_paths_map: RepositoryMap = {}
+    repository_paths_map_missing_digest: RepositoryMap = {}
 
     # select all bundle objects and make the output compact (-c ... one line, one item)
     # so we can easily process the output line by line, item by item and create
@@ -94,6 +101,10 @@ def create_repository_paths_map(
                 quay_repo_path = operator.repo_path
                 if quay_repo_path:
                     repository_paths_map.setdefault(quay_repo_path, []).append(operator)
+                    if operator.digest is None:
+                        repository_paths_map_missing_digest.setdefault(
+                            quay_repo_path, []
+                        ).append(operator)
             else:
                 logger.warning(
                     f"Item on line {line_num} is missing some of the attributes "
@@ -104,11 +115,11 @@ def create_repository_paths_map(
             f"Successfully identified {len(repository_paths_map)} repository paths "
             "and a list of their operator bundles from jq output."
         )
-        return repository_paths_map
+        return (repository_paths_map, repository_paths_map_missing_digest)
 
     except FileNotFoundError:
-        print(
-            f"Error: '{jq_command[0]}' command not found. Please, add it to your PATH. Terminating..."
+        logger.error(
+            f"'{jq_command[0]}' command not found. Please, add it to your PATH. Terminating..."
         )
         raise
     except subprocess.CalledProcessError as error:
@@ -117,11 +128,11 @@ def create_repository_paths_map(
         logger.debug(f"Stdout:\n{error.stdout}...")
         logger.error(f"Stderr:\n{error.stderr}")
         logger.info(f"Skipping catalog {catalog_json_file}...")
-        return {}
+        return ({}, {})
 
     except Exception as exception:
         logger.error(
             f"An unexpected error occurred during jq processing or operator creation: {exception}"
         )
         logger.info(f"Skipping catalog {catalog_json_file}...")
-        return {}
+        return ({}, {})
