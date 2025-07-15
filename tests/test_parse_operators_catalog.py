@@ -22,12 +22,13 @@ def test_render_catalog_success(mocker: MockerFixture, tmp_path: Path) -> None:
     output_file = tmp_path / "catalog.json"
     catalog_image = "my-image:latest"
 
-    render_operator_catalog(catalog_image, str(output_file))
+    is_success = render_operator_catalog(catalog_image, str(output_file))
 
     expected_command = ["opm", "render", catalog_image, "-o", "json"]
     mock_run.assert_called_once_with(
         expected_command, capture_output=True, text=True, check=True
     )
+    assert is_success is True
     assert output_file.read_text() == '{"schema": "olm.bundle"}'
 
 
@@ -57,8 +58,9 @@ def test_render_catalog_opm_fails(
     )
     mocker.patch("subprocess.run", side_effect=error)
 
-    render_operator_catalog("my-image:latest", "output.json")
+    is_success = render_operator_catalog("my-image:latest", "output.json")
 
+    assert is_success is False
     assert "Rendering of catalog image failed" in caplog.text
     assert "something went wrong" in caplog.text
 
@@ -71,8 +73,9 @@ def test_render_catalog_generic_exception(
     """
     mocker.patch("subprocess.run", side_effect=Exception("A generic opm error"))
 
-    render_operator_catalog("my-image:latest", "output.json")
+    is_success = render_operator_catalog("my-image:latest", "output.json")
 
+    assert is_success is False
     assert "An unexpected error occurred during opm render" in caplog.text
 
 
