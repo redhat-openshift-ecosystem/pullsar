@@ -4,47 +4,28 @@ from pullsar.operator_bundle_model import (
     extract_image_attributes,
     extract_tag,
     OperatorBundle,
+    ImageAttributes,
 )
 
 
-def test_extract_attributes_with_tag() -> None:
-    """Test parsing a standard image URL with a tag."""
-    image = "quay.io/my-org/my-repo:v1.2.3"
-    registry, org, repo, digest, tag = extract_image_attributes(image)
-    assert registry == "quay.io"
-    assert org == "my-org"
-    assert repo == "my-repo"
-    assert digest is None
-    assert tag == "v1.2.3"
-
-
-def test_extract_attributes_with_digest() -> None:
-    """Test parsing a standard image URL with a digest."""
-    image = "quay.io/my-org/my-repo@sha256:abcdef123456"
-    registry, org, repo, digest, tag = extract_image_attributes(image)
-    assert registry == "quay.io"
-    assert org == "my-org"
-    assert repo == "my-repo"
-    assert digest == "sha256:abcdef123456"
-    assert tag is None
-
-
-def test_extract_attributes_invalid_format() -> None:
-    """Test that an improperly formatted URL returns all Nones."""
-    image = "quay.io/my-repo-only"
-    result = extract_image_attributes(image)
-    assert result == (None, None, None, None, None)
-
-
-def test_extract_attributes_no_tag_or_digest() -> None:
-    """Test a URL with a repo but no identifier."""
-    image = "quay.io/my-org/my-repo"
-    registry, org, repo, digest, tag = extract_image_attributes(image)
-    assert registry == "quay.io"
-    assert org == "my-org"
-    assert repo is None
-    assert digest is None
-    assert tag is None
+@pytest.mark.parametrize(
+    ["image", "expected"],
+    [
+        (
+            "quay.io/my-org/my-repo:v1.2.3",
+            ("quay.io", "my-org", "my-repo", None, "v1.2.3"),
+        ),
+        (
+            "quay.io/my-org/my-repo@sha256:abcdef123456",
+            ("quay.io", "my-org", "my-repo", "sha256:abcdef123456", None),
+        ),
+        ("quay.io/my-repo-only", (None, None, None, None, None)),
+        ("quay.io/my-org/my-repo", ("quay.io", "my-org", None, None, None)),
+    ],
+)
+def test_extract_attributes_from_image(image: str, expected: ImageAttributes) -> None:
+    """Test extracting attributes from image pullspec URL."""
+    assert extract_image_attributes(image) == expected
 
 
 def test_extract_tag_valid_name() -> None:

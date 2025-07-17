@@ -1,9 +1,13 @@
 from typing import Optional, Tuple, Dict
 
+ImageAttributes = Tuple[
+    Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]
+]
+
 
 def extract_image_attributes(
     image: str,
-) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]:
+) -> ImageAttributes:
     """
     Parses image pullspec for attributes Quay registry, organization, repository and image digest/tag.
 
@@ -11,7 +15,7 @@ def extract_image_attributes(
         image (str): Operator image pullspec of format: quay.io/org/repo@digest OR quay.io/org/repo:tag
 
     Returns:
-        Tuple[Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]: in order,
+        ImageAttributes: tuple of 5 attributes that can be extracted from image pullspec URL, in order,
         Quay registry, organization, repository, image digest, image tag;
         attributes can be None if they were not found or the input format was unexpected.
     """
