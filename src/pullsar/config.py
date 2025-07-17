@@ -2,6 +2,7 @@ import os
 import logging
 import json
 from typing import Dict
+from dotenv import load_dotenv
 
 
 # set up logging
@@ -40,8 +41,11 @@ def load_quay_api_tokens() -> Dict[str, str]:
 
 class BaseConfig(object):
     """
-    Class that represents config variables.
+    Class that represents config variables. Quay API tokens
+    and database configuration can be loaded from '.env' file.
+    For example, see '.env.example' file.
     """
+    load_dotenv()
 
     QUAY_API_TOKENS: Dict[str, str] = {}
     QUAY_API_BASE_URL = "https://quay.io/api/v1"
@@ -51,3 +55,12 @@ class BaseConfig(object):
     LOG_DAYS_DEFAULT = 7
     LOG_DAYS_MIN = 1
     LOG_DAYS_MAX = 30  # Quay limit
+
+    # PostgreSQL configuration
+    DB_CONFIG = {
+    "dbname": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT", 5432),
+    }
