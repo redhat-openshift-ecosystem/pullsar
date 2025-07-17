@@ -8,7 +8,7 @@ from pullsar.config import logger
 RepositoryMap = Dict[str, List[OperatorBundle]]
 
 
-def render_operator_catalog(catalog_image: str, output_file: str):
+def render_operator_catalog(catalog_image: str, output_file: str) -> bool:
     """
     Renders the OLM catalog image to a local JSON file using opm.
     Requires 'opm' to be installed and accessible in PATH,
@@ -18,6 +18,9 @@ def render_operator_catalog(catalog_image: str, output_file: str):
         catalog_image (str): Operators catalog image pullspec
         output_file (str): Name of a file to be generated, containing
         the rendered JSON catalog.
+
+    Returns:
+        bool: True if render was successful, else False
     """
     command = ["opm", "render", catalog_image, "-o", "json"]
 
@@ -30,6 +33,7 @@ def render_operator_catalog(catalog_image: str, output_file: str):
             file.write(process.stdout)
 
         logger.info(f"Successfully rendered catalog to {output_file}")
+        return True
 
     except FileNotFoundError:
         logger.error(
@@ -44,9 +48,11 @@ def render_operator_catalog(catalog_image: str, output_file: str):
         logger.debug(f"Stdout:\n{error.stdout}")
         logger.error(f"Stderr:\n{error.stderr}")
         logger.info(f"Skipping catalog {catalog_image}...")
+        return False
     except Exception as exception:
         logger.error(f"An unexpected error occurred during opm render: {exception}")
         logger.info(f"Skipping catalog {catalog_image}...")
+        return False
 
 
 def create_repository_paths_maps(

@@ -214,7 +214,11 @@ def update_operator_usage_stats(
         being a list of OperatorBundle objects, images of which are stored in the repository.
     """
     if catalog_image:
-        render_operator_catalog(catalog_image, BaseConfig.CATALOG_JSON_FILE)
+        is_success = render_operator_catalog(
+            catalog_image, BaseConfig.CATALOG_JSON_FILE
+        )
+        if not is_success:
+            return {}
 
     repository_paths_map, repository_paths_map_missing_digests = (
         create_repository_paths_maps(catalog_json_file or BaseConfig.CATALOG_JSON_FILE)

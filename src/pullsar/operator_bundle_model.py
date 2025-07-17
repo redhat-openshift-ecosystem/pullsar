@@ -1,9 +1,13 @@
 from typing import Optional, Tuple, Dict
 
+ImageAttributes = Tuple[
+    Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]
+]
+
 
 def extract_image_attributes(
     image: str,
-) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]:
+) -> ImageAttributes:
     """
     Parses image pullspec for attributes Quay registry, organization, repository and image digest/tag.
 
@@ -11,7 +15,7 @@ def extract_image_attributes(
         image (str): Operator image pullspec of format: quay.io/org/repo@digest OR quay.io/org/repo:tag
 
     Returns:
-        Tuple[Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]: in order,
+        ImageAttributes: tuple of 5 attributes that can be extracted from image pullspec URL, in order,
         Quay registry, organization, repository, image digest, image tag;
         attributes can be None if they were not found or the input format was unexpected.
     """
@@ -86,12 +90,12 @@ class OperatorBundle:
 
     @property
     def org(self) -> Optional[str]:
-        """The Quay organization name of the operator bundle image."""
+        """The organization name of the operator bundle image."""
         return self._org
 
     @property
     def repo(self) -> Optional[str]:
-        """The Quay repository name of the operator bundle image."""
+        """The repository name of the operator bundle image."""
         return self._repo
 
     @property
@@ -115,9 +119,9 @@ class OperatorBundle:
 
         Returns:
             Optional[str]: path to Quay repository, e.g. org/repo
-            or None if org or repo is None.
+            or None if org or repo is None, or registry is not quay.io.
         """
-        if self.org and self.repo:
+        if self.registry == "quay.io" and self.org and self.repo:
             return f"{self.org}/{self.repo}"
 
         return None
