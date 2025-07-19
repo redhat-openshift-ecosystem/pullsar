@@ -11,8 +11,7 @@ class ParsedArgs(NamedTuple):
 
     debug: bool
     log_days: int
-    catalog_json_list: List[str]
-    catalog_image_list: List[str]
+    catalogs: List[List[str]]
 
 
 def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
@@ -29,22 +28,17 @@ def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
         default=BaseConfig.LOG_DAYS_DEFAULT,
         help="number of completed past days to include logs from (default: 7)",
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--catalog-json-file",
-        dest="catalog_json_list",
-        action="append",
-        default=[],
-        help="path to pre-rendered catalog JSON file (repeatable)",
-        metavar="CATALOG_JSON",
-    )
-    group.add_argument(
+    parser.add_argument(
         "--catalog-image",
-        dest="catalog_image_list",
+        dest="catalogs",
         action="append",
+        nargs="+",
         default=[],
-        help="catalog image pullspec to render (repeatable)",
-        metavar="CATALOG_IMAGE",
+        metavar="IMAGE [RENDERED_JSON_FILE]",
+        help="operators catalog, e.g. '<CATALOG_IMAGE_PULLSPEC>:<OCP_VERSION>' "
+        "to be rendered with 'opm' and used in database entry (keeping track of "
+        "each operator's source catalogs). To skip render, provide optional second "
+        "argument, a path to a pre-rendered catalog JSON file. Option is repeatable.",
     )
     args = parser.parse_args(argv)
 
@@ -54,9 +48,15 @@ def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
             f"and {BaseConfig.LOG_DAYS_MAX}"
         )
 
+    for catalog_info in args.catalogs:
+        if len(catalog_info) not in (1, 2):
+            parser.error(
+                f"argument --catalog-image: requires 1 or 2 arguments, "
+                f"but received {len(catalog_info)}"
+            )
+
     return ParsedArgs(
         debug=args.debug,
         log_days=args.log_days,
-        catalog_json_list=args.catalog_json_list,
-        catalog_image_list=args.catalog_image_list,
+        catalogs=args.catalogs,
     )

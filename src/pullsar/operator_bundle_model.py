@@ -4,6 +4,26 @@ from datetime import date
 ImageAttributes = Tuple[
     Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]
 ]
+CatalogAttributes = Tuple[Optional[str], Optional[str]]
+
+
+def extract_catalog_attributes(catalog_image: str) -> CatalogAttributes:
+    """
+    Parses catalog pullspec for attributes catalog name and OCP version.
+
+    Args:
+        catalog_image (str): format, e.g. <CATALOG_NAME>:<OCP_VERSION>,
+        OCP version 'latest' is not allowed.
+
+    Returns:
+        CatalogAttributes: Tuple with catalog name and OCP version, or both
+        being None if the format is invalid.
+    """
+    if ":" in catalog_image:
+        catalog, ocp_version = catalog_image.split(":", 1)
+        if ocp_version != "latest":
+            return (catalog, ocp_version)
+    return (None, None)
 
 
 def extract_image_attributes(

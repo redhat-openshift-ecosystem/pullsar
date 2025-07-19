@@ -195,26 +195,26 @@ def print_operator_usage_stats(repository_paths_map: RepositoryMap):
 def update_operator_usage_stats(
     quay_client: QuayClient,
     log_days: int,
-    catalog_image: Optional[str] = None,
+    catalog_image: str,
     catalog_json_file: Optional[str] = None,
 ) -> RepositoryMap:
     """
     Scans input catalog of operators for operator bundles, then uses their metadata
-    to retrieve their individual pull counts from their Quay repositories. Functions expects
-    either one catalog image or one catalog json file, not both at the same time.
-    Lists updated stats on the stdout.
+    to retrieve their individual pull counts from their Quay repositories. If optional
+    'catalog_json_file' is provided, 'opm render' on 'catalog_image' is skipped and
+    the provided catalog file is used instead.
 
     Args:
         quay_client (QuayClient): Quay client used for API requests.
         log_days (int): Update stats based on logs from the last 'log_days' completed days.
-        catalog_image (Optional[str]): Operators catalog image. Defaults to None.
+        catalog_image (str): Operators catalog image.
         catalog_json_file (Optional[str]): Pre-rendered operators catalog JSON file. Defaults to None.
 
     Returns:
         RepositoryMap: Dictionary of key-value pairs, key being a quay repository and value
         being a list of OperatorBundle objects, images of which are stored in the repository.
     """
-    if catalog_image:
+    if not catalog_json_file:
         is_success = render_operator_catalog(
             catalog_image, BaseConfig.CATALOG_JSON_FILE
         )

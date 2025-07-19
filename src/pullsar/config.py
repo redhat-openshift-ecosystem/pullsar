@@ -67,7 +67,7 @@ class BaseConfig(object):
     }
 
 
-def is_database_present() -> bool:
+def is_database_configured() -> bool:
     """Checks if database is configured for the script.
 
     Returns:
