@@ -758,6 +758,18 @@ virtualenv = ">=20.31"
 test = ["devpi-process (>=1.0.2)", "pytest (>=8.3.4)", "pytest-mock (>=3.14)"]
 
 [[package]]
+name = "types-psycopg2"
+version = "2.9.21.20250516"
+description = "Typing stubs for psycopg2"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "types_psycopg2-2.9.21.20250516-py3-none-any.whl", hash = "sha256:2a9212d1e5e507017b31486ce8147634d06b85d652769d7a2d91d53cb4edbd41"},
+    {file = "types_psycopg2-2.9.21.20250516.tar.gz", hash = "sha256:6721018279175cce10b9582202e2a2b4a0da667857ccf82a97691bdb5ecd610f"},
+]
+
+[[package]]
 name = "types-requests"
 version = "2.32.4.20250611"
 description = "Typing stubs for requests"
@@ -826,4 +838,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "ac436ea162e20e5cd90f0967551dad17355915f83cdc6e536de6cc0d08cb5978"
+content-hash = "9ceef2dd567d2a1676d7c2a8e2799c2464390327ac91dfdfad77c2a217d8467a"

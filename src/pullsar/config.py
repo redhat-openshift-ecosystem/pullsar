@@ -45,6 +45,7 @@ class BaseConfig(object):
     and database configuration can be loaded from '.env' file.
     For example, see '.env.example' file.
     """
+
     load_dotenv()
 
     QUAY_API_TOKENS: Dict[str, str] = {}
@@ -58,9 +59,27 @@ class BaseConfig(object):
 
     # PostgreSQL configuration
     DB_CONFIG = {
-    "dbname": os.getenv("DB_NAME"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "host": os.getenv("DB_HOST"),
-    "port": os.getenv("DB_PORT", 5432),
+        "dbname": os.getenv("DB_NAME"),
+        "user": os.getenv("DB_USER"),
+        "password": os.getenv("DB_PASSWORD"),
+        "host": os.getenv("DB_HOST"),
+        "port": os.getenv("DB_PORT", 5432),
     }
+
+
+def is_database_present() -> bool:
+    """Checks if database is configured for the script.
+
+    Returns:
+        bool: True if all necessary environmental variables
+        are set, else False.
+    """
+    for value in BaseConfig.DB_CONFIG.values():
+        if not value:
+            logger.warning(
+                "To allow posting to database, set up database "
+                "configuration in '.env' file, see '.env.example'."
+            )
+            return False
+
+    return True
