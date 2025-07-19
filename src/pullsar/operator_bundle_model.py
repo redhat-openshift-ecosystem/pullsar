@@ -1,4 +1,5 @@
 from typing import Optional, Tuple, Dict
+from datetime import date
 
 ImageAttributes = Tuple[
     Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]
@@ -66,7 +67,7 @@ class OperatorBundle:
         (self._registry, self._org, self._repo, self._digest, _) = (
             extract_image_attributes(image)
         )
-        self._pull_count: Dict[str, int] = {}
+        self._pull_count: Dict[date, int] = {}
 
     @property
     def name(self) -> str:
@@ -127,14 +128,14 @@ class OperatorBundle:
         return None
 
     @property
-    def pull_count(self) -> Dict[str, int]:
+    def pull_count(self) -> Dict[date, int]:
         """
         Accesses pull counts of an operator bundle for specific dates.
 
         Returns:
-            Dict[str, int]: Dictionary of key-value pairs, key being a date,
-            string formatted as: MM/DD/YYYY and value being an integer representing
-            a number of pulls recorded for the operator bundle for that date.
+            Dict[date, int]: Dictionary of key-value pairs, key being a date
+            and value being an integer representing a number of pulls recorded
+            for the operator bundle for that date.
         """
         return self._pull_count
 
