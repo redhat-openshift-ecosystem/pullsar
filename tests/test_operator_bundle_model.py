@@ -2,9 +2,11 @@ import pytest
 
 from pullsar.operator_bundle_model import (
     extract_image_attributes,
+    extract_catalog_attributes,
     extract_tag,
     OperatorBundle,
     ImageAttributes,
+    CatalogAttributes,
 )
 
 
@@ -38,6 +40,18 @@ def test_extract_tag_no_dot() -> None:
     """Test a name with no version, expecting None."""
     name = "my-operator"
     assert extract_tag(name) is None
+
+
+@pytest.mark.parametrize(
+    ["image", "expected"],
+    [
+        ("community-operators:v4.18", ("community-operators", "v4.18")),
+        ("community-operators", (None, None)),
+        ("community-operators:latest", (None, None)),
+    ],
+)
+def test_extract_catalog_attributes(image: str, expected: CatalogAttributes) -> None:
+    assert extract_catalog_attributes(image) == expected
 
 
 @pytest.fixture
