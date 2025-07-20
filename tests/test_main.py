@@ -41,8 +41,12 @@ def test_main_flow_with_db_and_debug(mocker: MockerFixture) -> None:
     mock_db_instance.connect.assert_called_once()
 
     assert mock_update_stats.call_count == 2
-    mock_update_stats.assert_any_call(mocker.ANY, 7, "image:v1", None)
-    mock_update_stats.assert_any_call(mocker.ANY, 7, "image:v2", "rendered.json")
+    mock_update_stats.assert_any_call(
+        mocker.ANY, mocker.ANY, mocker.ANY, 7, "image:v1", None
+    )
+    mock_update_stats.assert_any_call(
+        mocker.ANY, mocker.ANY, mocker.ANY, 7, "image:v2", "rendered.json"
+    )
 
     assert mock_db_instance.save_operator_usage_stats.call_count == 2
 

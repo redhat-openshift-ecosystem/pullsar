@@ -6,6 +6,7 @@ from datetime import date
 from pullsar import update_operator_usage_stats as stats
 from pullsar.operator_bundle_model import OperatorBundle
 from pullsar.quay_client import QuayClient
+from pullsar.pyxis_client import PyxisClient
 
 
 @pytest.fixture
@@ -171,7 +172,7 @@ def test_update_operator_usage_stats_flow(mocker: MockerFixture) -> None:
     )
     mock_create_maps = mocker.patch(
         "pullsar.update_operator_usage_stats.create_repository_paths_maps",
-        return_value=({"repo": []}, {"repo": []}, {"repo": []}),
+        return_value=({"repo": []}, {"repo": []}, {}),
     )
     mock_update_digests = mocker.patch(
         "pullsar.update_operator_usage_stats.update_image_digests"
@@ -183,9 +184,15 @@ def test_update_operator_usage_stats_flow(mocker: MockerFixture) -> None:
         "pullsar.update_operator_usage_stats.print_operator_usage_stats"
     )
     mock_quay_client = mocker.Mock(spec=QuayClient)
+    mock_pyxis_client = mocker.Mock(spec=PyxisClient)
+    mock_pyxis_client.get_images_for_repository.return_value = {"data": []}
 
     stats.update_operator_usage_stats(
-        quay_client=mock_quay_client, log_days=7, catalog_image="my-image:latest"
+        quay_client=mock_quay_client,
+        pyxis_client=mock_pyxis_client,
+        known_image_translations={},
+        log_days=7,
+        catalog_image="my-image:latest",
     )
 
     mock_render.assert_called_once()
