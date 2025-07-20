@@ -13,9 +13,8 @@ from pullsar.update_operator_usage_stats import (
 )
 from pullsar.cli import parse_arguments, ParsedArgs
 from pullsar.quay_client import QuayClient
-from pullsar.operator_bundle_model import extract_catalog_attributes
 from pullsar.db.schema import create_tables
-from pullsar.db.insert import insert_data
+from pullsar.db.manager import save_operator_usage_stats_to_db
 
 
 def main() -> None:
@@ -33,20 +32,17 @@ def main() -> None:
         base_url=BaseConfig.QUAY_API_BASE_URL, api_tokens=BaseConfig.QUAY_API_TOKENS
     )
 
-    is_db_configured = is_database_configured()
-    if is_db_configured:
+    is_db_allowed = is_database_configured() and not args.dry_run
+    if is_db_allowed:
         create_tables()
 
-    for catalog_info in args.catalogs:
+    for catalog in args.catalogs:
         repository_paths = update_operator_usage_stats(
-            quay_client, args.log_days, *catalog_info
+            quay_client, args.log_days, catalog.image, catalog.json_file
         )
 
-        if repository_paths and is_db_configured:
-            catalog_image = catalog_info[0]
-            catalog_name, ocp_version = extract_catalog_attributes(catalog_image)
-            if catalog_name and ocp_version:
-                insert_data(repository_paths, catalog_name, ocp_version)
+        if repository_paths and is_db_allowed:
+            save_operator_usage_stats_to_db(repository_paths, catalog.image)
 
 
 if __name__ == "__main__":  # pragma: no cover

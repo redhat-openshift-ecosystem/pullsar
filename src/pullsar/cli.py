@@ -4,14 +4,22 @@ from typing import NamedTuple, List, Optional
 from pullsar.config import BaseConfig
 
 
+class ParsedCatalogArg(NamedTuple):
+    """A NamedTuple with image and optional rendered JSON file."""
+
+    image: str
+    json_file: Optional[str]
+
+
 class ParsedArgs(NamedTuple):
     """
     A NamedTuple to hold the parsed command-line arguments.
     """
 
+    dry_run: bool
     debug: bool
     log_days: int
-    catalogs: List[List[str]]
+    catalogs: List[ParsedCatalogArg]
 
 
 def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
@@ -21,6 +29,12 @@ def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
         "(catalog images or pre-rendered catalog JSON files)."
     )
 
+    parser.add_argument(
+        "--dry-run",
+        "--test",
+        action="store_true",
+        help="run the script without saving any data to the database",
+    )
     parser.add_argument("--debug", action="store_true", help="makes logs more verbose")
     parser.add_argument(
         "--log-days",
@@ -48,15 +62,23 @@ def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
             f"and {BaseConfig.LOG_DAYS_MAX}"
         )
 
+    catalog_args: List[ParsedCatalogArg] = []
     for catalog_info in args.catalogs:
-        if len(catalog_info) not in (1, 2):
+        if len(catalog_info) == 1:
+            catalog_args.append(ParsedCatalogArg(image=catalog_info[0], json_file=None))
+        elif len(catalog_info) == 2:
+            catalog_args.append(
+                ParsedCatalogArg(image=catalog_info[0], json_file=catalog_info[1])
+            )
+        else:
             parser.error(
                 f"argument --catalog-image: requires 1 or 2 arguments, "
                 f"but received {len(catalog_info)}"
             )
 
     return ParsedArgs(
+        dry_run=args.dry_run,
         debug=args.debug,
         log_days=args.log_days,
-        catalogs=args.catalogs,
+        catalogs=catalog_args,
     )
