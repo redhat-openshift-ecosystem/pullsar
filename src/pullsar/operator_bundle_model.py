@@ -104,6 +104,11 @@ class OperatorBundle:
         """The full image pull spec of the operator bundle."""
         return self._image
 
+    @image.setter
+    def image(self, new_image: str):
+        """Sets the image of the operator bundle."""
+        self._image = new_image
+
     @property
     def registry(self) -> Optional[str]:
         """The registry of the operator bundle image, e.g. quay.io"""
@@ -158,6 +163,12 @@ class OperatorBundle:
             for the operator bundle for that date.
         """
         return self._pull_count
+
+    def update_image_digest(self, new_digest: str):
+        """Updates image URL to have new digest identifier."""
+        if self.repo_path:
+            self.image = f"{self.registry}/{self.repo_path}@{new_digest}"
+            self.digest = new_digest
 
     def __str__(self) -> str:
         return f"""Name: {self.name}

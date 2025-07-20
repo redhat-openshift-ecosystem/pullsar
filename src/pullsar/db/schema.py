@@ -13,9 +13,9 @@ def create_tables() -> None:
         cur.execute("""
         CREATE TABLE IF NOT EXISTS bundles (
             id SERIAL PRIMARY KEY,
-            name TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
             package TEXT NOT NULL,
-            image TEXT NOT NULL
+            image TEXT UNIQUE NOT NULL
         );
         """)
 

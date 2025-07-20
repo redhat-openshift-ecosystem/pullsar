@@ -14,8 +14,8 @@ def insert_data(
                     """
                 INSERT INTO bundles (name, package, image)
                 VALUES (%s, %s, %s)
-                ON CONFLICT (name) DO UPDATE
-                SET package = EXCLUDED.package, image = EXCLUDED.image
+                ON CONFLICT (image) DO UPDATE
+                SET package = EXCLUDED.package, name = EXCLUDED.name
                 RETURNING id;
                 """,
                     (bundle.name, bundle.package, bundle.image),

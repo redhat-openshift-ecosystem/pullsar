@@ -88,7 +88,9 @@ def update_image_digests(quay_client: QuayClient, repository_paths_map: Reposito
         for tag_object in tag_objects:
             tag = tag_in_tag_map(tag_object["name"], tag_to_operator_bundle)
             if tag:
-                tag_to_operator_bundle[tag].digest = tag_object["manifest_digest"]
+                tag_to_operator_bundle[tag].update_image_digest(
+                    tag_object["manifest_digest"]
+                )
 
 
 def extract_date(datetime_str: str) -> date:
