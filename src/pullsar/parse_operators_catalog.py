@@ -56,7 +56,7 @@ def render_operator_catalog(catalog_image: str, output_file: str) -> bool:
 
 
 def create_repository_paths_maps(
-    catalog_json_file: str,
+    catalog_json_file: str, known_image_translations: Dict[str, str]
 ) -> Tuple[RepositoryMap, RepositoryMap, RepositoryMap]:
     """
     Parses rendered JSON operators catalog and creates mappings between
@@ -65,6 +65,7 @@ def create_repository_paths_maps(
 
     Args:
         catalog_json_file (str): Rendered JSON catalog of operators.
+        known_image_translations (Tuple[str, str]): mapping from non-quay image to quay image
 
     Returns:
         Tuple[RepositoryMap, RepositoryMap, RepositoryMap]: Three dictionaries with key-value pairs,
@@ -115,7 +116,16 @@ def create_repository_paths_maps(
                             repository_paths_map_missing_digest.setdefault(
                                 repo_path, []
                             ).append(operator)
-                    else:
+                    elif known_image_translations.get(operator.image):
+                        new_bundle = OperatorBundle(
+                            operator.name,
+                            operator.package,
+                            known_image_translations[operator.image],
+                        )
+                        repository_paths_map.setdefault(repo_path, []).append(
+                            new_bundle
+                        )
+                    elif operator.registry == "registry.connect.redhat.com":
                         repository_paths_map_not_quay.setdefault(repo_path, []).append(
                             operator
                         )

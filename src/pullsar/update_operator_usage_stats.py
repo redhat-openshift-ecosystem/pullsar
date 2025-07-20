@@ -9,6 +9,7 @@ from pullsar.parse_operators_catalog import (
 )
 from pullsar.operator_bundle_model import OperatorBundle
 from pullsar.quay_client import QuayClient, QuayLog, QuayTag
+from pullsar.pyxis_client import PyxisClient
 
 TagToOperatorBundleMap = Dict[str, OperatorBundle]
 DigestToOperatorBundleMap = Dict[str, OperatorBundle]
@@ -66,6 +67,52 @@ def create_local_tag_digest_maps(
             digest_to_operator_bundle[operator_bundle.digest] = operator_bundle
 
     return (tag_to_operator_bundle, digest_to_operator_bundle)
+
+
+def resolve_not_quay_repositories(
+    pyxis_client: PyxisClient,
+    not_quay_repos_map: RepositoryMap,
+    quay_repos_map: RepositoryMap,
+    known_images_map: Dict[str, str],
+) -> None:
+    """
+    Resolves connect.redhat.com URLs to quay.io URLs using the Pyxis API
+    and merges the results into the main quay_repos_map.
+
+    Args:
+        pyxis_client (PyxisClient): An instance of the PyxisClient.
+        not_quay_repos_map (RepositoryMap): The map of repositories needing translation.
+        quay_repos_map (RepositoryMap): The main map where successfully translated bundles
+        will be added.
+        known_images_map (Dict[str, str]): mapping from non-quay image to quay image
+        (e.g. known from previously processed catalogs in the same script run)
+    """
+    logger.info(
+        f"Attempting to resolve {len(not_quay_repos_map)} non-Quay repositories via Pyxis..."
+    )
+    for repo_path, bundles in not_quay_repos_map.items():
+        pyxis_images = pyxis_client.get_images_for_repository(repo_path)
+        if not pyxis_images:
+            continue
+
+        _, digest_to_operator_bundle = create_local_tag_digest_maps(bundles)
+
+        for pyxis_image in pyxis_images:
+            digest = pyxis_image.get("image_id")
+            if digest in digest_to_operator_bundle and pyxis_image.get("repositories"):
+                for repo in pyxis_image["repositories"]:
+                    repo_path = repo.get("repository")
+                    registry = repo.get("registry")
+                    if registry == "quay.io" and repo_path:
+                        old_bundle = digest_to_operator_bundle[digest]
+                        new_bundle = OperatorBundle(
+                            old_bundle.name,
+                            old_bundle.package,
+                            f"{registry}/{repo_path}@{digest}",
+                        )
+                        quay_repos_map.setdefault(repo_path, []).append(new_bundle)
+                        known_images_map[old_bundle.image] = new_bundle.image
+                        break
 
 
 def update_image_digests(quay_client: QuayClient, repository_paths_map: RepositoryMap):
@@ -196,6 +243,8 @@ def print_operator_usage_stats(repository_paths_map: RepositoryMap):
 
 def update_operator_usage_stats(
     quay_client: QuayClient,
+    pyxis_client: PyxisClient,
+    known_image_translations: Dict[str, str],
     log_days: int,
     catalog_image: str,
     catalog_json_file: Optional[str] = None,
@@ -208,6 +257,8 @@ def update_operator_usage_stats(
 
     Args:
         quay_client (QuayClient): Quay client used for API requests.
+        pyxis_client (PyxisClient): Pyxis client used for API requests.
+        known_image_translations (Dict[str, str]): mapping from non-quay image to quay image
         log_days (int): Update stats based on logs from the last 'log_days' completed days.
         catalog_image (str): Operators catalog image.
         catalog_json_file (Optional[str]): Pre-rendered operators catalog JSON file. Defaults to None.
@@ -224,7 +275,14 @@ def update_operator_usage_stats(
             return {}
 
     quay_repos_map, no_digest_repos_map, not_quay_repos_map = (
-        create_repository_paths_maps(catalog_json_file or BaseConfig.CATALOG_JSON_FILE)
+        create_repository_paths_maps(
+            catalog_json_file or BaseConfig.CATALOG_JSON_FILE, known_image_translations
+        )
+    )
+
+    logger.info("\nResolving non-Quay image URLs if any...")
+    resolve_not_quay_repositories(
+        pyxis_client, not_quay_repos_map, quay_repos_map, known_image_translations
     )
 
     logger.info("\nLooking up missing manifest digests if any...")
