@@ -223,17 +223,17 @@ def update_operator_usage_stats(
         if not is_success:
             return {}
 
-    repository_paths_map, repository_paths_map_missing_digests = (
+    quay_repos_map, no_digest_repos_map, not_quay_repos_map = (
         create_repository_paths_maps(catalog_json_file or BaseConfig.CATALOG_JSON_FILE)
     )
 
     logger.info("\nLooking up missing manifest digests if any...")
-    update_image_digests(quay_client, repository_paths_map_missing_digests)
+    update_image_digests(quay_client, no_digest_repos_map)
 
     logger.info("\nOperator bundles and their usage stats:")
-    update_image_pull_counts(quay_client, repository_paths_map, log_days)
+    update_image_pull_counts(quay_client, quay_repos_map, log_days)
 
     logger.info(f"\nOperators pulled at least once in the last {log_days} days:")
-    print_operator_usage_stats(repository_paths_map)
+    print_operator_usage_stats(quay_repos_map)
 
-    return repository_paths_map
+    return quay_repos_map

@@ -33,14 +33,13 @@ def extract_image_attributes(
     Parses image pullspec for attributes Quay registry, organization, repository and image digest/tag.
 
     Args:
-        image (str): Operator image pullspec of format: quay.io/org/repo@digest OR quay.io/org/repo:tag
+        image (str): Operator image pullspec of format: registry/org/repo@digest OR registry/org/repo:tag
 
     Returns:
         ImageAttributes: tuple of 5 attributes that can be extracted from image pullspec URL, in order,
         Quay registry, organization, repository, image digest, image tag;
         attributes can be None if they were not found or the input format was unexpected.
     """
-    # TODO: translate registry.connect.redhat.com proxy to quay.io registry if needed
     registry, org, repo, digest, tag = (None, None, None, None, None)
     registry_org_repo = image.split("/")
 
@@ -141,13 +140,13 @@ class OperatorBundle:
 
     @property
     def repo_path(self) -> Optional[str]:
-        """Accesses path to Quay repository of the operator bundle.
+        """Accesses path to the repository of the operator bundle.
 
         Returns:
-            Optional[str]: path to Quay repository, e.g. org/repo
-            or None if org or repo is None, or registry is not quay.io.
+            Optional[str]: path to repository, e.g. org/repo
+            or None if org or repo is None.
         """
-        if self.registry == "quay.io" and self.org and self.repo:
+        if self.org and self.repo:
             return f"{self.org}/{self.repo}"
 
         return None

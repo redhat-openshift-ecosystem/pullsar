@@ -171,7 +171,7 @@ def test_update_operator_usage_stats_flow(mocker: MockerFixture) -> None:
     )
     mock_create_maps = mocker.patch(
         "pullsar.update_operator_usage_stats.create_repository_paths_maps",
-        return_value=({"repo": []}, {"repo": []}),
+        return_value=({"repo": []}, {"repo": []}, {"repo": []}),
     )
     mock_update_digests = mocker.patch(
         "pullsar.update_operator_usage_stats.update_image_digests"
