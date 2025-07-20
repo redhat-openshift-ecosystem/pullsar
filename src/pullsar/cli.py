@@ -48,6 +48,7 @@ def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
         action="append",
         nargs="+",
         default=[],
+        required=True,
         metavar="IMAGE [RENDERED_JSON_FILE]",
         help="operators catalog, e.g. '<CATALOG_IMAGE_PULLSPEC>:<OCP_VERSION>' "
         "to be rendered with 'opm' and used in database entry (keeping track of "
