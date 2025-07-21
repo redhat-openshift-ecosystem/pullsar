@@ -3,7 +3,12 @@ import pytest
 from pytest import MonkeyPatch, LogCaptureFixture
 from pytest_mock import MockerFixture
 
-from pullsar.config import load_quay_api_tokens, is_database_configured, BaseConfig
+from pullsar.config import (
+    load_quay_api_tokens,
+    is_database_configured,
+    BaseConfig,
+    DBConfig,
+)
 
 
 def test_load_quay_api_tokens_success(monkeypatch: MonkeyPatch) -> None:
@@ -55,12 +60,13 @@ def test_is_database_configured_success(mocker: MockerFixture) -> None:
     mocker.patch.object(
         BaseConfig,
         "DB_CONFIG",
-        {
-            "dbname": "test_db",
-            "user": "test_user",
-            "password": "test_password",
-            "host": "localhost",
-        },
+        DBConfig(
+            dbname="test_db",
+            user="test_user",
+            password="test_password",
+            host="localhost",
+            port=5432,
+        ),
     )
 
     assert is_database_configured() is True
@@ -75,12 +81,12 @@ def test_is_database_configured_missing_value(
     mocker.patch.object(
         BaseConfig,
         "DB_CONFIG",
-        {
-            "dbname": "test_db",
-            "user": "test_user",
-            "password": None,
-            "host": "localhost",
-        },
+        DBConfig(
+            dbname="test_db",
+            user="test_user",
+            password=None,
+            host="localhost",
+        ),
     )
 
     assert is_database_configured() is False

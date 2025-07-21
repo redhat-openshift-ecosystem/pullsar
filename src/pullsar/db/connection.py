@@ -12,12 +12,13 @@ def managed_db_cursor():
     conn = None
     cur = None
     try:
+        config = BaseConfig.DB_CONFIG
         conn = psycopg2.connect(
-            dbname=BaseConfig.DB_CONFIG["dbname"],
-            user=BaseConfig.DB_CONFIG["user"],
-            password=BaseConfig.DB_CONFIG["password"],
-            host=BaseConfig.DB_CONFIG["host"],
-            port=BaseConfig.DB_CONFIG["port"],
+            dbname=config.dbname,
+            user=config.user,
+            password=config.password,
+            host=config.host,
+            port=config.port,
             gssencmode="disable",
         )
         cur = conn.cursor()

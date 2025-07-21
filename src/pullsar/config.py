@@ -1,8 +1,9 @@
 import os
 import logging
 import json
-from typing import Dict
+from typing import Dict, Optional
 from dotenv import load_dotenv
+from dataclasses import dataclass
 
 
 # set up logging
@@ -39,6 +40,17 @@ def load_quay_api_tokens() -> Dict[str, str]:
         raise
 
 
+@dataclass
+class DBConfig:
+    """A dataclass to hold database connection details."""
+
+    dbname: Optional[str] = None
+    user: Optional[str] = None
+    password: Optional[str] = None
+    host: Optional[str] = None
+    port: Optional[int] = None
+
+
 class BaseConfig(object):
     """
     Class that represents config variables. Quay API tokens
@@ -58,13 +70,13 @@ class BaseConfig(object):
     LOG_DAYS_MAX = 30  # Quay limit
 
     # PostgreSQL configuration
-    DB_CONFIG = {
-        "dbname": os.getenv("DB_NAME"),
-        "user": os.getenv("DB_USER"),
-        "password": os.getenv("DB_PASSWORD"),
-        "host": os.getenv("DB_HOST"),
-        "port": os.getenv("DB_PORT", 5432),
-    }
+    DB_CONFIG = DBConfig(
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT", 5432)),
+    )
 
 
 def is_database_configured() -> bool:
@@ -74,12 +86,11 @@ def is_database_configured() -> bool:
         bool: True if all necessary environmental variables
         are set, else False.
     """
-    for value in BaseConfig.DB_CONFIG.values():
-        if not value:
-            logger.warning(
-                "To allow posting to database, set up database "
-                "configuration in '.env' file, see '.env.example'."
-            )
-            return False
-
+    config = BaseConfig.DB_CONFIG
+    if not all([config.dbname, config.user, config.password, config.host, config.port]):
+        logger.warning(
+            "To allow posting to database, set up database "
+            "configuration in '.env' file, see '.env.example'."
+        )
+        return False
     return True
