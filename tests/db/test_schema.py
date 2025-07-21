@@ -9,7 +9,7 @@ def test_create_tables(mocker: MockerFixture) -> None:
     mock_conn = mock_connect.return_value
     mock_cur = mock_conn.cursor.return_value
 
-    schema.create_tables()
+    schema.create_tables(mock_cur)
 
     assert mock_cur.execute.call_count == 3
     sql_calls = "".join(call.args[0] for call in mock_cur.execute.call_args_list)

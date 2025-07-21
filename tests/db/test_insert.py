@@ -17,7 +17,7 @@ def test_insert_data_with_multiple_bundles(
 
     mock_cur.fetchone.side_effect = [(1,), (2,), (3,)]
 
-    insert.insert_data(sample_repo_map, "catalog-name", "v4.18")
+    insert.insert_data(mock_cur, sample_repo_map, "catalog-name", "v4.18")
 
     # 3 calls for each bundle: bundles, bundle_appearances, pull_counts
     assert mock_cur.execute.call_count == 9

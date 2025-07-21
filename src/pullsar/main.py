@@ -13,8 +13,7 @@ from pullsar.update_operator_usage_stats import (
 )
 from pullsar.cli import parse_arguments, ParsedArgs
 from pullsar.quay_client import QuayClient
-from pullsar.db.schema import create_tables
-from pullsar.db.manager import save_operator_usage_stats_to_db
+from pullsar.db.manager import DatabaseManager
 
 
 def main() -> None:
@@ -32,17 +31,25 @@ def main() -> None:
         base_url=BaseConfig.QUAY_API_BASE_URL, api_tokens=BaseConfig.QUAY_API_TOKENS
     )
 
+    db = None
     is_db_allowed = is_database_configured() and not args.dry_run
-    if is_db_allowed:
-        create_tables()
+    try:
+        if is_db_allowed:
+            db = DatabaseManager()
+            db.connect()
 
-    for catalog in args.catalogs:
-        repository_paths = update_operator_usage_stats(
-            quay_client, args.log_days, catalog.image, catalog.json_file
-        )
+        for catalog in args.catalogs:
+            repository_paths = update_operator_usage_stats(
+                quay_client, args.log_days, catalog.image, catalog.json_file
+            )
 
-        if repository_paths and is_db_allowed:
-            save_operator_usage_stats_to_db(repository_paths, catalog.image)
+            if repository_paths and db:
+                db.save_operator_usage_stats(repository_paths, catalog.image)
+    except Exception as e:
+        logger.error(f"A critical error occurred during processing: {e}")
+    finally:
+        if db:
+            db.close()
 
 
 if __name__ == "__main__":  # pragma: no cover
