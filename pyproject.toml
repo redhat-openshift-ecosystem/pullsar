@@ -11,7 +11,9 @@ readme = "README.md"
 packages = [{include = "pullsar", from = "src"}]
 requires-python = ">=3.10"
 dependencies = [
-    "requests (>=2.32.4,<3.0.0)"
+    "requests (>=2.32.4,<3.0.0)",
+    "dotenv (>=0.9.9,<0.10.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)"
 ]
 
 [build-system]
@@ -26,6 +28,7 @@ tox = "^4.27.0"
 pytest-cov = "^6.2.1"
 types-requests = "^2.32.4.20250611"
 pytest-mock = "^3.14.1"
+types-psycopg2 = "^2.9.21.20250516"
 
 [tool.poetry.scripts]
 pullsar = "pullsar.main:main"

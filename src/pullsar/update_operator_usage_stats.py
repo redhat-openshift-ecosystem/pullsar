@@ -1,6 +1,5 @@
-from typing import Optional, Dict, List, Tuple
-from datetime import datetime
-import json
+from typing import Optional, Dict, List, Tuple, TypedDict, NotRequired
+from datetime import datetime, date
 
 from pullsar.config import BaseConfig, logger
 from pullsar.parse_operators_catalog import (
@@ -13,7 +12,12 @@ from pullsar.quay_client import QuayClient, QuayLog, QuayTag
 
 TagToOperatorBundleMap = Dict[str, OperatorBundle]
 DigestToOperatorBundleMap = Dict[str, OperatorBundle]
-PullLog = Dict[str, str]
+
+
+class PullLog(TypedDict):
+    date: date
+    tag: NotRequired[str]
+    digest: NotRequired[str]
 
 
 def tag_in_tag_map(tag: str, tag_map: TagToOperatorBundleMap) -> str | None:
@@ -84,20 +88,22 @@ def update_image_digests(quay_client: QuayClient, repository_paths_map: Reposito
         for tag_object in tag_objects:
             tag = tag_in_tag_map(tag_object["name"], tag_to_operator_bundle)
             if tag:
-                tag_to_operator_bundle[tag].digest = tag_object["manifest_digest"]
+                tag_to_operator_bundle[tag].update_image_digest(
+                    tag_object["manifest_digest"]
+                )
 
 
-def extract_date(datetime_str: str) -> str:
+def extract_date(datetime_str: str) -> date:
     """Extracts date from datetime string used in Quay logs.
 
     Args:
         datetime_str (str): datetime, e.g.: "Mon, 09 Jun 2025 16:23:18 -0000"
 
     Returns:
-        str: extracted date, e.g.: "06/09/2025"
+        date: extracted date object
     """
     dt = datetime.strptime(datetime_str, "%a, %d %b %Y %H:%M:%S %z")
-    return dt.strftime("%m/%d/%Y")
+    return dt.date()
 
 
 def filter_pull_repo_logs(logs: List[QuayLog]) -> List[PullLog]:
@@ -122,10 +128,10 @@ def filter_pull_repo_logs(logs: List[QuayLog]) -> List[PullLog]:
         ):
             date = extract_date(log["datetime"])
             if log["metadata"].get("tag"):
-                pull_logs.append({"date": date, "tag": log["metadata"]["tag"]})
+                pull_logs.append(PullLog(date=date, tag=log["metadata"]["tag"]))
             elif log["metadata"].get("manifest_digest"):
                 pull_logs.append(
-                    {"date": date, "digest": log["metadata"]["manifest_digest"]}
+                    PullLog(date=date, digest=log["metadata"]["manifest_digest"])
                 )
 
     logger.info(f"Total pull log entries retrieved: {len(pull_logs)}")
@@ -152,13 +158,10 @@ def update_image_pull_counts(
             logger.info(f"No logs found for repository path: {repository_path}")
             continue
 
-        pull_logs = filter_pull_repo_logs(logs)
-        logger.debug(f"\nPull logs:\n{json.dumps(pull_logs, indent=2)}")
-
         tag_to_operator_bundle, digest_to_operator_bundle = (
             create_local_tag_digest_maps(operator_bundles)
         )
-
+        pull_logs = filter_pull_repo_logs(logs)
         for log in pull_logs:
             if log.get("digest") and log["digest"] in digest_to_operator_bundle:
                 pull_count = digest_to_operator_bundle[log["digest"]].pull_count
@@ -194,26 +197,26 @@ def print_operator_usage_stats(repository_paths_map: RepositoryMap):
 def update_operator_usage_stats(
     quay_client: QuayClient,
     log_days: int,
-    catalog_image: Optional[str] = None,
+    catalog_image: str,
     catalog_json_file: Optional[str] = None,
 ) -> RepositoryMap:
     """
     Scans input catalog of operators for operator bundles, then uses their metadata
-    to retrieve their individual pull counts from their Quay repositories. Functions expects
-    either one catalog image or one catalog json file, not both at the same time.
-    Lists updated stats on the stdout.
+    to retrieve their individual pull counts from their Quay repositories. If optional
+    'catalog_json_file' is provided, 'opm render' on 'catalog_image' is skipped and
+    the provided catalog file is used instead.
 
     Args:
         quay_client (QuayClient): Quay client used for API requests.
         log_days (int): Update stats based on logs from the last 'log_days' completed days.
-        catalog_image (Optional[str]): Operators catalog image. Defaults to None.
+        catalog_image (str): Operators catalog image.
         catalog_json_file (Optional[str]): Pre-rendered operators catalog JSON file. Defaults to None.
 
     Returns:
         RepositoryMap: Dictionary of key-value pairs, key being a quay repository and value
         being a list of OperatorBundle objects, images of which are stored in the repository.
     """
-    if catalog_image:
+    if not catalog_json_file:
         is_success = render_operator_catalog(
             catalog_image, BaseConfig.CATALOG_JSON_FILE
         )

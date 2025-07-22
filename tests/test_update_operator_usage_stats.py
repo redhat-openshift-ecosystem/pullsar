@@ -1,6 +1,7 @@
 import pytest
 from pytest_mock import MockerFixture
 from pytest import CaptureFixture
+from datetime import date
 
 from pullsar import update_operator_usage_stats as stats
 from pullsar.operator_bundle_model import OperatorBundle
@@ -45,7 +46,7 @@ def test_create_local_tag_digest_maps(sample_bundles: list[OperatorBundle]) -> N
 def test_extract_date() -> None:
     """Tests the date extraction from Quay's log format."""
     datetime_str = "Mon, 14 Jul 2025 16:23:18 -0000"
-    assert stats.extract_date(datetime_str) == "07/14/2025"
+    assert stats.extract_date(datetime_str) == date(2025, 7, 14)
 
 
 def test_filter_pull_repo_logs() -> None:
@@ -66,8 +67,8 @@ def test_filter_pull_repo_logs() -> None:
     pull_logs = stats.filter_pull_repo_logs(quay_logs)
 
     assert len(pull_logs) == 2
-    assert pull_logs[0] == {"date": "07/15/2025", "tag": "v1"}
-    assert pull_logs[1] == {"date": "07/16/2025", "digest": "sha256:123"}
+    assert pull_logs[0] == {"date": date(2025, 7, 15), "tag": "v1"}
+    assert pull_logs[1] == {"date": date(2025, 7, 16), "digest": "sha256:123"}
 
 
 def test_update_image_digests(
@@ -123,9 +124,9 @@ def test_update_image_pull_counts(
 
     stats.update_image_pull_counts(mock_quay_client, repo_map, log_days=7)
 
-    assert sample_bundles[0].pull_count == {"07/14/2025": 2}
+    assert sample_bundles[0].pull_count == {date(2025, 7, 14): 2}
     assert sample_bundles[1].pull_count == {}
-    assert sample_bundles[2].pull_count == {"07/15/2025": 1}
+    assert sample_bundles[2].pull_count == {date(2025, 7, 15): 1}
     mock_quay_client.get_repo_logs.assert_called_once_with("org/repo", 7)
 
 

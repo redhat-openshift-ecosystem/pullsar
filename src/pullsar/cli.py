@@ -4,15 +4,22 @@ from typing import NamedTuple, List, Optional
 from pullsar.config import BaseConfig
 
 
+class ParsedCatalogArg(NamedTuple):
+    """A NamedTuple with image and optional rendered JSON file."""
+
+    image: str
+    json_file: Optional[str]
+
+
 class ParsedArgs(NamedTuple):
     """
     A NamedTuple to hold the parsed command-line arguments.
     """
 
+    dry_run: bool
     debug: bool
     log_days: int
-    catalog_json_list: List[str]
-    catalog_image_list: List[str]
+    catalogs: List[ParsedCatalogArg]
 
 
 def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
@@ -22,6 +29,12 @@ def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
         "(catalog images or pre-rendered catalog JSON files)."
     )
 
+    parser.add_argument(
+        "--dry-run",
+        "--test",
+        action="store_true",
+        help="run the script without saving any data to the database",
+    )
     parser.add_argument("--debug", action="store_true", help="makes logs more verbose")
     parser.add_argument(
         "--log-days",
@@ -29,22 +42,18 @@ def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
         default=BaseConfig.LOG_DAYS_DEFAULT,
         help="number of completed past days to include logs from (default: 7)",
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--catalog-json-file",
-        dest="catalog_json_list",
-        action="append",
-        default=[],
-        help="path to pre-rendered catalog JSON file (repeatable)",
-        metavar="CATALOG_JSON",
-    )
-    group.add_argument(
+    parser.add_argument(
         "--catalog-image",
-        dest="catalog_image_list",
+        dest="catalogs",
         action="append",
+        nargs="+",
         default=[],
-        help="catalog image pullspec to render (repeatable)",
-        metavar="CATALOG_IMAGE",
+        required=True,
+        metavar="IMAGE [RENDERED_JSON_FILE]",
+        help="operators catalog, e.g. '<CATALOG_IMAGE_PULLSPEC>:<OCP_VERSION>' "
+        "to be rendered with 'opm' and used in database entry (keeping track of "
+        "each operator's source catalogs). To skip render, provide optional second "
+        "argument, a path to a pre-rendered catalog JSON file. Option is repeatable.",
     )
     args = parser.parse_args(argv)
 
@@ -54,9 +63,23 @@ def parse_arguments(argv: Optional[List[str]] = None) -> ParsedArgs:
             f"and {BaseConfig.LOG_DAYS_MAX}"
         )
 
+    catalog_args: List[ParsedCatalogArg] = []
+    for catalog_info in args.catalogs:
+        if len(catalog_info) == 1:
+            catalog_args.append(ParsedCatalogArg(image=catalog_info[0], json_file=None))
+        elif len(catalog_info) == 2:
+            catalog_args.append(
+                ParsedCatalogArg(image=catalog_info[0], json_file=catalog_info[1])
+            )
+        else:
+            parser.error(
+                f"argument --catalog-image: requires 1 or 2 arguments, "
+                f"but received {len(catalog_info)}"
+            )
+
     return ParsedArgs(
+        dry_run=args.dry_run,
         debug=args.debug,
         log_days=args.log_days,
-        catalog_json_list=args.catalog_json_list,
-        catalog_image_list=args.catalog_image_list,
+        catalogs=catalog_args,
     )

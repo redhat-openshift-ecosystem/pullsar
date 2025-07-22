@@ -2,9 +2,11 @@ import pytest
 
 from pullsar.operator_bundle_model import (
     extract_image_attributes,
+    extract_catalog_attributes,
     extract_tag,
     OperatorBundle,
     ImageAttributes,
+    CatalogAttributes,
 )
 
 
@@ -38,6 +40,18 @@ def test_extract_tag_no_dot() -> None:
     """Test a name with no version, expecting None."""
     name = "my-operator"
     assert extract_tag(name) is None
+
+
+@pytest.mark.parametrize(
+    ["image", "expected"],
+    [
+        ("community-operators:v4.18", ("community-operators", "v4.18")),
+        ("community-operators", (None, None)),
+        ("community-operators:latest", (None, None)),
+    ],
+)
+def test_extract_catalog_attributes(image: str, expected: CatalogAttributes) -> None:
+    assert extract_catalog_attributes(image) == expected
 
 
 @pytest.fixture
@@ -83,11 +97,12 @@ def test_bundle_initialization_with_digest(digested_bundle: OperatorBundle) -> N
     assert digested_bundle.repo_path == "beta-org/beta-repo"
 
 
-def test_bundle_digest_setter(tagged_bundle: OperatorBundle) -> None:
-    """Test that the digest property can be set correctly."""
+def test_bundle_update_image_digest(tagged_bundle: OperatorBundle) -> None:
+    """Test that the digest and image is set correctly."""
     assert tagged_bundle.digest is None
-    tagged_bundle.digest = "sha256:newdigest"
+    tagged_bundle.update_image_digest("sha256:newdigest")
     assert tagged_bundle.digest == "sha256:newdigest"
+    assert tagged_bundle.image == "quay.io/alpha-org/alpha-repo@sha256:newdigest"
 
 
 def test_bundle_repo_path_none_case() -> None:

@@ -1,8 +1,29 @@
 from typing import Optional, Tuple, Dict
+from datetime import date
 
 ImageAttributes = Tuple[
     Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]
 ]
+CatalogAttributes = Tuple[Optional[str], Optional[str]]
+
+
+def extract_catalog_attributes(catalog_image: str) -> CatalogAttributes:
+    """
+    Parses catalog pullspec for attributes catalog name and OCP version.
+
+    Args:
+        catalog_image (str): format, e.g. <CATALOG_NAME>:<OCP_VERSION>,
+        OCP version 'latest' is not allowed.
+
+    Returns:
+        CatalogAttributes: Tuple with catalog name and OCP version, or both
+        being None if the format is invalid.
+    """
+    if ":" in catalog_image:
+        catalog, ocp_version = catalog_image.split(":", 1)
+        if ocp_version != "latest":
+            return (catalog, ocp_version)
+    return (None, None)
 
 
 def extract_image_attributes(
@@ -66,7 +87,7 @@ class OperatorBundle:
         (self._registry, self._org, self._repo, self._digest, _) = (
             extract_image_attributes(image)
         )
-        self._pull_count: Dict[str, int] = {}
+        self._pull_count: Dict[date, int] = {}
 
     @property
     def name(self) -> str:
@@ -82,6 +103,11 @@ class OperatorBundle:
     def image(self) -> str:
         """The full image pull spec of the operator bundle."""
         return self._image
+
+    @image.setter
+    def image(self, new_image: str):
+        """Sets the image of the operator bundle."""
+        self._image = new_image
 
     @property
     def registry(self) -> Optional[str]:
@@ -127,16 +153,22 @@ class OperatorBundle:
         return None
 
     @property
-    def pull_count(self) -> Dict[str, int]:
+    def pull_count(self) -> Dict[date, int]:
         """
         Accesses pull counts of an operator bundle for specific dates.
 
         Returns:
-            Dict[str, int]: Dictionary of key-value pairs, key being a date,
-            string formatted as: MM/DD/YYYY and value being an integer representing
-            a number of pulls recorded for the operator bundle for that date.
+            Dict[date, int]: Dictionary of key-value pairs, key being a date
+            and value being an integer representing a number of pulls recorded
+            for the operator bundle for that date.
         """
         return self._pull_count
+
+    def update_image_digest(self, new_digest: str):
+        """Updates image URL to have new digest identifier."""
+        if self.repo_path:
+            self.image = f"{self.registry}/{self.repo_path}@{new_digest}"
+            self.digest = new_digest
 
     def __str__(self) -> str:
         return f"""Name: {self.name}

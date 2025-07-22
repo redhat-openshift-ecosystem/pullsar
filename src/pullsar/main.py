@@ -2,10 +2,18 @@
 
 import logging
 
-from pullsar.config import BaseConfig, logger, load_quay_api_tokens
-from pullsar.update_operator_usage_stats import update_operator_usage_stats
+from pullsar.config import (
+    BaseConfig,
+    logger,
+    load_quay_api_tokens,
+    is_database_configured,
+)
+from pullsar.update_operator_usage_stats import (
+    update_operator_usage_stats,
+)
 from pullsar.cli import parse_arguments, ParsedArgs
 from pullsar.quay_client import QuayClient
+from pullsar.db.manager import DatabaseManager
 
 
 def main() -> None:
@@ -23,15 +31,25 @@ def main() -> None:
         base_url=BaseConfig.QUAY_API_BASE_URL, api_tokens=BaseConfig.QUAY_API_TOKENS
     )
 
-    for catalog_json_file in args.catalog_json_list:
-        update_operator_usage_stats(
-            quay_client, args.log_days, catalog_json_file=catalog_json_file
-        )
+    db = None
+    is_db_allowed = is_database_configured() and not args.dry_run
+    try:
+        if is_db_allowed:
+            db = DatabaseManager()
+            db.connect()
 
-    for catalog_image in args.catalog_image_list:
-        update_operator_usage_stats(
-            quay_client, args.log_days, catalog_image=catalog_image
-        )
+        for catalog in args.catalogs:
+            repository_paths = update_operator_usage_stats(
+                quay_client, args.log_days, catalog.image, catalog.json_file
+            )
+
+            if repository_paths and db:
+                db.save_operator_usage_stats(repository_paths, catalog.image)
+    except Exception as e:
+        logger.error(f"A critical error occurred during processing: {e}")
+    finally:
+        if db:
+            db.close()
 
 
 if __name__ == "__main__":  # pragma: no cover
