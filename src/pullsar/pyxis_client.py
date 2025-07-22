@@ -1,7 +1,6 @@
 import requests
 from typing import List, Dict, Any
 from urllib.parse import quote
-
 from requests_kerberos import HTTPKerberosAuth, DISABLED
 
 from pullsar.config import logger
@@ -29,12 +28,17 @@ class PyxisClient:
         """
         encoded_repo = quote(repo_path, safe="")
         endpoint = f"repositories/registry/registry.connect.redhat.com/repository/{encoded_repo}/images"
+        fields = "data.image_id,data.repositories.registry,data.repositories.repository"
 
         all_images = []
         page = 0
         while True:
             api_url = f"{self.base_url}/{endpoint}"
-            params = {"page_size": 100, "page": page}
+            params: Dict[str, str | int] = {
+                "page_size": 100,
+                "page": page,
+                "include": fields,
+            }
             logger.debug(f"Fetching Pyxis data from {api_url} with params: {params}")
 
             try:
