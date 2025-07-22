@@ -15,7 +15,9 @@ class PyxisClient:
         self.session.headers.update({"Accept": "application/json"})
         self.kerberos_auth = HTTPKerberosAuth(mutual_authentication=DISABLED)
 
-    def get_images_for_repository(self, repo_path: str) -> List[Dict[str, Any]]:
+    def get_images_for_repository(
+        self, registry: str, repo_path: str, include: str
+    ) -> List[Dict[str, Any]]:
         """
         Fetches all image data for a given repository from Pyxis.
         Handles pagination automatically.
@@ -27,8 +29,7 @@ class PyxisClient:
             A list of all image data objects from all pages.
         """
         encoded_repo = quote(repo_path, safe="")
-        endpoint = f"repositories/registry/registry.connect.redhat.com/repository/{encoded_repo}/images"
-        fields = "data.image_id,data.repositories.registry,data.repositories.repository"
+        endpoint = f"repositories/registry/{registry}/repository/{encoded_repo}/images"
 
         all_images = []
         page = 0
@@ -37,7 +38,7 @@ class PyxisClient:
             params: Dict[str, str | int] = {
                 "page_size": 100,
                 "page": page,
-                "include": fields,
+                "include": include,
             }
             logger.debug(f"Fetching Pyxis data from {api_url} with params: {params}")
 

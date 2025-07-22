@@ -90,8 +90,15 @@ def resolve_not_quay_repositories(
     logger.info(
         f"Attempting to resolve {len(not_quay_repos_map)} non-Quay repositories via Pyxis..."
     )
+
+    target_registry = "registry.connect.redhat.com"
+    include_fields = (
+        "data.image_id,data.repositories.registry,data.repositories.repository"
+    )
     for repo_path, bundles in not_quay_repos_map.items():
-        pyxis_images = pyxis_client.get_images_for_repository(repo_path)
+        pyxis_images = pyxis_client.get_images_for_repository(
+            target_registry, repo_path, include_fields
+        )
         if not pyxis_images:
             continue
 

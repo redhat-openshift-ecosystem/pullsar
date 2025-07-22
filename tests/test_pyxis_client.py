@@ -28,7 +28,9 @@ def test_get_images_single_page(client: PyxisClient, mocker: MockerFixture) -> N
         client.session, "get", side_effect=[mock_response_page1, mock_response_page2]
     )
 
-    images = client.get_images_for_repository("my-org/my-repo")
+    images = client.get_images_for_repository(
+        "registry.connect.redhat.com", "my-org/my-repo", "data.image_id"
+    )
 
     assert len(images) == 1
     assert images[0]["image_id"] == "abc"
@@ -58,7 +60,9 @@ def test_get_images_with_pagination(client: PyxisClient, mocker: MockerFixture) 
         side_effect=[mock_response_page1, mock_response_page2, mock_response_page3],
     )
 
-    images = client.get_images_for_repository("my-org/my-repo")
+    images = client.get_images_for_repository(
+        "registry.connect.redhat.com", "my-org/my-repo", "data.image_id"
+    )
 
     assert len(images) == 2
     assert images == [{"image_id": "p1"}, {"image_id": "p2"}]
@@ -76,7 +80,9 @@ def test_get_images_request_fails(
         side_effect=requests.exceptions.RequestException("Connection error"),
     )
 
-    images = client.get_images_for_repository("my-org/my-repo")
+    images = client.get_images_for_repository(
+        "registry.connect.redhat.com", "my-org/my-repo", "data.image_id"
+    )
 
     assert images == []
     assert "Pyxis API request failed for repo my-org/my-repo" in caplog.text
@@ -92,7 +98,9 @@ def test_repository_path_encoding(client: PyxisClient, mocker: MockerFixture) ->
     mock_get = mocker.patch.object(client.session, "get", return_value=mock_response)
 
     repo_with_slash = "my-org/my-repo"
-    client.get_images_for_repository(repo_with_slash)
+    client.get_images_for_repository(
+        "registry.connect.redhat.com", repo_with_slash, "data.image_id"
+    )
 
     expected_url = f"{BASE_URL}/repositories/registry/registry.connect.redhat.com/repository/my-org%2Fmy-repo/images"
     called_url = mock_get.call_args.args[0]
