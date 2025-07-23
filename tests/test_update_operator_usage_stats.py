@@ -2,10 +2,13 @@ import pytest
 from pytest_mock import MockerFixture
 from pytest import CaptureFixture
 from datetime import date
+from typing import List
 
 from pullsar import update_operator_usage_stats as stats
 from pullsar.operator_bundle_model import OperatorBundle
 from pullsar.quay_client import QuayClient
+from pullsar.pyxis_client import PyxisClient
+from pullsar.parse_operators_catalog import RepositoryMap
 
 
 @pytest.fixture
@@ -69,6 +72,81 @@ def test_filter_pull_repo_logs() -> None:
     assert len(pull_logs) == 2
     assert pull_logs[0] == {"date": date(2025, 7, 15), "tag": "v1"}
     assert pull_logs[1] == {"date": date(2025, 7, 16), "digest": "sha256:123"}
+
+
+@pytest.fixture
+def bundles_to_translate() -> List[OperatorBundle]:
+    """Provides a sample list of OperatorBundles that need translation."""
+    bundle1 = OperatorBundle(
+        name="op-a.v1",
+        package="op-a",
+        image="registry.connect.redhat.com/connect-org-a/repo-a@sha256:digest1",
+    )
+    bundle2 = OperatorBundle(
+        name="op-b.v1",
+        package="op-b",
+        image="registry.connect.redhat.com/connect-org-b/repo-b@sha256:digest2",
+    )
+    return [bundle1, bundle2]
+
+
+def test_resolve_repositories_success_with_multiple_bundles(
+    mocker: MockerFixture, bundles_to_translate: List[OperatorBundle]
+) -> None:
+    """
+    Tests that multiple non-Quay bundles from different repositories are
+    successfully resolved and updated.
+    """
+    mock_pyxis_client = mocker.Mock(spec=PyxisClient)
+
+    fake_response1 = [
+        {
+            "image_id": "sha256:digest1",
+            "repositories": [
+                {"registry": "quay.io", "repository": "quay-org-a/repo-a"}
+            ],
+        }
+    ]
+    fake_response2 = [
+        {
+            "image_id": "sha256:digest2",
+            "repositories": [
+                {"registry": "quay.io", "repository": "quay-org-b/repo-b"}
+            ],
+        }
+    ]
+
+    mock_pyxis_client.get_images_for_repository.side_effect = [
+        fake_response1,
+        fake_response2,
+    ]
+
+    not_quay_map: RepositoryMap = {
+        "connect-org-a/repo-a": [bundles_to_translate[0]],
+        "connect-org-b/repo-b": [bundles_to_translate[1]],
+    }
+    quay_map: RepositoryMap = {}
+    known_images_map: RepositoryMap = {}
+
+    stats.resolve_not_quay_repositories(
+        mock_pyxis_client, not_quay_map, quay_map, known_images_map
+    )
+
+    assert len(quay_map) == 2
+    assert "quay-org-a/repo-a" in quay_map
+    assert "quay-org-b/repo-b" in quay_map
+
+    bundle_a = quay_map["quay-org-a/repo-a"][0]
+    assert bundle_a.name == "op-a.v1"
+    assert bundle_a.image == "quay.io/quay-org-a/repo-a@sha256:digest1"
+
+    bundle_b = quay_map["quay-org-b/repo-b"][0]
+    assert bundle_b.name == "op-b.v1"
+    assert bundle_b.image == "quay.io/quay-org-b/repo-b@sha256:digest2"
+
+    assert len(known_images_map) == 2
+    assert known_images_map[bundles_to_translate[0].image] == bundle_a.image
+    assert known_images_map[bundles_to_translate[1].image] == bundle_b.image
 
 
 def test_update_image_digests(
@@ -171,7 +249,7 @@ def test_update_operator_usage_stats_flow(mocker: MockerFixture) -> None:
     )
     mock_create_maps = mocker.patch(
         "pullsar.update_operator_usage_stats.create_repository_paths_maps",
-        return_value=({"repo": []}, {"repo": []}),
+        return_value=({"repo": []}, {"repo": []}, {}),
     )
     mock_update_digests = mocker.patch(
         "pullsar.update_operator_usage_stats.update_image_digests"
@@ -183,9 +261,15 @@ def test_update_operator_usage_stats_flow(mocker: MockerFixture) -> None:
         "pullsar.update_operator_usage_stats.print_operator_usage_stats"
     )
     mock_quay_client = mocker.Mock(spec=QuayClient)
+    mock_pyxis_client = mocker.Mock(spec=PyxisClient)
+    mock_pyxis_client.get_images_for_repository.return_value = {"data": []}
 
     stats.update_operator_usage_stats(
-        quay_client=mock_quay_client, log_days=7, catalog_image="my-image:latest"
+        quay_client=mock_quay_client,
+        pyxis_client=mock_pyxis_client,
+        known_image_translations={},
+        log_days=7,
+        catalog_image="my-image:latest",
     )
 
     mock_render.assert_called_once()

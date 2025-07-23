@@ -62,6 +62,7 @@ class BaseConfig(object):
 
     QUAY_API_TOKENS: Dict[str, str] = {}
     QUAY_API_BASE_URL = "https://quay.io/api/v1"
+    PYXIS_API_BASE_URL = "https://pyxis.engineering.redhat.com/v1"
 
     # destination for output rendered JSON operators catalog files
     CATALOG_JSON_FILE = "operators_catalog.json"

@@ -89,8 +89,12 @@ def fake_jq_output() -> str:
         "package": "op-b",
         "image": "quay.io/org-b/repo@sha256:abc",
     }
-    # bundle with registry other than quay.io should be skipped later
-    bundle4 = {"name": "op-c.v1", "package": "op-c", "image": "docker.io/org-c/repo:v1"}
+    # bundle with registry.connect proxy should be in non-quay map
+    bundle4 = {
+        "name": "op-c.v1",
+        "package": "op-c",
+        "image": "registry.connect.redhat.com/org-c/repo:v1",
+    }
 
     return (
         "\n".join(
@@ -116,7 +120,9 @@ def test_create_maps_success(
     mocker.patch("subprocess.run", return_value=mock_process)
     catalog_file = tmp_path / "catalog.json"
 
-    all_map, missing_digest_map = create_repository_paths_maps(str(catalog_file))
+    all_map, missing_digest_map, not_quay_map = create_repository_paths_maps(
+        str(catalog_file), {}
+    )
 
     assert len(all_map) == 2  # two repo paths: org-a/repo and org-b/repo
     assert len(all_map["org-a/repo"]) == 2  # two bundles for this repo
@@ -128,6 +134,10 @@ def test_create_maps_success(
     assert len(missing_digest_map["org-a/repo"]) == 2
     assert "org-b/repo" not in missing_digest_map
 
+    assert len(not_quay_map) == 1
+    assert len(not_quay_map["org-c/repo"]) == 1
+    assert not_quay_map["org-c/repo"][0].registry == "registry.connect.redhat.com"
+
 
 def test_create_maps_jq_not_found(
     mocker: MockerFixture, caplog: LogCaptureFixture
@@ -138,7 +148,7 @@ def test_create_maps_jq_not_found(
     mock_run = mocker.patch("subprocess.run", side_effect=FileNotFoundError)
 
     with pytest.raises(FileNotFoundError):
-        create_repository_paths_maps("catalog.json")
+        create_repository_paths_maps("catalog.json", {})
 
     mock_run.assert_called_once()
     assert "'jq' command not found" in caplog.text
@@ -151,10 +161,13 @@ def test_create_maps_jq_fails(mocker: MockerFixture, caplog: LogCaptureFixture) 
     error = subprocess.CalledProcessError(returncode=1, cmd=["jq", "..."])
     mocker.patch("subprocess.run", side_effect=error)
 
-    all_map, missing_digest_map = create_repository_paths_maps("catalog.json")
+    all_map, missing_digest_map, not_quay_map = create_repository_paths_maps(
+        "catalog.json", {}
+    )
 
     assert all_map == {}
     assert missing_digest_map == {}
+    assert not_quay_map == {}
     assert "Error running jq command" in caplog.text
 
 
@@ -170,7 +183,7 @@ def test_create_maps_malformed_json_line(
     mocker.patch("subprocess.run", return_value=mock_process)
     catalog_file = tmp_path / "catalog.json"
 
-    create_repository_paths_maps(str(catalog_file))
+    create_repository_paths_maps(str(catalog_file), {})
 
     assert "Could not decode JSON" in caplog.text
     assert "Problematic line content: not-json" in caplog.text
@@ -184,8 +197,11 @@ def test_create_maps_generic_exception(
     """
     mocker.patch("subprocess.run", side_effect=Exception("A generic jq error"))
 
-    all_map, missing_digest_map = create_repository_paths_maps("catalog.json")
+    all_map, missing_digest_map, not_quay_map = create_repository_paths_maps(
+        "catalog.json", {}
+    )
 
     assert all_map == {}
     assert missing_digest_map == {}
+    assert not_quay_map == {}
     assert "An unexpected error occurred during jq processing" in caplog.text

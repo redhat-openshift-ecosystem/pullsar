@@ -56,26 +56,30 @@ def render_operator_catalog(catalog_image: str, output_file: str) -> bool:
 
 
 def create_repository_paths_maps(
-    catalog_json_file: str,
-) -> Tuple[RepositoryMap, RepositoryMap]:
+    catalog_json_file: str, known_image_translations: Dict[str, str]
+) -> Tuple[RepositoryMap, RepositoryMap, RepositoryMap]:
     """
     Parses rendered JSON operators catalog and creates mappings between
-    all the Quay repository paths and lists of the operator bundle versions
+    all the repository paths and lists of the operator bundle versions
     that are tied with these repositories.
 
     Args:
         catalog_json_file (str): Rendered JSON catalog of operators.
+        known_image_translations (Tuple[str, str]): mapping from non-quay image to quay image
 
     Returns:
-        Tuple[RepositoryMap, RepositoryMap]: Two dictionaries with key-value pairs,
-        key being a Quay repository path e.g. org/repo and value being a list
+        Tuple[RepositoryMap, RepositoryMap, RepositoryMap]: Three dictionaries with key-value pairs,
+        key being a repository path e.g. org/repo and value being a list
         of OperatorBundle objects, images of which are available in these repositories.
-        First dictionary contains all repositories with all of their operator bundles
-        Second dictionary contains only repositories and their operator bundles with undefined digests
-        (digests for these need to be looked up using Quay API before moving on).
+        First dictionary contains all Quay repositories with all of their operator bundles.
+        Second dictionary contains only Quay repositories and their operator bundles with undefined
+        digests (digests for these need to be looked up using Quay API before moving on).
+        Third dictionary contains all non-Quay repositories with all of their operator
+        bundles (these can be translated to equivalent Quay repositories in some cases).
     """
     repository_paths_map: RepositoryMap = {}
     repository_paths_map_missing_digest: RepositoryMap = {}
+    repository_paths_map_not_quay: RepositoryMap = {}
 
     # select all bundle objects and make the output compact (-c ... one line, one item)
     # so we can easily process the output line by line, item by item and create
@@ -104,13 +108,27 @@ def create_repository_paths_maps(
                     name=item["name"], package=item["package"], image=item["image"]
                 )
 
-                quay_repo_path = operator.repo_path
-                if quay_repo_path:
-                    repository_paths_map.setdefault(quay_repo_path, []).append(operator)
-                    if operator.digest is None:
-                        repository_paths_map_missing_digest.setdefault(
-                            quay_repo_path, []
-                        ).append(operator)
+                repo_path = operator.repo_path
+                if repo_path:
+                    if operator.registry == "quay.io":
+                        repository_paths_map.setdefault(repo_path, []).append(operator)
+                        if operator.digest is None:
+                            repository_paths_map_missing_digest.setdefault(
+                                repo_path, []
+                            ).append(operator)
+                    elif known_image_translations.get(operator.image):
+                        new_bundle = OperatorBundle(
+                            operator.name,
+                            operator.package,
+                            known_image_translations[operator.image],
+                        )
+                        repository_paths_map.setdefault(repo_path, []).append(
+                            new_bundle
+                        )
+                    elif operator.registry == "registry.connect.redhat.com":
+                        repository_paths_map_not_quay.setdefault(repo_path, []).append(
+                            operator
+                        )
             else:
                 logger.warning(
                     f"Item on line {line_num} is missing some of the attributes "
@@ -121,7 +139,11 @@ def create_repository_paths_maps(
             f"Successfully identified {len(repository_paths_map)} repository paths "
             "and a list of their operator bundles from jq output."
         )
-        return (repository_paths_map, repository_paths_map_missing_digest)
+        return (
+            repository_paths_map,
+            repository_paths_map_missing_digest,
+            repository_paths_map_not_quay,
+        )
 
     except FileNotFoundError:
         logger.error(
@@ -134,11 +156,11 @@ def create_repository_paths_maps(
         logger.debug(f"Stdout:\n{error.stdout}...")
         logger.error(f"Stderr:\n{error.stderr}")
         logger.info(f"Skipping catalog {catalog_json_file}...")
-        return ({}, {})
+        return ({}, {}, {})
 
     except Exception as exception:
         logger.error(
             f"An unexpected error occurred during jq processing or operator creation: {exception}"
         )
         logger.info(f"Skipping catalog {catalog_json_file}...")
-        return ({}, {})
+        return ({}, {}, {})
