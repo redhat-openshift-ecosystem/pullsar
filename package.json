@@ -1,0 +1,21 @@
+{
+  "name": "pullsar",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+
+    "api:dev": "pnpm --filter api dev",
+    "web:dev": "pnpm --filter web dev",
+	"worker:run": "cd apps/worker && poetry run pullsar"
+  },
+	"dependencies": {
+		"pnpm": "^10.13.1"
+	},
+	"devDependencies": {
+		"turbo": "^2.5.5"
+	},
+	"packageManager": "pnpm@10.13.1"
+}
