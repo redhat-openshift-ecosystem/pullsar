@@ -38,7 +38,7 @@ podman-compose up -d
 ## Web and API testing:
 ### 1. run web and API:
 - serves web static files at `localhost:5173`
-- REST API at `localhost:8000/api/v1`
+- REST API at `localhost:8000/api/v1/`
 ```
 pnpm dev
 ```
@@ -60,7 +60,7 @@ podman build -t pullsar-app:1.0 -f Containerfile .
 ```
 ### 2. run web and REST API:
 - serves web static files at root `localhost:8000`
-- REST API at `localhost:8000/api/v1`
+- REST API at `localhost:8000/api/v1/`
 ```
 podman run --name pullsar-webapp -p 8000:8000 pullsar-app:1.0
 ```
