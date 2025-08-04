@@ -8,12 +8,12 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     server: {
-      host: true, 
+      host: true,
       proxy: {
         '/api': {
           target: env.VITE_API_PROXY_TARGET || 'http://api:8000',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
+          rewrite: (path) => path.replace(/^\/api/, ''),
         },
       },
     },
