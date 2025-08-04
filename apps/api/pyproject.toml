@@ -1,9 +1,7 @@
 [project]
 name = "app"
 version = "0.1.0"
-
 description = "The FastAPI backend for the Pullsar web application."
-
 authors = [{name = "Jakub Durkac", email = "jakubdurkac@gmail.com"}]
 
 license = {text = "Apache-2.0"}

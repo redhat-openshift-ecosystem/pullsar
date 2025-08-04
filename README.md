@@ -8,19 +8,14 @@ for Openshift operators easily accessible to the users.
 2. [REST API](./apps/api/README.md) that serves aggregated operator usage statistics from the database.
 3. [Web](./apps/web/README.md) frontend that displays the statistics in a user friendly form.
 
-## Web and API development setup:
+## Setup:
 ### 1. clone the repository:
 ```
 git clone https://github.com/redhat-openshift-ecosystem/pullsar.git
 cd pullsar
 ```
 
-### 2. install dependencies:
-```
-pnpm install
-```
-
-### 3. create a file named `.env` with your configuration (see file `.env.example`):
+### 2. create a file named `.env` with your configuration (see file `.env.example`):
 - set PostgreSQL database configuration:
 ```
 DB_NAME="pullsar_db"
@@ -30,20 +25,32 @@ DB_HOST="localhost"
 DB_PORT="5432"
 ```
 
-### 4. start local Postgres database (optional):
+### 3. start services (web, API, database):
 ```
 podman-compose up -d
 ```
+- serves web static files at root `localhost:5173`
+- REST API at both `localhost:8000/v1/` and `localhost:5173/api/v1/`
 
-## Web and API testing:
-### 1. run web and API:
-- serves web static files at `localhost:5173`
-- REST API at `localhost:8000/api/v1/`
+## For developers, test API and web with pnpm:
+### 1. install dependencies:
+```
+pnpm install
+```
+
+### 2. create `/apps/web/.env` to allow forwarding of requests to API:
+```
+VITE_API_PROXY_TARGET="http://localhost:8000"
+```
+
+### 3. run web and API:
 ```
 pnpm dev
 ```
+- serves web static files at root `localhost:5173`
+- REST API at both `localhost:8000/v1/` and `localhost:5173/api/v1/`
 
-### 2. run tests:
+### 4. run tests:
 ```
 pnpm test
 ```
@@ -53,20 +60,15 @@ pnpm test
 pnpm worker:run -- --help
 ```
 
-## Build using Containerfile:
+## Build worker using Containerfile:
 ### 1. build image:
 ```
-podman build -t pullsar-app:1.0 -f Containerfile .
+podman build -t pullsar-worker:1.0 -f ./apps/worker/Containerfile .
 ```
-### 2. run web and REST API:
-- serves web static files at root `localhost:8000`
-- REST API at `localhost:8000/api/v1/`
+
+### 2. run worker:
 ```
-podman run --name pullsar-webapp -p 8000:8000 pullsar-app:1.0
-```
-### 3. run worker:
-```
-podman run --rm --env-file .env pullsar-app:1.0 pullsar --help
+podman run --rm --env-file .env pullsar-worker:1.0 poetry run pullsar --help
 ```
 
 ## License
