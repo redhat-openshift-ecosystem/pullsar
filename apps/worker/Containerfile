@@ -1,0 +1,15 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y curl jq build-essential libkrb5-dev && \
+    curl -L https://github.com/operator-framework/operator-registry/releases/download/v1.33.0/linux-amd64-opm -o /usr/local/bin/opm && \
+    chmod +x /usr/local/bin/opm && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN pip install poetry
+
+COPY ./apps/worker/pyproject.toml ./apps/worker/poetry.lock ./apps/worker/README.md ./
+COPY ./apps/worker/src ./src
+
+RUN poetry install --without dev

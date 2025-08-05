@@ -1,0 +1,30 @@
+[project]
+name = "app"
+version = "0.1.0"
+description = "The FastAPI backend for the Pullsar web application."
+authors = [{name = "Jakub Durkac", email = "jakubdurkac@gmail.com"}]
+
+license = {text = "Apache-2.0"}
+readme = "README.md"
+packages = [{include = "app", from = "src"}]
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+fastapi = "^0.116.1"
+uvicorn = "^0.35.0"
+psycopg2-binary = "^2.9.10"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.12.1"
+pytest = "^8.4.1"
+mypy = "^1.16.1"
+tox = "^4.27.0"
+pytest-cov = "^6.2.1"
+types-psycopg2 = "^2.9.21.20250516"
+
+[tool.poetry.scripts]
+test = "tox"

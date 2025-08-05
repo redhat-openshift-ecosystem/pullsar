@@ -9,23 +9,44 @@ on:
   workflow_dispatch:
 
 jobs:
-  tox:
+  test-and-lint:
     name: Run unit tests and linters
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
-      - name: Install Kerberos development libraries
-        run: sudo apt-get update && sudo apt-get install -y libkrb5-dev
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js with pnpm caching
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
 
       - name: Install Poetry
         uses: snok/install-poetry@v1.4.1
 
-      - name: Install dependencies
-        run: |
-          poetry install --no-interaction --no-root
+      - name: Install Kerberos development libraries for worker
+        run: sudo apt-get update && sudo apt-get install -y libkrb5-dev
 
-      - name: Run Tests
-        run: |
-          poetry run tox
+      - name: Install root and web app dependencies
+        run: pnpm install
+
+      - name: Install Python dependencies for worker
+        run: poetry install --no-interaction --no-root
+        working-directory: ./apps/worker
+
+      - name: Install Python dependencies for api
+        run: poetry install --no-interaction --no-root
+        working-directory: ./apps/api
+
+      - name: Run linters for all apps
+        run: pnpm lint
+
+      - name: Run tests for all apps
+        run: pnpm test
+
+      - name: Build all apps
+        run: pnpm build

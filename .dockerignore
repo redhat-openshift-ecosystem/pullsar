@@ -1,0 +1,24 @@
+# configuration
+.env
+.env.*
+*.env
+
+# git
+.git
+.github
+.gitignore
+
+# web
+node_modules/
+dist/
+
+# Python
+.mypy_cache/
+.ruff_cache/
+.tox/
+__pycache__/
+.coverage
+
+# other
+.turbo/
+.vscode/
