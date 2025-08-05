@@ -29,8 +29,8 @@ DB_PORT="5432"
 ```
 podman-compose up -d
 ```
-- serves web static files at root `localhost:5173`
-- REST API at both `localhost:8000/v1/` and `localhost:5173/api/v1/`
+- serves web static files at root `localhost:8080`
+- REST API at both `localhost:8000/v1/` and `localhost:8080/api/v1/`
 
 ## For developers, test API and web with pnpm:
 ### 1. install dependencies:
