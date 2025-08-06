@@ -1,11 +1,12 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { ThemeProvider } from '../contexts/theme-context'
 
 export const Route = createRootRoute({
   component: () => (
     <>
-      <main>
+      <ThemeProvider>
         <Outlet />
-      </main>
+      </ThemeProvider>
     </>
   ),
 })

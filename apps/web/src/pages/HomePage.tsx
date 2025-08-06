@@ -1,7 +1,9 @@
 import { useSearch, Link } from '@tanstack/react-router'
+import { useTheme } from '../contexts/theme-context'
 
 export function HomePage() {
   const { ocp_version, start_date, end_date } = useSearch({ from: '/' })
+  const { theme, toggleTheme } = useTheme()
 
   return (
     <div>
@@ -15,6 +17,12 @@ export function HomePage() {
       <Link to="/dashboard" className="text-blue-500 hover:underline">
         Go to Dashboard
       </Link>
+      <button
+        onClick={toggleTheme}
+        className="rounded-md bg-primary py-2 text-primary-foreground transition-colors hover:bg-primary/90"
+      >
+        Toggle Theme
+      </button>
     </div>
   )
 }
