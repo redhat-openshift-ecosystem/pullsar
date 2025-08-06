@@ -4,6 +4,15 @@ from typing import Any, Optional, Sequence
 import textwrap
 
 
+def get_ocp_versions(db: cursor) -> list[str]:
+    """Fetches a list of unique OCP versions from the database, sorted descending."""
+    query = (
+        "SELECT DISTINCT ocp_version FROM bundle_appearances ORDER BY ocp_version DESC;"
+    )
+    db.execute(query)
+    return [row[0] for row in db.fetchall()]
+
+
 def get_summary_stats(db: cursor) -> dict[str, int]:
     """
     Queries the database to get high-level summary statistics.

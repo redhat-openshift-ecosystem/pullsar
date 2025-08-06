@@ -12,10 +12,11 @@
   "dependencies": {
     "@tanstack/react-router": "^1.130.12",
     "@tanstack/react-router-devtools": "^1.130.13",
+    "@tanstack/zod-adapter": "^1.130.12",
     "prettier": "^3.6.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "zod": "^4.0.14"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

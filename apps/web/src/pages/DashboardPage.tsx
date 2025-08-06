@@ -6,7 +6,7 @@ export function DashboardPage() {
       <h1>Statistics Dashboard</h1>
       <p>This is where the main dashboard will be.</p>
       <br />
-      <Link to="/" search={{}} className="text-blue-500 hover:underline">
+      <Link to="/" className="text-blue-500 hover:underline">
         Go back to Home
       </Link>
     </div>

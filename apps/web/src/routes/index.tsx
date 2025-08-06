@@ -1,14 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { z } from 'zod'
+import { createFileRoute, stripSearchParams } from '@tanstack/react-router'
 import { HomePage } from '../pages/HomePage'
-
-const homeSearchSchema = z.object({
-  ocp_version: z.string().optional(),
-  start_date: z.string().optional(),
-  end_date: z.string().optional(),
-})
+import { homePageSearchDefaults, homePageSearchSchema } from '../utils/schemas'
+import { zodValidator } from '@tanstack/zod-adapter'
 
 export const Route = createFileRoute('/')({
-  validateSearch: (search) => homeSearchSchema.parse(search),
+  validateSearch: zodValidator(homePageSearchSchema),
+  search: {
+    middlewares: [stripSearchParams(homePageSearchDefaults)],
+  },
   component: HomePage,
 })

@@ -7,10 +7,13 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
-    plugins: [ tanstackRouter({
-      target: 'react',
-      autoCodeSplitting: true,
-    }), react()],
+    plugins: [
+      tanstackRouter({
+        target: 'react',
+        autoCodeSplitting: true,
+      }),
+      react(),
+    ],
     server: {
       host: true,
       proxy: {

@@ -18,6 +18,12 @@ def read_api_root():
     return {"message": "Welcome to the Pullsar API"}
 
 
+@router.get("/ocp-versions", response_model=list[str])
+def read_ocp_versions(db: cursor = Depends(get_db_cursor)):
+    """Retrieves a list of all available OCP versions in the database."""
+    return crud.get_ocp_versions(db)
+
+
 @router.get("/summary", response_model=schemas.SummaryStats)
 def read_summary_stats(db: cursor = Depends(get_db_cursor)):
     """Retrieves total numbers of recorded catalogs, packages, bundles and pulls."""
