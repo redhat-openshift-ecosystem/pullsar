@@ -44,8 +44,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* custom variables */
-  --color-from-blue-400: var(--from-blue-400);
-  --color-from-indigo-900: var(--from-indigo-900);
+  --color-custom-background: var(--custom-background);
   --color-catalogs-icon: var(--catalogs-icon);
   --color-packages-icon: var(--packages-icon);
   --color-bundles-icon: var(--bundles-icon);
@@ -86,8 +85,7 @@
   --ring: #0284c7;
 
   /* custom variables */
-  --from-blue-400: #7da6ff;
-  --from-indigo-900: #312e81;
+  --custom-background: #7da6ff;
   --catalogs-icon: #0ea5e9;
   --packages-icon: #14b8a6;
   --bundles-icon: #10b981;
@@ -142,8 +140,7 @@
   --ring: #818cf8;
 
   /* custom variables */
-  --from-blue-400: #7da6ff;
-  --from-indigo-900: #312e81;
+  --custom-background: #312e81;
   --catalogs-icon: #0ea5e9;
   --packages-icon: #14b8a6;
   --bundles-icon: #10b981;

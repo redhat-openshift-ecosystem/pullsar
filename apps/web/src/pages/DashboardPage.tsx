@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useTheme } from '../contexts/theme-context'
+import { Button } from '../components/ui/button'
 
 export function DashboardPage() {
   const { theme, toggleTheme } = useTheme()
@@ -11,12 +12,7 @@ export function DashboardPage() {
       <Link to="/" className="text-blue-500 hover:underline">
         Go back to Home
       </Link>
-      <button
-        onClick={toggleTheme}
-        className="rounded-md bg-primary py-2 text-primary-foreground transition-colors hover:bg-primary/90"
-      >
-        Toggle Theme
-      </button>
+      <Button onClick={toggleTheme}>Toggle Theme</Button>
     </div>
   )
 }
