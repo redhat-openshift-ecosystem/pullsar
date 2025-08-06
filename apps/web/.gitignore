@@ -24,3 +24,7 @@ routeTree.gen.ts
 *.njsproj
 *.sln
 *.sw?
+
+# shadcn
+!components.json
+!src/lib

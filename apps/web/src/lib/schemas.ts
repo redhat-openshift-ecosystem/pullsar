@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { daysAgo } from './utils'
+import { daysAgo } from '../lib/utils'
 
 const zodDateString = z
   .string()

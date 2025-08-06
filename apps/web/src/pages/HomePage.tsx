@@ -5,7 +5,9 @@ export function HomePage() {
 
   return (
     <div>
-      <h1>Welcome to the Pullsar Homepage</h1>
+      <h1 className="text-xl font-bold text-cyan-400 underline bg-red-50">
+        Welcome to the Pullsar Homepage
+      </h1>
       <p>Currently viewing stats for OCP Version: {ocp_version}</p>
       <p>Start Date: {start_date || 'Not set'}</p>
       <p>End Date: {end_date || 'Not set'}</p>
