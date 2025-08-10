@@ -24,6 +24,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
+  --color-summary-accent: var(--summary-accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
@@ -71,13 +72,14 @@
   --card-foreground: #1f2937;
   --popover: #ffffff;
   --popover-foreground: #1f2937;
-  --primary: #1f2937; /* text-primary-light */
+  --primary: #133a70; /* text-primary-light */
   --primary-foreground: #ffffff; /* text-header-light */
-  --secondary: #585858; /* text-secondary-light */
+  --secondary: #355188; /* text-secondary-light */
   --secondary-foreground: #ffffff;
-  --muted: #585858; /* text-secondary-light */
+  --muted: #5b7192; /* text-secondary-light */
   --muted-foreground: #1f2937;
   --accent: #0284c7;
+  --summary-accent: #0284c7;
   --accent-foreground: #ffffff;
   --destructive: #ef4444; /* trend-down */
   --border: #5d9dd0;
@@ -133,6 +135,7 @@
   --muted: #9ca3af; /* text-secondary-dark */
   --muted-foreground: #dfdfdf;
   --accent: #818cf8;
+  --summary-accent: #dfdfdf;
   --accent-foreground: #111827;
   --destructive: #ef4444; /* trend-down */
   --border: #474755;
