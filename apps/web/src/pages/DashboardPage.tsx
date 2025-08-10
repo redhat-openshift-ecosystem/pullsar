@@ -3,7 +3,7 @@ import { useTheme } from '../contexts/theme-context'
 import { Button } from '../components/ui/button'
 
 export function DashboardPage() {
-  const { theme, toggleTheme } = useTheme()
+  const { toggleTheme } = useTheme()
   return (
     <div>
       <h1>Statistics Dashboard</h1>

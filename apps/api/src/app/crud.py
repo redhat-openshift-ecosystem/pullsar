@@ -1,5 +1,5 @@
 from psycopg2.extensions import cursor
-from datetime import date
+from datetime import date, timedelta
 from typing import Any, Optional, Sequence
 import textwrap
 
@@ -14,15 +14,7 @@ def get_ocp_versions(db: cursor) -> list[str]:
 
 
 def get_summary_stats(db: cursor) -> dict[str, int]:
-    """
-    Queries the database to get high-level summary statistics.
-
-    Args:
-        db (cursor): An active database cursor.
-
-    Returns:
-        A dictionary containing the summary statistics.
-    """
+    """Queries the database to get high-level summary statistics."""
     query = textwrap.dedent("""
         SELECT
             (SELECT COUNT(DISTINCT catalog_name) FROM bundle_appearances),
@@ -44,13 +36,29 @@ def get_summary_stats(db: cursor) -> dict[str, int]:
     }
 
 
-def _calculate_trend(start: int, end: int) -> float:
+def _calculate_trend(start: int, end: int) -> Optional[float]:
     """Utility to calculate percentage trend between two values."""
     if start > 0:
         return ((end - start) / start) * 100
     elif end > 0:
-        return float("inf")
+        return None
     return 0.0
+
+
+def _fill_date_gaps(
+    sparse_data: list[dict[str, Any]], start_date: date, end_date: date
+) -> list[dict[str, Any]]:
+    """Fills missing dates in a time-series with zero pulls."""
+    pulls_map = {item["date"]: item["pulls"] for item in sparse_data}
+    complete_data = []
+    current_date = start_date
+    while current_date <= end_date:
+        formatted_date = current_date.strftime("%b %d")
+        complete_data.append(
+            {"date": formatted_date, "pulls": pulls_map.get(formatted_date, 0)}
+        )
+        current_date += timedelta(days=1)
+    return complete_data
 
 
 def get_overall_pulls(
@@ -78,38 +86,38 @@ def get_overall_pulls(
     db.execute(query, params)
     results = db.fetchall()
 
-    if not results:
-        return {"total_pulls": 0, "trend": 0.0, "chart_data": []}
-
-    chart_data = [
+    sparse_chart_data = [
         {"date": row[0].strftime("%b %d"), "pulls": int(row[1])} for row in results
     ]
+
+    chart_data = _fill_date_gaps(sparse_chart_data, start_date, end_date)
+
+    if not chart_data:
+        return {"total_pulls": 0, "trend": 0.0, "chart_data": []}
+
     total_pulls = sum(item["pulls"] for item in chart_data)
     trend = _calculate_trend(chart_data[0]["pulls"], chart_data[-1]["pulls"])
 
     return {"total_pulls": total_pulls, "trend": trend, "chart_data": chart_data}
 
 
-def _process_grouped_results(results: Sequence[tuple]) -> list[dict[str, Any]]:
-    """
-    Converts grouped SQL results into structured dict format with chart data and stats.
-    Each result row: (item_name, pull_date, pull_count)
-    """
+def _process_grouped_results(
+    results: Sequence[tuple], start_date: date, end_date: date
+) -> list[dict[str, Any]]:
+    """Converts grouped SQL results into a structured dict with complete chart data."""
     if not results:
         return []
 
     grouped_data: dict[str, list[dict[str, Any]]] = {}
-
     for name, pull_date, daily_pulls in results:
         grouped_data.setdefault(name, []).append(
-            {
-                "date": pull_date.strftime("%b %d"),
-                "pulls": int(daily_pulls),
-            }
+            {"date": pull_date.strftime("%b %d"), "pulls": int(daily_pulls)}
         )
 
     response = []
-    for name, chart_data in grouped_data.items():
+    for name, sparse_chart_data in grouped_data.items():
+        chart_data = _fill_date_gaps(sparse_chart_data, start_date, end_date)
+
         total_pulls = sum(item["pulls"] for item in chart_data)
         trend = _calculate_trend(chart_data[0]["pulls"], chart_data[-1]["pulls"])
 
@@ -136,33 +144,22 @@ def get_items_with_stats(
     catalog_name: Optional[str] = None,
     package_name: Optional[str] = None,
 ) -> list[dict[str, Any]]:
-    """
-    Unified fetch for catalog/package/bundle stats in a date range.
-    Optionally filter by catalog/package.
-    """
+    """Unified fetch for catalog/package/bundle stats in a date range."""
     level_column_map = {
         "catalog": "ba.catalog_name",
         "package": "b.package",
         "bundle": "b.name",
     }
-
     if level not in level_column_map:
         raise ValueError("Invalid level: must be 'catalog', 'package', or 'bundle'.")
 
     group_by_column = level_column_map[level]
 
-    query = textwrap.dedent(f"""
-        SELECT
-            {group_by_column},
-            pc.pull_date,
-            SUM(pc.pull_count) AS daily_pulls
-        FROM pull_counts pc
-        JOIN bundle_appearances ba ON pc.bundle_id = ba.bundle_id
-        JOIN bundles b ON pc.bundle_id = b.id
-        WHERE ba.ocp_version = %(ocp_version)s
-          AND pc.pull_date BETWEEN %(start_date)s AND %(end_date)s
-    """)
-
+    query_parts = [
+        f"SELECT {group_by_column}, pc.pull_date, SUM(pc.pull_count) AS daily_pulls",
+        "FROM pull_counts pc JOIN bundle_appearances ba ON pc.bundle_id = ba.bundle_id JOIN bundles b ON pc.bundle_id = b.id",
+        "WHERE ba.ocp_version = %(ocp_version)s AND pc.pull_date BETWEEN %(start_date)s AND %(end_date)s",
+    ]
     params: dict[str, Any] = {
         "ocp_version": ocp_version,
         "start_date": start_date,
@@ -170,16 +167,15 @@ def get_items_with_stats(
     }
 
     if catalog_name:
-        query += " AND ba.catalog_name = %(catalog_name)s"
+        query_parts.append("AND ba.catalog_name = %(catalog_name)s")
         params["catalog_name"] = catalog_name
     if package_name:
-        query += " AND b.package = %(package_name)s"
+        query_parts.append("AND b.package = %(package_name)s")
         params["package_name"] = package_name
 
-    query += f"""
-        GROUP BY {group_by_column}, pc.pull_date
-        ORDER BY {group_by_column}, pc.pull_date
-    """
+    query_parts.append(
+        f"GROUP BY {group_by_column}, pc.pull_date ORDER BY {group_by_column}, pc.pull_date"
+    )
 
-    db.execute(query, params)
-    return _process_grouped_results(db.fetchall())
+    db.execute(" ".join(query_parts), params)
+    return _process_grouped_results(db.fetchall(), start_date, end_date)

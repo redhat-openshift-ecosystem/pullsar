@@ -1,32 +1,33 @@
-import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, ArrowUpRight } from 'lucide-react'
 
 interface Props {
-  trend: number
+  trend?: number
 }
 
 export const TrendIndicator = ({ trend }: Props) => {
-  if (trend === Infinity)
+  if (!trend && trend !== 0)
     return (
       <span className="text-sm font-medium text-accent flex items-center">
         New Activity
       </span>
     )
-  if (trend === 0)
-    return (
-      <span className="text-sm font-medium text-secondary flex items-center">
-        Stable
-      </span>
-    )
-  const isPositive = trend >= 0
-  const color = isPositive ? 'text-trend-up' : 'text-trend-down'
-  const Icon = isPositive ? ArrowUpRight : ArrowDownRight
+
+  let color = 'text-trend-stable'
+  let Icon = ArrowRight
+
+  if (trend > 0) {
+    color = 'text-trend-up'
+    Icon = ArrowUpRight
+  } else if (trend < 0) {
+    color = 'text-trend-down'
+    Icon = ArrowDownRight
+  }
 
   return (
     <span
       className={`text-2xl lg:text-3xl font-bold flex items-center ${color}`}
     >
       <Icon className="w-8 h-8 mr-2" />
-      {isPositive ? '+' : ''}
       {trend.toFixed(1)}%
     </span>
   )

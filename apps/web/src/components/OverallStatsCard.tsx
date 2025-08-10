@@ -8,7 +8,7 @@ import { useNavigate } from '@tanstack/react-router'
 
 interface Props {
   totalPulls: number
-  trend: number
+  trend?: number
   chartData: {
     date: string
     pulls: number
@@ -68,7 +68,7 @@ export const OverallStatsCard = ({
             </p>
             <p className="text-sm text-secondary">Total Pulls</p>
           </div>
-          <div>
+          <div className="flex flex-col items-center">
             <TrendIndicator trend={trend} />
             <p className="text-sm text-secondary">Trend</p>
           </div>

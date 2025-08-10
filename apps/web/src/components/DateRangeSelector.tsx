@@ -12,6 +12,7 @@ interface Props {
 }
 
 export function DateRangeSelector({ dateRange, onDateChange }: Props) {
+  const [isOpen, setIsOpen] = useState(false)
   const [range, setRange] = useState<DateRange | undefined>(() => {
     return dateRange.from && dateRange.to
       ? { from: parseISO(dateRange.from), to: parseISO(dateRange.to) }
@@ -24,12 +25,19 @@ export function DateRangeSelector({ dateRange, onDateChange }: Props) {
     }
   }, [dateRange])
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onDateChange(range)
+    }
+    setIsOpen(open)
+  }
+
   return (
     <div>
       <label className="block text-sm font-medium text-secondary mb-1">
         Date Range
       </label>
-      <Popover>
+      <Popover open={isOpen} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -45,10 +53,7 @@ export function DateRangeSelector({ dateRange, onDateChange }: Props) {
           <Calendar
             mode="range"
             selected={range}
-            onSelect={(selectedRange) => {
-              setRange(selectedRange)
-              onDateChange(selectedRange)
-            }}
+            onSelect={(selectedRange) => setRange(selectedRange)}
             numberOfMonths={1}
           />
         </PopoverContent>
