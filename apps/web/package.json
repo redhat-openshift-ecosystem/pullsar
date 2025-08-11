@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "generate-routes": "tsr generate",
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "pnpm run generate-routes && tsc -b && vite build",
     "lint": "eslint . && prettier --check .",
     "preview": "vite preview"
   },
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@eslint/js": "^9.30.1",
     "@tailwindcss/postcss": "^4.1.11",
+    "@tanstack/router-cli": "^1.131.5",
     "@tanstack/router-plugin": "^1.130.15",
     "@types/node": "^24.2.0",
     "@types/react": "^19.1.8",
