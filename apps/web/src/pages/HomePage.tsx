@@ -58,58 +58,52 @@ export function HomePage() {
             OpenShift operators based on Quay.io logs
           </p>
         </div>
-        {isLoadingSummaryStats ? (
-          <div>Loading...</div>
-        ) : (
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 pb-16">
-            <SummaryStatsCard
-              icon={BookOpen}
-              iconColorClass="text-catalogs-icon"
-              iconBackgroundColorClass="bg-bg-catalogs-icon/20"
-              label="Catalogs Tracked"
-              value={summaryStatsData?.total_catalogs || 0}
-            />
-            <SummaryStatsCard
-              icon={Package}
-              iconColorClass="text-packages-icon"
-              iconBackgroundColorClass="bg-bg-packages-icon/20"
-              label="Unique Packages"
-              value={summaryStatsData?.total_packages || 0}
-            />
-            <SummaryStatsCard
-              icon={Box}
-              iconColorClass="text-bundles-icon"
-              iconBackgroundColorClass="bg-bg-bundles-icon/20"
-              label="Total Bundles"
-              value={summaryStatsData?.total_bundles || 0}
-            />
-            <SummaryStatsCard
-              icon={BarChart3}
-              iconColorClass="text-pulls-icon"
-              iconBackgroundColorClass="bg-bg-pulls-icon/20"
-              label="Pulls Recorded"
-              value={summaryStatsData?.total_pulls || 0}
-            />
-          </div>
-        )}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 pb-16">
+          <SummaryStatsCard
+            icon={BookOpen}
+            iconColorClass="text-catalogs-icon"
+            iconBackgroundColorClass="bg-bg-catalogs-icon/20"
+            label="Catalogs Tracked"
+            value={summaryStatsData?.total_catalogs}
+            isLoading={isLoadingSummaryStats}
+          />
+          <SummaryStatsCard
+            icon={Package}
+            iconColorClass="text-packages-icon"
+            iconBackgroundColorClass="bg-bg-packages-icon/20"
+            label="Unique Packages"
+            value={summaryStatsData?.total_packages}
+            isLoading={isLoadingSummaryStats}
+          />
+          <SummaryStatsCard
+            icon={Box}
+            iconColorClass="text-bundles-icon"
+            iconBackgroundColorClass="bg-bg-bundles-icon/20"
+            label="Total Bundles"
+            value={summaryStatsData?.total_bundles}
+            isLoading={isLoadingSummaryStats}
+          />
+          <SummaryStatsCard
+            icon={BarChart3}
+            iconColorClass="text-pulls-icon"
+            iconBackgroundColorClass="bg-bg-pulls-icon/20"
+            label="Pulls Recorded"
+            value={summaryStatsData?.total_pulls}
+            isLoading={isLoadingSummaryStats}
+          />
+        </div>
       </div>
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <main className="pb-16 -mt-8">
-          {isLoadingOcpVersions || isLoadingOverallData || !overallData ? (
-            <div>Loading...</div>
-          ) : (
-            <OverallStatsCard
-              totalPulls={overallData.total_pulls}
-              trend={overallData.trend}
-              chartData={overallData.chart_data}
-              availableOcpVersions={availableOcpVersions ?? []}
-              currentOcpVersion={ocp_version}
-              currentDateRange={{ from: start_date, to: end_date }}
-              handleOcpVersionChange={handleOcpVersionChange}
-              handleDateChange={handleDateChange}
-            />
-          )}
-
+          <OverallStatsCard
+            overallData={overallData}
+            availableOcpVersions={availableOcpVersions ?? []}
+            currentOcpVersion={ocp_version}
+            currentDateRange={{ from: start_date, to: end_date }}
+            handleOcpVersionChange={handleOcpVersionChange}
+            handleDateChange={handleDateChange}
+            isLoading={isLoadingOcpVersions || isLoadingOverallData}
+          />
           <div className="mt-16">
             <ComparisonTutorial />
           </div>
