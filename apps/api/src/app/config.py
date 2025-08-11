@@ -2,6 +2,7 @@ import os
 import logging
 from dotenv import load_dotenv
 from dataclasses import dataclass
+from typing import Optional
 
 
 # set up logging
@@ -13,11 +14,11 @@ logger = logging.getLogger("PULLSAR_API")
 class DBConfig:
     """A dataclass to hold database connection details."""
 
-    dbname: str
-    user: str
-    password: str
-    host: str
-    port: int
+    dbname: Optional[str] = None
+    user: Optional[str] = None
+    password: Optional[str] = None
+    host: Optional[str] = None
+    port: Optional[int] = None
 
 
 class BaseConfig(object):
@@ -30,9 +31,9 @@ class BaseConfig(object):
 
     # PostgreSQL configuration
     DB_CONFIG = DBConfig(
-        dbname=os.environ["DB_NAME"],
-        user=os.environ["DB_USER"],
-        password=os.environ["DB_PASSWORD"],
-        host=os.environ["DB_HOST"],
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
         port=int(os.getenv("DB_PORT", 5432)),
     )
