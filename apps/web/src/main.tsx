@@ -5,6 +5,8 @@ import './index.css'
 
 import { routeTree } from './routeTree.gen'
 
+// disable lint, as routeTree is auto-generated
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const router = createRouter({ routeTree })
 
 declare module '@tanstack/react-router' {

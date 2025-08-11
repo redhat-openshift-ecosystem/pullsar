@@ -22,7 +22,7 @@ const fetchOverallPulls = async (
   })
   const response = await fetch(`/api/v1/overall?${searchParams.toString()}`)
   if (!response.ok) throw new Error('Failed to fetch overall pull statistics')
-  const data: OverallPullsApiResponse = await response.json()
+  const data = (await response.json()) as OverallPullsApiResponse
   return data
 }
 

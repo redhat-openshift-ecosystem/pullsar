@@ -5,6 +5,12 @@ const zodDateString = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format.')
 
+export interface HomePageSearchParams {
+  ocp_version: string
+  start_date: string
+  end_date: string
+}
+
 export const homePageSearchDefaults = {
   ocp_version: 'v4.18',
   start_date: daysAgo(15),

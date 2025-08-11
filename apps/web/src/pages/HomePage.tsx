@@ -9,9 +9,12 @@ import { format } from 'date-fns'
 import { useOcpVersions } from '../hooks/useOcpVersions'
 import { useSummaryStats } from '../hooks/useSummaryStats'
 import { useOverallPulls } from '../hooks/useOverallPulls'
+import type { HomePageSearchParams } from '../lib/schemas'
 
 export function HomePage() {
-  const { ocp_version, start_date, end_date } = useSearch({ from: '/' })
+  const { ocp_version, start_date, end_date }: HomePageSearchParams = useSearch(
+    { from: '/' }
+  )
   const navigate = useNavigate({ from: '/' })
 
   const { data: availableOcpVersions, isLoading: isLoadingOcpVersions } =
@@ -26,8 +29,11 @@ export function HomePage() {
     })
 
   const handleOcpVersionChange = (version: string) => {
-    navigate({
-      search: (prev) => ({ ...prev, ocp_version: version }),
+    void navigate({
+      search: (prev: HomePageSearchParams) => ({
+        ...prev,
+        ocp_version: version,
+      }),
     })
   }
 
@@ -37,8 +43,8 @@ export function HomePage() {
     }
 
     const { from, to } = range
-    navigate({
-      search: (prev) => ({
+    void navigate({
+      search: (prev: HomePageSearchParams) => ({
         ...prev,
         start_date: format(from, 'yyyy-MM-dd'),
         end_date: format(to, 'yyyy-MM-dd'),

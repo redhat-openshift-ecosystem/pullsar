@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 const fetchOcpVersions = async (): Promise<string[]> => {
   const response = await fetch('/api/v1/ocp-versions')
   if (!response.ok) throw new Error('Failed to fetch OCP versions')
-  return response.json()
+
+  const data = (await response.json()) as string[]
+  return data
 }
 
 export const useOcpVersions = () =>
