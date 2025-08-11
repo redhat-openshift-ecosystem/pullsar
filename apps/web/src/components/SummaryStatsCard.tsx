@@ -1,4 +1,10 @@
-import type { LucideIcon } from 'lucide-react'
+import {
+  BarChart3,
+  BookOpen,
+  Box,
+  Package,
+  type LucideIcon,
+} from 'lucide-react'
 import { Skeleton } from './ui/skeleton'
 
 interface Props {
@@ -6,6 +12,11 @@ interface Props {
   iconColorClass: string
   iconBackgroundColorClass: string
   label: string
+  value?: number
+  isLoading?: boolean
+}
+
+interface MinProps {
   value?: number
   isLoading?: boolean
 }
@@ -73,3 +84,47 @@ const loadingSkeleton = () => {
     </div>
   )
 }
+
+export const CatalogsSummaryStatsCard = ({ value, isLoading }: MinProps) => (
+  <SummaryStatsCard
+    icon={BookOpen}
+    iconColorClass="text-catalogs-icon"
+    iconBackgroundColorClass="bg-bg-catalogs-icon/20"
+    label="Catalogs Tracked"
+    value={value}
+    isLoading={isLoading}
+  />
+)
+
+export const PackagesSummaryStatsCard = ({ value, isLoading }: MinProps) => (
+  <SummaryStatsCard
+    icon={Package}
+    iconColorClass="text-packages-icon"
+    iconBackgroundColorClass="bg-bg-packages-icon/20"
+    label="Unique Packages"
+    value={value}
+    isLoading={isLoading}
+  />
+)
+
+export const BundlesSummaryStatsCard = ({ value, isLoading }: MinProps) => (
+  <SummaryStatsCard
+    icon={Box}
+    iconColorClass="text-bundles-icon"
+    iconBackgroundColorClass="bg-bg-bundles-icon/20"
+    label="Total Bundles"
+    value={value}
+    isLoading={isLoading}
+  />
+)
+
+export const PullsSummaryStatsCard = ({ value, isLoading }: MinProps) => (
+  <SummaryStatsCard
+    icon={BarChart3}
+    iconColorClass="text-pulls-icon"
+    iconBackgroundColorClass="bg-bg-pulls-icon/20"
+    label="Pulls Recorded"
+    value={value}
+    isLoading={isLoading}
+  />
+)

@@ -1,7 +1,11 @@
 import { useNavigate, useSearch } from '@tanstack/react-router'
 
-import { BookOpen, Package, Box, BarChart3 } from 'lucide-react'
-import { SummaryStatsCard } from '../components/SummaryStatsCard'
+import {
+  BundlesSummaryStatsCard,
+  CatalogsSummaryStatsCard,
+  PackagesSummaryStatsCard,
+  PullsSummaryStatsCard,
+} from '../components/SummaryStatsCard'
 import { ComparisonTutorial } from '../components/ComparisonTutorial'
 import { OverallStatsCard } from '../components/OverallStatsCard'
 import type { DateRange } from 'react-day-picker'
@@ -65,35 +69,19 @@ export function HomePage() {
           </p>
         </div>
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 pb-16">
-          <SummaryStatsCard
-            icon={BookOpen}
-            iconColorClass="text-catalogs-icon"
-            iconBackgroundColorClass="bg-bg-catalogs-icon/20"
-            label="Catalogs Tracked"
+          <CatalogsSummaryStatsCard
             value={summaryStatsData?.total_catalogs}
             isLoading={isLoadingSummaryStats}
           />
-          <SummaryStatsCard
-            icon={Package}
-            iconColorClass="text-packages-icon"
-            iconBackgroundColorClass="bg-bg-packages-icon/20"
-            label="Unique Packages"
+          <PackagesSummaryStatsCard
             value={summaryStatsData?.total_packages}
             isLoading={isLoadingSummaryStats}
           />
-          <SummaryStatsCard
-            icon={Box}
-            iconColorClass="text-bundles-icon"
-            iconBackgroundColorClass="bg-bg-bundles-icon/20"
-            label="Total Bundles"
+          <BundlesSummaryStatsCard
             value={summaryStatsData?.total_bundles}
             isLoading={isLoadingSummaryStats}
           />
-          <SummaryStatsCard
-            icon={BarChart3}
-            iconColorClass="text-pulls-icon"
-            iconBackgroundColorClass="bg-bg-pulls-icon/20"
-            label="Pulls Recorded"
+          <PullsSummaryStatsCard
             value={summaryStatsData?.total_pulls}
             isLoading={isLoadingSummaryStats}
           />
