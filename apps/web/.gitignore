@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+routeTree.gen.ts
+.tanstack/
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +24,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# shadcn
+!components.json
+!src/lib
