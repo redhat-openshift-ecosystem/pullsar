@@ -3,7 +3,7 @@ import { useTheme } from '../contexts/theme-context'
 
 export const ThemeToggle = () => {
   const { theme, toggleTheme } = useTheme()
-  const iconStyleClass = 'w-10 h-10 text-accent'
+  const iconStyleClass = 'w-8 h-8 sm:w-10 sm:h-10 text-accent'
   return (
     <button
       onClick={toggleTheme}

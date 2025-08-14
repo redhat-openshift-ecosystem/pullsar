@@ -27,3 +27,26 @@ export const homePageSearchSchema = z.object({
     .default(homePageSearchDefaults.start_date),
   end_date: zodDateString.optional().default(homePageSearchDefaults.end_date),
 })
+
+export interface DashboardPageSearchParams {
+  ocp_version: string
+  start_date: string
+  end_date: string
+}
+
+export const dashboardPageSearchDefaults = {
+  ocp_version: 'v4.18',
+  start_date: daysAgo(15),
+  end_date: daysAgo(1),
+}
+
+export const dashboardPageSearchSchema = z.object({
+  ocp_version: z
+    .string()
+    .optional()
+    .default(homePageSearchDefaults.ocp_version),
+  start_date: zodDateString
+    .optional()
+    .default(homePageSearchDefaults.start_date),
+  end_date: zodDateString.optional().default(homePageSearchDefaults.end_date),
+})
