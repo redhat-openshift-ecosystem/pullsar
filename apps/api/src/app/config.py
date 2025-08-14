@@ -21,19 +21,19 @@ class DBConfig:
     port: Optional[int] = None
 
 
-class BaseConfig(object):
+def _load_db_conf() -> DBConfig:
     """
-    Class that represents config variables. Database configuration can be loaded
-    from '.env' file. For example, see '.env.example' file.
+    Loads PostgreSQL database configuration from '.env' file.
+    For example, see '.env.example' file.
     """
-
     load_dotenv()
-
-    # PostgreSQL configuration
-    DB_CONFIG = DBConfig(
+    return DBConfig(
         dbname=os.getenv("DB_NAME"),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         host=os.getenv("DB_HOST"),
         port=int(os.getenv("DB_PORT", 5432)),
     )
+
+
+DB_CONFIG = _load_db_conf()

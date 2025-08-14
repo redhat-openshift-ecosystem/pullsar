@@ -24,7 +24,10 @@ def get_summary_stats(db: cursor) -> dict[str, int]:
     """)
 
     db.execute(query)
-    result = db.fetchone() or (0, 0, 0, 0)
+    result = db.fetchone()
+
+    if result is None:
+        raise RuntimeError("Unexpected: summary stats query returned no rows.")
 
     total_catalogs, total_packages, total_bundles, total_pulls = result
 
@@ -37,7 +40,12 @@ def get_summary_stats(db: cursor) -> dict[str, int]:
 
 
 def _calculate_trend(start: int, end: int) -> Optional[float]:
-    """Utility to calculate percentage trend between two values."""
+    """
+    Utility to calculate percentage trend between two values.
+    Returns percentage representing the change from value start
+    to value end. Returns None in special case of start == 0 and end > 0,
+    which would be a raise by 'infinity' %.
+    """
     if start > 0:
         return ((end - start) / start) * 100
     elif end > 0:
@@ -53,12 +61,22 @@ def _fill_date_gaps(
     complete_data = []
     current_date = start_date
     while current_date <= end_date:
-        formatted_date = current_date.strftime("%b %d")
         complete_data.append(
-            {"date": formatted_date, "pulls": pulls_map.get(formatted_date, 0)}
+            {"date": current_date, "pulls": pulls_map.get(current_date, 0)}
         )
         current_date += timedelta(days=1)
     return complete_data
+
+
+def _convert_dates_to_str(chart_data: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Replaces date objects in chart data for formatted string dates,
+    preparing the final API response.
+    """
+    for data_point in chart_data:
+        data_point["date"] = data_point["date"].strftime("%b %d")
+
+    return chart_data
 
 
 def get_overall_pulls(
@@ -86,9 +104,7 @@ def get_overall_pulls(
     db.execute(query, params)
     results = db.fetchall()
 
-    sparse_chart_data = [
-        {"date": row[0].strftime("%b %d"), "pulls": int(row[1])} for row in results
-    ]
+    sparse_chart_data = [{"date": row[0], "pulls": int(row[1])} for row in results]
 
     chart_data = _fill_date_gaps(sparse_chart_data, start_date, end_date)
 
@@ -97,6 +113,7 @@ def get_overall_pulls(
 
     total_pulls = sum(item["pulls"] for item in chart_data)
     trend = _calculate_trend(chart_data[0]["pulls"], chart_data[-1]["pulls"])
+    _convert_dates_to_str(chart_data)
 
     return {"total_pulls": total_pulls, "trend": trend, "chart_data": chart_data}
 
@@ -111,7 +128,7 @@ def _process_grouped_results(
     grouped_data: dict[str, list[dict[str, Any]]] = {}
     for name, pull_date, daily_pulls in results:
         grouped_data.setdefault(name, []).append(
-            {"date": pull_date.strftime("%b %d"), "pulls": int(daily_pulls)}
+            {"date": pull_date, "pulls": int(daily_pulls)}
         )
 
     response = []
@@ -120,6 +137,7 @@ def _process_grouped_results(
 
         total_pulls = sum(item["pulls"] for item in chart_data)
         trend = _calculate_trend(chart_data[0]["pulls"], chart_data[-1]["pulls"])
+        _convert_dates_to_str(chart_data)
 
         response.append(
             {
