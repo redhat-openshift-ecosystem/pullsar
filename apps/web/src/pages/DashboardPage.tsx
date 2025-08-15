@@ -5,10 +5,16 @@ import { format } from 'date-fns'
 import { useOcpVersions } from '../hooks/useOcpVersions'
 import type { DashboardPageSearchParams } from '../lib/schemas'
 import { useNavigate, useSearch } from '@tanstack/react-router'
+import { useSortTypes } from '../hooks/useSortTypes'
 
 export function DashboardPage() {
-  const { ocp_version, start_date, end_date }: DashboardPageSearchParams =
-    useSearch({ from: '/dashboard' })
+  const {
+    ocp_version,
+    start_date,
+    end_date,
+    sort_type,
+    is_desc,
+  }: DashboardPageSearchParams = useSearch({ from: '/dashboard' })
   const navigate = useNavigate({ from: '/dashboard' })
 
   const { data: availableOcpVersions, isLoading: isLoadingOcpVersions } =
@@ -19,6 +25,27 @@ export function DashboardPage() {
       search: (prev: DashboardPageSearchParams) => ({
         ...prev,
         ocp_version: version,
+      }),
+    })
+  }
+
+  const { data: availableSortTypes, isLoading: isLoadingSortTypes } =
+    useSortTypes()
+
+  const handleSortTypeChange = (type: string) => {
+    void navigate({
+      search: (prev: DashboardPageSearchParams) => ({
+        ...prev,
+        sort_type: type,
+      }),
+    })
+  }
+
+  const handleSortDirectionChange = (isDesc: boolean) => {
+    void navigate({
+      search: (prev: DashboardPageSearchParams) => ({
+        ...prev,
+        is_desc: isDesc,
       }),
     })
   }
@@ -59,9 +86,14 @@ export function DashboardPage() {
         availableOcpVersions={availableOcpVersions ?? []}
         currentOcpVersion={ocp_version}
         currentDateRange={{ from: start_date, to: end_date }}
+        availableSortTypes={availableSortTypes ?? []}
+        currentSortType={sort_type}
+        isDesc={is_desc}
         handleOcpVersionChange={handleOcpVersionChange}
         handleDateChange={handleDateChange}
-        isLoading={isLoadingOcpVersions}
+        handleSortTypeChange={handleSortTypeChange}
+        handleSortDirectionChange={handleSortDirectionChange}
+        isLoading={isLoadingOcpVersions || isLoadingSortTypes}
       />
     </div>
   )

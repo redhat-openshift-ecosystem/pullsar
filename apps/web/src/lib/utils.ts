@@ -10,3 +10,7 @@ export const daysAgo = (n: number) => {
   date.setDate(date.getDate() - n)
   return date.toISOString().split('T')[0]
 }
+
+export const capitalizeFirstLetter = (word: string) => {
+  return String(word).charAt(0).toUpperCase() + String(word).slice(1)
+}

@@ -41,7 +41,7 @@ export function DateRangeSelector({ dateRange, onDateChange }: Props) {
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="justify-start text-left font-normal bg-input border-border"
+            className="justify-start text-left font-normal bg-input border-border w-full"
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {range?.from && range?.to

@@ -43,6 +43,7 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-bg-active: var(--bg-active);
 
   /* custom variables */
   --color-custom-background: var(--custom-background);
@@ -99,10 +100,11 @@
   --trend-up: #22c55e;
   --trend-down: #ef4444;
   --trend-stable: #bf7c00;
-  --bg-add: #b7d0ff;
+  --bg-add: #a6c5ff;
   --bg-remove: #e69393;
   --bg-comparison: #d2e5ff;
   --text-header: #ffffff;
+  --bg-active: #0284c7;
 
   /* Shadcn chart colors */
   --chart-1: oklch(0.646 0.222 41.116);
@@ -159,6 +161,7 @@
   --bg-remove: #611f1f;
   --bg-comparison: #0f121a;
   --text-header: #dfdfdf; /* text-primary-dark */
+  --bg-active: #312e81;
 
   /* Shadcn chart colors */
   --chart-1: oklch(0.488 0.243 264.376);

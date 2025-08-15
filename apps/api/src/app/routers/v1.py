@@ -9,6 +9,7 @@ router = APIRouter()
 
 DEFAULT_OCP_VERSION = "v4.18"
 DEFAULT_DAYS_DELTA = 14
+SORT_TYPES = ["pulls", "name"]
 
 
 def get_default_start_date():
@@ -29,6 +30,12 @@ def read_api_root():
 def read_ocp_versions(db: cursor = Depends(get_db_cursor)):
     """Retrieves a list of all available OCP versions in the database."""
     return crud.get_ocp_versions(db)
+
+
+@router.get("/sort-types", response_model=list[str])
+def read_sort_types(db: cursor = Depends(get_db_cursor)):
+    """Retrieves a list of all supported sort types."""
+    return SORT_TYPES
 
 
 @router.get("/summary", response_model=schemas.SummaryStats)

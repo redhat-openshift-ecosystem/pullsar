@@ -24,7 +24,7 @@ export function OcpVersionSelector({
         OCP Version
       </label>
       <Select value={currentVersion} onValueChange={onVersionChange}>
-        <SelectTrigger className="justify-start text-left font-normal bg-input border-border">
+        <SelectTrigger className="justify-start text-left font-normal bg-input border-border w-full">
           <SelectValue placeholder="Select a version" />
         </SelectTrigger>
         <SelectContent>

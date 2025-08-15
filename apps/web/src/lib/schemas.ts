@@ -32,21 +32,32 @@ export interface DashboardPageSearchParams {
   ocp_version: string
   start_date: string
   end_date: string
+  sort_type: string
+  is_desc: boolean
 }
 
 export const dashboardPageSearchDefaults = {
   ocp_version: 'v4.18',
   start_date: daysAgo(15),
   end_date: daysAgo(1),
+  sort_type: 'pulls',
+  is_desc: true,
 }
 
 export const dashboardPageSearchSchema = z.object({
   ocp_version: z
     .string()
     .optional()
-    .default(homePageSearchDefaults.ocp_version),
+    .default(dashboardPageSearchDefaults.ocp_version),
   start_date: zodDateString
     .optional()
-    .default(homePageSearchDefaults.start_date),
-  end_date: zodDateString.optional().default(homePageSearchDefaults.end_date),
+    .default(dashboardPageSearchDefaults.start_date),
+  end_date: zodDateString
+    .optional()
+    .default(dashboardPageSearchDefaults.end_date),
+  sort_type: z
+    .string()
+    .optional()
+    .default(dashboardPageSearchDefaults.sort_type),
+  is_desc: z.boolean().optional().default(dashboardPageSearchDefaults.is_desc),
 })
