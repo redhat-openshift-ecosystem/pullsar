@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.routers import v1
 
 app = FastAPI(
     title="Pullsar API",
@@ -6,8 +7,4 @@ app = FastAPI(
     version="0.1.0",
 )
 
-
-@app.get("/v1/")
-def read_api_root():
-    """Returns a simple API welcome message."""
-    return {"message": "Welcome to the Pullsar API"}
+app.include_router(v1.router, prefix="/v1")
