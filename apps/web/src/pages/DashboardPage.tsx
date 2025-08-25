@@ -4,7 +4,7 @@ import type { DateRange } from 'react-day-picker'
 import { format } from 'date-fns'
 import { useOcpVersions } from '../hooks/useOcpVersions'
 import type { DashboardPageSearchParams } from '../lib/schemas'
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { Outlet, useNavigate, useSearch } from '@tanstack/react-router'
 import { useSortTypes } from '../hooks/useSortTypes'
 
 export function DashboardPage() {
@@ -95,6 +95,8 @@ export function DashboardPage() {
         handleSortDirectionChange={handleSortDirectionChange}
         isLoading={isLoadingOcpVersions || isLoadingSortTypes}
       />
+
+      <Outlet />
     </div>
   )
 }

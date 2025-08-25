@@ -72,7 +72,7 @@ export const OverallStatsCard = ({
       <div className="border-t border-border pt-4 flex flex-col md:flex-row items-center gap-6">
         <div className="flex-shrink-0 grid grid-cols-2 gap-6 text-center">
           <div>
-            <p className="text-3xl lg:text-5xl font-bold text-accent">
+            <p className="text-3xl lg:text-4xl font-bold text-accent">
               {total_pulls.toLocaleString()}
             </p>
             <p className="text-sm text-secondary">Total Pulls</p>

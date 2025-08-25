@@ -18,14 +18,9 @@ export const homePageSearchDefaults = {
 }
 
 export const homePageSearchSchema = z.object({
-  ocp_version: z
-    .string()
-    .optional()
-    .default(homePageSearchDefaults.ocp_version),
-  start_date: zodDateString
-    .optional()
-    .default(homePageSearchDefaults.start_date),
-  end_date: zodDateString.optional().default(homePageSearchDefaults.end_date),
+  ocp_version: z.string().default(homePageSearchDefaults.ocp_version),
+  start_date: zodDateString.default(homePageSearchDefaults.start_date),
+  end_date: zodDateString.default(homePageSearchDefaults.end_date),
 })
 
 export interface DashboardPageSearchParams {
@@ -45,19 +40,9 @@ export const dashboardPageSearchDefaults = {
 }
 
 export const dashboardPageSearchSchema = z.object({
-  ocp_version: z
-    .string()
-    .optional()
-    .default(dashboardPageSearchDefaults.ocp_version),
-  start_date: zodDateString
-    .optional()
-    .default(dashboardPageSearchDefaults.start_date),
-  end_date: zodDateString
-    .optional()
-    .default(dashboardPageSearchDefaults.end_date),
-  sort_type: z
-    .string()
-    .optional()
-    .default(dashboardPageSearchDefaults.sort_type),
-  is_desc: z.boolean().optional().default(dashboardPageSearchDefaults.is_desc),
+  ocp_version: z.string().default(dashboardPageSearchDefaults.ocp_version),
+  start_date: zodDateString.default(dashboardPageSearchDefaults.start_date),
+  end_date: zodDateString.default(dashboardPageSearchDefaults.end_date),
+  sort_type: z.string().default(dashboardPageSearchDefaults.sort_type),
+  is_desc: z.boolean().default(dashboardPageSearchDefaults.is_desc),
 })

@@ -174,9 +174,10 @@ def get_items_with_stats(
     group_by_column = level_column_map[level]
 
     query_parts = [
-        f"SELECT {group_by_column}, pc.pull_date, SUM(pc.pull_count) AS daily_pulls",
-        "FROM pull_counts pc JOIN bundle_appearances ba ON pc.bundle_id = ba.bundle_id JOIN bundles b ON pc.bundle_id = b.id",
-        "WHERE ba.ocp_version = %(ocp_version)s AND pc.pull_date BETWEEN %(start_date)s AND %(end_date)s",
+        f"SELECT {group_by_column}, pc.pull_date, SUM(COALESCE(pc.pull_count, 0)) AS daily_pulls",
+        "FROM bundles b JOIN bundle_appearances ba ON b.id = ba.bundle_id",
+        "LEFT JOIN pull_counts pc ON pc.bundle_id = ba.bundle_id AND pc.pull_date BETWEEN %(start_date)s AND %(end_date)s",
+        "WHERE ba.ocp_version = %(ocp_version)s",
     ]
     params: dict[str, Any] = {
         "ocp_version": ocp_version,
