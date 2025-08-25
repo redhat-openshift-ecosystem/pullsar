@@ -12,4 +12,8 @@ RUN pip install poetry
 COPY ./apps/worker/pyproject.toml ./apps/worker/poetry.lock ./apps/worker/README.md ./
 COPY ./apps/worker/src ./src
 
-RUN poetry install --without dev
+RUN poetry config virtualenvs.create false && \
+    poetry install --without dev
+
+RUN chgrp -R 0 /app && \
+    chmod -R g+w /app

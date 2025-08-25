@@ -22,7 +22,7 @@ services:
       dockerfile: ./apps/web/Containerfile
     container_name: pullsar-web
     ports:
-      - "8080:80"
+      - "8080:8080"
     depends_on:
       - api
 
