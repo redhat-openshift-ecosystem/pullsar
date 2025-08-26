@@ -118,42 +118,124 @@ def get_overall_pulls(
     return {"total_pulls": total_pulls, "trend": trend, "chart_data": chart_data}
 
 
-def _process_grouped_results(
-    results: Sequence[tuple], start_date: date, end_date: date
-) -> list[dict[str, Any]]:
-    """Converts grouped SQL results into a structured dict with complete chart data."""
-    if not results:
-        return []
-
-    grouped_data: dict[str, list[dict[str, Any]]] = {}
-    for name, pull_date, daily_pulls in results:
-        grouped_data.setdefault(name, []).append(
-            {"date": pull_date, "pulls": int(daily_pulls)}
+def _build_main_query_and_params(
+    item_column: str,
+    ocp_version: str,
+    start_date: date,
+    end_date: date,
+    catalog_name: Optional[str],
+    package_name: Optional[str],
+    search_query: Optional[str],
+) -> tuple[str, dict[str, Any]]:
+    """Builds the CTE query to get aggregated stats needed for sorting and trend."""
+    query = f"""
+        WITH AggregatedStats AS (
+            SELECT
+                {item_column} AS item_name,
+                SUM(COALESCE(pc.pull_count, 0)) AS total_pulls,
+                SUM(
+                    CASE WHEN pc.pull_date = %(start_date)s THEN COALESCE(pc.pull_count, 0) ELSE 0 END
+                ) AS first_day_pulls,
+                SUM(
+                    CASE WHEN pc.pull_date = %(end_date)s THEN COALESCE(pc.pull_count, 0) ELSE 0 END
+                ) AS last_day_pulls
+            FROM
+                bundles b
+                JOIN bundle_appearances ba ON b.id = ba.bundle_id
+                LEFT JOIN pull_counts pc ON pc.bundle_id = ba.bundle_id
+                    AND pc.pull_date BETWEEN %(start_date)s AND %(end_date)s
+            WHERE
+                ba.ocp_version = %(ocp_version)s
+                {"AND ba.catalog_name = %(catalog_name)s" if catalog_name else ""}
+                {"AND b.package = %(package_name)s" if package_name else ""}
+                {"AND " + item_column + " LIKE %(search_query)s" if search_query else ""}
+            GROUP BY
+                item_name
         )
+        SELECT item_name, total_pulls, first_day_pulls, last_day_pulls
+        FROM AggregatedStats
+    """
+    params = {
+        "ocp_version": ocp_version,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+    if catalog_name:
+        params["catalog_name"] = catalog_name
+    if package_name:
+        params["package_name"] = package_name
+    if search_query:
+        params["search_query"] = f"%{search_query}%"
 
-    response = []
-    for name, sparse_chart_data in grouped_data.items():
-        chart_data = _fill_date_gaps(sparse_chart_data, start_date, end_date)
+    return query, params
 
-        total_pulls = sum(item["pulls"] for item in chart_data)
-        trend = _calculate_trend(chart_data[0]["pulls"], chart_data[-1]["pulls"])
-        _convert_dates_to_str(chart_data)
 
-        response.append(
+def _fetch_chart_data(
+    db: cursor,
+    item_column: str,
+    item_names: list[str],
+    params: dict[str, Any],
+) -> Sequence[tuple]:
+    """Fetches the daily pull count data for a specific list of items."""
+    query = f"""
+        SELECT
+            {item_column} AS item_name,
+            pc.pull_date,
+            SUM(COALESCE(pc.pull_count, 0)) AS daily_pulls
+        FROM
+            bundles b
+            JOIN bundle_appearances ba ON b.id = ba.bundle_id
+            LEFT JOIN pull_counts pc ON pc.bundle_id = ba.bundle_id
+                AND pc.pull_date BETWEEN %(start_date)s AND %(end_date)s
+        WHERE
+            ba.ocp_version = %(ocp_version)s
+            AND {item_column} IN %(item_names)s
+            {"AND ba.catalog_name = %(catalog_name)s" if "catalog_name" in params else ""}
+            {"AND b.package = %(package_name)s" if "package_name" in params else ""}
+        GROUP BY
+            item_name, pc.pull_date
+        ORDER BY
+            item_name, pc.pull_date
+    """
+    chart_params = {**params, "item_names": tuple(item_names)}
+    db.execute(query, chart_params)
+    return db.fetchall()
+
+
+def _combine_results(
+    paginated_items: Sequence[tuple],
+    chart_results: Sequence[tuple],
+    start_date: date,
+    end_date: date,
+) -> list[dict[str, Any]]:
+    """Merges aggregated data with chart data, including trend calculation."""
+    chart_data_map: dict[str, list[dict[str, Any]]] = {}
+    for name, pull_date, daily_pulls in chart_results:
+        if pull_date:
+            chart_data_map.setdefault(name, []).append(
+                {"date": pull_date, "pulls": int(daily_pulls)}
+            )
+
+    response_items = []
+    for name, total_pulls, first_pulls, last_pulls in paginated_items:
+        sparse_chart_data = chart_data_map.get(name, [])
+        full_chart_data = _fill_date_gaps(sparse_chart_data, start_date, end_date)
+        _convert_dates_to_str(full_chart_data)
+
+        response_items.append(
             {
                 "name": name,
                 "stats": {
-                    "total_pulls": total_pulls,
-                    "trend": trend,
-                    "chart_data": chart_data,
+                    "total_pulls": int(total_pulls),
+                    "trend": _calculate_trend(int(first_pulls), int(last_pulls)),
+                    "chart_data": full_chart_data,
                 },
             }
         )
+    return response_items
 
-    return response
 
-
-def get_items_with_stats(
+def get_paginated_items(
     db: cursor,
     level: str,
     ocp_version: str,
@@ -161,40 +243,69 @@ def get_items_with_stats(
     end_date: date,
     catalog_name: Optional[str] = None,
     package_name: Optional[str] = None,
-) -> list[dict[str, Any]]:
-    """Unified fetch for catalog/package/bundle stats in a date range."""
+    search_query: Optional[str] = None,
+    sort_type: str = "pulls",
+    is_desc: bool = True,
+    page: int = 1,
+    page_size: int = 10,
+) -> dict[str, Any]:
+    """
+    Orchestrates fetching, sorting (by pulls/name), and paginating item stats.
+    """
     level_column_map = {
         "catalog": "ba.catalog_name",
         "package": "b.package",
         "bundle": "b.name",
     }
     if level not in level_column_map:
-        raise ValueError("Invalid level: must be 'catalog', 'package', or 'bundle'.")
+        raise ValueError("Invalid level provided.")
 
-    group_by_column = level_column_map[level]
+    item_column = level_column_map[level]
 
-    query_parts = [
-        f"SELECT {group_by_column}, pc.pull_date, SUM(COALESCE(pc.pull_count, 0)) AS daily_pulls",
-        "FROM bundles b JOIN bundle_appearances ba ON b.id = ba.bundle_id",
-        "LEFT JOIN pull_counts pc ON pc.bundle_id = ba.bundle_id AND pc.pull_date BETWEEN %(start_date)s AND %(end_date)s",
-        "WHERE ba.ocp_version = %(ocp_version)s",
-    ]
-    params: dict[str, Any] = {
-        "ocp_version": ocp_version,
-        "start_date": start_date,
-        "end_date": end_date,
-    }
-
-    if catalog_name:
-        query_parts.append("AND ba.catalog_name = %(catalog_name)s")
-        params["catalog_name"] = catalog_name
-    if package_name:
-        query_parts.append("AND b.package = %(package_name)s")
-        params["package_name"] = package_name
-
-    query_parts.append(
-        f"GROUP BY {group_by_column}, pc.pull_date ORDER BY {group_by_column}, pc.pull_date"
+    # build the main query and its parameters
+    main_query, params = _build_main_query_and_params(
+        item_column,
+        ocp_version,
+        start_date,
+        end_date,
+        catalog_name,
+        package_name,
+        search_query,
     )
 
-    db.execute(" ".join(query_parts), params)
-    return _process_grouped_results(db.fetchall(), start_date, end_date)
+    # get the total count of items
+    count_query = f"SELECT COUNT(*) FROM ({main_query}) AS total"
+    db.execute(count_query, params)
+    result = db.fetchone()
+    total_count = result[0] if result else 0
+
+    # fetch one page of sorted items
+    sort_column_map = {
+        "name": "item_name",
+        "pulls": "total_pulls",
+    }
+    order_by_clause = f"ORDER BY {sort_column_map.get(sort_type, 'total_pulls')} {'DESC' if is_desc else 'ASC'}"
+    pagination_clause = "LIMIT %(page_size)s OFFSET %(offset)s"
+    paginated_query = f"{main_query} {order_by_clause} {pagination_clause}"
+
+    paginated_params = {
+        **params,
+        "page_size": page_size,
+        "offset": (page - 1) * page_size,
+    }
+    db.execute(paginated_query, paginated_params)
+    paginated_items = db.fetchall()
+
+    if not paginated_items:
+        return {"total_count": total_count, "items": []}
+
+    # fetch the chart data for the current page
+    item_names_on_page = [row[0] for row in paginated_items]
+    chart_results = _fetch_chart_data(db, item_column, item_names_on_page, params)
+
+    # combine the datasets into the final response
+    response_items = _combine_results(
+        paginated_items, chart_results, start_date, end_date
+    )
+
+    return {"total_count": total_count, "items": response_items}

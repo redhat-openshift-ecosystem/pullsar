@@ -1,20 +1,22 @@
-import { useRef } from 'react'
 import { Input } from './ui/input'
 import { Search } from 'lucide-react'
 import { Button } from './ui/button'
+import { useEffect, useState } from 'react'
 
 interface Props {
   placeholder: string
+  currentQuery: string
+  onSearchSubmit: (query: string) => void
 }
-const SearchBar = ({ placeholder }: Props) => {
-  const inputRef = useRef<HTMLInputElement>(null)
+const SearchBar = ({ placeholder, currentQuery, onSearchSubmit }: Props) => {
+  const [inputValue, setInputValue] = useState(currentQuery)
+
+  useEffect(() => {
+    setInputValue(currentQuery)
+  }, [currentQuery])
+
   const handleSearchSubmit = () => {
-    if (inputRef.current) {
-      const searchQuery = inputRef.current.value
-      if (searchQuery) {
-        // TODO
-      }
-    }
+    onSearchSubmit(inputValue)
   }
 
   return (
@@ -25,15 +27,15 @@ const SearchBar = ({ placeholder }: Props) => {
       <div className="w-full mr-8 relative flex items-center">
         <Input
           type="search"
-          ref={inputRef}
           placeholder={placeholder}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
           className="rounded-r-none"
         />
         <Button
-          className="flex items-center justify-center aspect-square
-          rounded-l-none"
-          onClick={() => handleSearchSubmit()}
+          className="flex items-center justify-center aspect-square rounded-l-none"
+          onClick={handleSearchSubmit}
         >
           <Search strokeWidth={3} />
         </Button>

@@ -1,5 +1,5 @@
 import { createFileRoute, useParams, useSearch } from '@tanstack/react-router'
-import { useBundles } from '../../../hooks/useBundles'
+import { useItems } from '../../../hooks/useItems'
 
 export const Route = createFileRoute('/dashboard/$catalogName/$packageName')({
   component: BundleListPage,
@@ -10,20 +10,34 @@ function BundleListPage() {
     from: '/dashboard/$catalogName/$packageName',
   })
 
-  const { ocp_version, start_date, end_date } = useSearch({
+  const {
+    ocp_version,
+    start_date,
+    end_date,
+    search_query,
+    sort_type,
+    is_desc,
+    page,
+  } = useSearch({
     from: '/dashboard',
   })
-  const { data: bundles, isLoading } = useBundles({
+  const { data, isLoading } = useItems({
     catalog_name: catalogName,
     package_name: packageName,
     ocp_version,
     start_date,
     end_date,
+    search_query,
+    sort_type,
+    is_desc,
+    page,
   })
 
-  if (isLoading || bundles === undefined) {
+  if (isLoading || !data) {
     return <div>Loading...</div>
   }
+
+  const { items: bundles } = data
 
   return (
     <div>

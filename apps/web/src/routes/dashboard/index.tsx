@@ -1,24 +1,38 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
-import { useCatalogs } from '../../hooks/useCatalogs'
+import { useItems } from '../../hooks/useItems'
 
 export const Route = createFileRoute('/dashboard/')({
   component: CatalogListPage,
 })
 
 function CatalogListPage() {
-  const { ocp_version, start_date, end_date } = useSearch({
-    from: '/dashboard',
-  })
-
-  const { data: catalogs, isLoading } = useCatalogs({
+  const {
     ocp_version,
     start_date,
     end_date,
+    search_query,
+    sort_type,
+    is_desc,
+    page,
+  } = useSearch({
+    from: '/dashboard',
   })
 
-  if (isLoading || catalogs === undefined) {
+  const { data, isLoading } = useItems({
+    ocp_version,
+    start_date,
+    end_date,
+    search_query,
+    sort_type,
+    is_desc,
+    page,
+  })
+
+  if (isLoading || !data) {
     return <div>Loading...</div>
   }
+
+  const { items: catalogs } = data
 
   return (
     <div>

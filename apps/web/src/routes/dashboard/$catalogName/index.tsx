@@ -4,7 +4,7 @@ import {
   useParams,
   useSearch,
 } from '@tanstack/react-router'
-import { usePackages } from '../../../hooks/usePackages'
+import { useItems } from '../../../hooks/useItems'
 
 export const Route = createFileRoute('/dashboard/$catalogName/')({
   component: PackageListPage,
@@ -12,20 +12,34 @@ export const Route = createFileRoute('/dashboard/$catalogName/')({
 
 function PackageListPage() {
   const { catalogName } = useParams({ from: '/dashboard/$catalogName/' })
-  const { ocp_version, start_date, end_date } = useSearch({
+  const {
+    ocp_version,
+    start_date,
+    end_date,
+    search_query,
+    sort_type,
+    is_desc,
+    page,
+  } = useSearch({
     from: '/dashboard',
   })
 
-  const { data: packages, isLoading } = usePackages({
+  const { data, isLoading } = useItems({
     catalog_name: catalogName,
     ocp_version,
     start_date,
     end_date,
+    search_query,
+    sort_type,
+    is_desc,
+    page,
   })
 
-  if (isLoading || packages === undefined) {
+  if (isLoading || !data) {
     return <div>Loading...</div>
   }
+
+  const { items: packages } = data
 
   return (
     <div>

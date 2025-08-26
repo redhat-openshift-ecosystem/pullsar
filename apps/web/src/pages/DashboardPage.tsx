@@ -12,6 +12,7 @@ export function DashboardPage() {
     ocp_version,
     start_date,
     end_date,
+    search_query,
     sort_type,
     is_desc,
   }: DashboardPageSearchParams = useSearch({ from: '/dashboard' })
@@ -65,6 +66,15 @@ export function DashboardPage() {
     })
   }
 
+  const handleSearchChange = (query: string) => {
+    void navigate({
+      search: (prev: DashboardPageSearchParams) => ({
+        ...prev,
+        search_query: query,
+      }),
+    })
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex text-left mb-5 md:mt-7">
@@ -86,11 +96,13 @@ export function DashboardPage() {
         availableOcpVersions={availableOcpVersions ?? []}
         currentOcpVersion={ocp_version}
         currentDateRange={{ from: start_date, to: end_date }}
+        currentSearchQuery={search_query}
         availableSortTypes={availableSortTypes ?? []}
         currentSortType={sort_type}
         isDesc={is_desc}
         handleOcpVersionChange={handleOcpVersionChange}
         handleDateChange={handleDateChange}
+        handleSearchChange={handleSearchChange}
         handleSortTypeChange={handleSortTypeChange}
         handleSortDirectionChange={handleSortDirectionChange}
         isLoading={isLoadingOcpVersions || isLoadingSortTypes}

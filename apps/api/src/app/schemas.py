@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal
 
 
 class ChartDataPoint(BaseModel):
@@ -33,3 +33,11 @@ class SummaryStats(BaseModel):
     total_packages: int
     total_bundles: int
     total_pulls: int
+
+
+class PaginatedListResponse(BaseModel):
+    total_count: int
+    items: list[ListItem]
+
+
+SortType = Literal["name", "pulls"]

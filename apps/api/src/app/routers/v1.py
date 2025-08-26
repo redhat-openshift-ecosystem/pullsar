@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from psycopg2.extensions import cursor
 from datetime import date, timedelta
+from typing import Optional
 
 from app import crud, schemas
 from app.database import get_db_cursor
@@ -10,6 +11,11 @@ router = APIRouter()
 DEFAULT_OCP_VERSION = "v4.18"
 DEFAULT_DAYS_DELTA = 14
 SORT_TYPES = ["pulls", "name"]
+DEFAULT_SEARCH_QUERY = Query(None)
+DEFAULT_SORT_TYPE = Query("pulls")
+DEFAULT_IS_DESC = Query(True)
+DEFAULT_PAGE = Query(1, ge=1)
+DEFAULT_PAGE_SIZE = Query(50, ge=1, le=100)
 
 
 def get_default_start_date():
@@ -55,39 +61,68 @@ def read_overall_summary(
     return crud.get_overall_pulls(db, ocp_version, start_date, end_date)
 
 
-@router.get("/catalogs", response_model=list[schemas.ListItem])
+@router.get("/catalogs", response_model=schemas.PaginatedListResponse)
 def read_catalogs(
     ocp_version: str = Query(DEFAULT_OCP_VERSION),
     start_date: date = get_default_start_date(),
     end_date: date = get_default_end_date(),
+    search_query: Optional[str] = DEFAULT_SEARCH_QUERY,
+    sort_type: schemas.SortType = DEFAULT_SORT_TYPE,
+    is_desc: bool = DEFAULT_IS_DESC,
+    page: int = DEFAULT_PAGE,
+    page_size: int = DEFAULT_PAGE_SIZE,
     db: cursor = Depends(get_db_cursor),
 ):
-    """Retrieves pull count, trend and chart data for each individual catalog."""
-    return crud.get_items_with_stats(db, "catalog", ocp_version, start_date, end_date)
+    """Retrieves a paginated and sorted list of catalogs with stats."""
+    return crud.get_paginated_items(
+        db,
+        level="catalog",
+        ocp_version=ocp_version,
+        start_date=start_date,
+        end_date=end_date,
+        search_query=search_query,
+        sort_type=sort_type,
+        is_desc=is_desc,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get(
-    "/catalogs/{catalog_name:path}/packages", response_model=list[schemas.ListItem]
+    "/catalogs/{catalog_name:path}/packages",
+    response_model=schemas.PaginatedListResponse,
 )
 def read_packages_in_catalog(
     catalog_name: str,
     ocp_version: str = Query(DEFAULT_OCP_VERSION),
     start_date: date = get_default_start_date(),
     end_date: date = get_default_end_date(),
+    search_query: Optional[str] = DEFAULT_SEARCH_QUERY,
+    sort_type: schemas.SortType = DEFAULT_SORT_TYPE,
+    is_desc: bool = DEFAULT_IS_DESC,
+    page: int = DEFAULT_PAGE,
+    page_size: int = DEFAULT_PAGE_SIZE,
     db: cursor = Depends(get_db_cursor),
 ):
-    """
-    Retrieves pull count, trend and chart data for each individual package
-    in the given catalog.
-    """
-    return crud.get_items_with_stats(
-        db, "package", ocp_version, start_date, end_date, catalog_name
+    """Retrieves a paginated and sorted list of packages within a catalog."""
+    return crud.get_paginated_items(
+        db,
+        level="package",
+        ocp_version=ocp_version,
+        start_date=start_date,
+        end_date=end_date,
+        catalog_name=catalog_name,
+        search_query=search_query,
+        sort_type=sort_type,
+        is_desc=is_desc,
+        page=page,
+        page_size=page_size,
     )
 
 
 @router.get(
     "/catalogs/{catalog_name:path}/packages/{package_name}/bundles",
-    response_model=list[schemas.ListItem],
+    response_model=schemas.PaginatedListResponse,
 )
 def read_bundles_in_package(
     catalog_name: str,
@@ -95,12 +130,25 @@ def read_bundles_in_package(
     ocp_version: str = Query(DEFAULT_OCP_VERSION),
     start_date: date = get_default_start_date(),
     end_date: date = get_default_end_date(),
+    search_query: Optional[str] = DEFAULT_SEARCH_QUERY,
+    sort_type: schemas.SortType = DEFAULT_SORT_TYPE,
+    is_desc: bool = DEFAULT_IS_DESC,
+    page: int = DEFAULT_PAGE,
+    page_size: int = DEFAULT_PAGE_SIZE,
     db: cursor = Depends(get_db_cursor),
 ):
-    """
-    Retrieves pull count, trend and chart data for each individual bundle
-    in the given package.
-    """
-    return crud.get_items_with_stats(
-        db, "bundle", ocp_version, start_date, end_date, catalog_name, package_name
+    """Retrieves a paginated and sorted list of bundles within a package."""
+    return crud.get_paginated_items(
+        db,
+        level="bundle",
+        ocp_version=ocp_version,
+        start_date=start_date,
+        end_date=end_date,
+        catalog_name=catalog_name,
+        package_name=package_name,
+        search_query=search_query,
+        sort_type=sort_type,
+        is_desc=is_desc,
+        page=page,
+        page_size=page_size,
     )

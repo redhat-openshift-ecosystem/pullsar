@@ -12,11 +12,13 @@ interface Props {
   availableOcpVersions: string[]
   currentOcpVersion: string
   currentDateRange: { from?: string; to?: string }
+  currentSearchQuery: string
   availableSortTypes: string[]
   currentSortType: string
   isDesc: boolean
   handleOcpVersionChange: (version: string) => void
   handleDateChange: (range: DateRange | undefined) => void
+  handleSearchChange: (query: string) => void
   handleSortTypeChange: (type: string) => void
   handleSortDirectionChange: (isDesc: boolean) => void
   isLoading?: boolean
@@ -26,11 +28,13 @@ export const Filters = ({
   availableOcpVersions,
   currentOcpVersion,
   currentDateRange,
+  currentSearchQuery,
   availableSortTypes,
   currentSortType,
   isDesc,
   handleOcpVersionChange,
   handleDateChange,
+  handleSearchChange,
   handleSortTypeChange,
   handleSortDirectionChange,
   isLoading,
@@ -45,7 +49,11 @@ export const Filters = ({
     <div className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden text-left">
       <div className="flex flex-col lg:flex-row lg:items-center lg:gap-4">
         <div className="flex items-center gap-2 w-full lg:flex-1">
-          <SearchBar placeholder="Search catalogs, packages, bundles..." />
+          <SearchBar
+            placeholder="Search catalogs, packages, bundles..."
+            currentQuery={currentSearchQuery}
+            onSearchSubmit={handleSearchChange}
+          />
           <div className="hidden sm:block lg:w-auto">
             <DateRangeSelector
               dateRange={currentDateRange}
