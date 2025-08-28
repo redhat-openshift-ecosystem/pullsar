@@ -2,6 +2,7 @@ import type { HTMLAttributes } from 'react'
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -28,6 +29,8 @@ const CustomPagination = ({
 }: Props) => {
   const { page, totalPages } = pagination
 
+  const pageNumbers = getPageNumbers(page, totalPages)
+
   return (
     <div
       className={cn('w-full lg:w-fit self-center md:self-end', className)}
@@ -42,14 +45,18 @@ const CustomPagination = ({
             />
           </PaginationItem>
 
-          {getPageNumbers(page, totalPages).map((p) => (
-            <PaginationItem key={p}>
-              <PaginationLink
-                onClick={() => handlePageChange(p)}
-                isActive={page === p}
-              >
-                {p}
-              </PaginationLink>
+          {pageNumbers.map((p, index) => (
+            <PaginationItem key={`${p}-${index}`}>
+              {typeof p === 'string' ? (
+                <PaginationEllipsis />
+              ) : (
+                <PaginationLink
+                  onClick={() => handlePageChange(p)}
+                  isActive={page === p}
+                >
+                  {p}
+                </PaginationLink>
+              )}
             </PaginationItem>
           ))}
 
@@ -67,20 +74,39 @@ const CustomPagination = ({
   )
 }
 
-const getPageNumbers = (currentPage: number, totalPages: number) => {
-  if (totalPages <= 3) {
+const getPageNumbers = (
+  currentPage: number,
+  totalPages: number
+): (number | string)[] => {
+  if (totalPages <= 5) {
     return Array.from({ length: totalPages }, (_, i) => i + 1)
   }
 
-  if (currentPage <= 2) {
-    return [1, 2, 3]
+  const pages = new Set<number>()
+
+  pages.add(1)
+  pages.add(totalPages)
+
+  for (let i = -2; i <= 2; i++) {
+    const p = currentPage + i
+    if (p > 1 && p < totalPages) {
+      pages.add(p)
+    }
   }
 
-  if (currentPage >= totalPages - 1) {
-    return [totalPages - 2, totalPages - 1, totalPages]
+  const sortedPages = Array.from(pages).sort((a, b) => a - b)
+  const result: (number | string)[] = []
+  let lastPage: number | null = null
+
+  for (const page of sortedPages) {
+    if (lastPage !== null && page - lastPage > 1) {
+      result.push('...')
+    }
+    result.push(page)
+    lastPage = page
   }
 
-  return [currentPage - 1, currentPage, currentPage + 1]
+  return result
 }
 
 export default CustomPagination
