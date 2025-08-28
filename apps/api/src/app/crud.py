@@ -241,13 +241,13 @@ def get_paginated_items(
     ocp_version: str,
     start_date: date,
     end_date: date,
+    sort_type: str,
+    is_desc: bool,
+    page: int,
+    page_size: int,
     catalog_name: Optional[str] = None,
     package_name: Optional[str] = None,
     search_query: Optional[str] = None,
-    sort_type: str = "pulls",
-    is_desc: bool = True,
-    page: int = 1,
-    page_size: int = 10,
 ) -> dict[str, Any]:
     """
     Orchestrates fetching, sorting (by pulls/name), and paginating item stats.
@@ -308,4 +308,4 @@ def get_paginated_items(
         paginated_items, chart_results, start_date, end_date
     )
 
-    return {"total_count": total_count, "items": response_items}
+    return {"total_count": total_count, "page_size": page_size, "items": response_items}

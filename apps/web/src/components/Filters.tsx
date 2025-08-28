@@ -41,16 +41,20 @@ export const Filters = ({
 }: Props) => {
   const [isExpanded, setIsExpanded] = useState(false)
 
-  if (isLoading || !availableOcpVersions || !availableSortTypes) {
+  if (
+    isLoading ||
+    availableOcpVersions.length === 0 ||
+    availableSortTypes.length === 0
+  ) {
     return getLoadingSkeleton()
   }
 
   return (
-    <div className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden text-left">
+    <div className="sticky top-2 z-10 bg-card/95 border border-border rounded-lg p-3 overflow-hidden text-left">
       <div className="flex flex-col lg:flex-row lg:items-center lg:gap-4">
         <div className="flex items-center gap-2 w-full lg:flex-1">
           <SearchBar
-            placeholder="Search catalogs, packages, bundles..."
+            placeholder="Filter by name..."
             currentQuery={currentSearchQuery}
             onSearchSubmit={handleSearchChange}
           />
@@ -60,7 +64,6 @@ export const Filters = ({
               onDateChange={handleDateChange}
             />
           </div>
-
           <Button
             className={`lg:hidden flex self-end ${isExpanded && 'bg-bg-active text-text-header'}`}
             onClick={() => setIsExpanded(!isExpanded)}
@@ -69,6 +72,9 @@ export const Filters = ({
           </Button>
         </div>
 
+        {/* mobile - vertical section expanded/hidden with 'funnel' button, 
+            desktop - lg:flex makes sure items are always visible
+            on big screen and the layout becomes horizontal */}
         <div
           className={`
             ${isExpanded ? 'flex' : 'hidden'} flex-col gap-4 mt-4

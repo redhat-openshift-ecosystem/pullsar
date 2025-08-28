@@ -20,7 +20,7 @@ class AggregatedPulls(BaseModel):
 
 
 class ListItem(BaseModel):
-    """Represents a single item in a list (e.g., a catalog or package)."""
+    """Represents a single item in a list (e.g., a catalog, package or bundle)."""
 
     name: str
     stats: AggregatedPulls
@@ -36,7 +36,10 @@ class SummaryStats(BaseModel):
 
 
 class PaginatedListResponse(BaseModel):
+    """Represents paginated list of items for the dashboard."""
+
     total_count: int
+    page_size: int
     items: list[ListItem]
 
 

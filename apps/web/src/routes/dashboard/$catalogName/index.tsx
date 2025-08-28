@@ -1,68 +1,35 @@
-import {
-  createFileRoute,
-  Link,
-  useParams,
-  useSearch,
-} from '@tanstack/react-router'
-import { useItems } from '../../../hooks/useItems'
+import { createFileRoute, useParams } from '@tanstack/react-router'
+import { type ListItem } from '../../../hooks/useItems'
+import { ItemList } from '../../../components/ItemList'
+import { ItemStatsCard } from '../../../components/ItemStatsCard'
+import { shortCatalogName } from '../../../lib/utils'
 
 export const Route = createFileRoute('/dashboard/$catalogName/')({
   component: PackageListPage,
 })
 
-function PackageListPage() {
+export function PackageListPage() {
   const { catalogName } = useParams({ from: '/dashboard/$catalogName/' })
-  const {
-    ocp_version,
-    start_date,
-    end_date,
-    search_query,
-    sort_type,
-    is_desc,
-    page,
-  } = useSearch({
-    from: '/dashboard',
-  })
-
-  const { data, isLoading } = useItems({
-    catalog_name: catalogName,
-    ocp_version,
-    start_date,
-    end_date,
-    search_query,
-    sort_type,
-    is_desc,
-    page,
-  })
-
-  if (isLoading || !data) {
-    return <div>Loading...</div>
-  }
-
-  const { items: packages } = data
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold">
-        Packages in <span className="text-accent">{catalogName}</span>
-      </h2>
-      <ul className="mt-4 list-disc pl-5 space-y-2">
-        {packages.map((pkg) => (
-          <li key={pkg.name}>
-            <Link
-              to="/dashboard/$catalogName/$packageName"
-              params={{ catalogName, packageName: pkg.name }}
-              search={true}
-              className="text-blue-500 hover:underline"
-            >
-              {pkg.name}
-            </Link>
-            <span className="ml-4 text-sm text-gray-500">
-              ({pkg.stats.total_pulls.toLocaleString()} pulls)
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ItemList
+      pathParams={{ catalog_name: catalogName }}
+      breadcrumbs={[
+        { to: '/dashboard', label: 'Catalogs' },
+        {
+          to: '/dashboard/$catalogName',
+          params: { catalogName },
+          label: shortCatalogName(catalogName),
+        },
+      ]}
+      renderItem={(pkg: ListItem) => (
+        <ItemStatsCard
+          label={pkg.name}
+          item={pkg}
+          linkTo="/dashboard/$catalogName/$packageName"
+          linkParams={{ catalogName, packageName: pkg.name }}
+        />
+      )}
+    />
   )
 }

@@ -80,11 +80,11 @@ def read_catalogs(
         ocp_version=ocp_version,
         start_date=start_date,
         end_date=end_date,
-        search_query=search_query,
         sort_type=sort_type,
         is_desc=is_desc,
         page=page,
         page_size=page_size,
+        search_query=search_query,
     )
 
 
@@ -111,12 +111,12 @@ def read_packages_in_catalog(
         ocp_version=ocp_version,
         start_date=start_date,
         end_date=end_date,
-        catalog_name=catalog_name,
-        search_query=search_query,
         sort_type=sort_type,
         is_desc=is_desc,
         page=page,
         page_size=page_size,
+        catalog_name=catalog_name,
+        search_query=search_query,
     )
 
 
@@ -144,11 +144,11 @@ def read_bundles_in_package(
         ocp_version=ocp_version,
         start_date=start_date,
         end_date=end_date,
-        catalog_name=catalog_name,
-        package_name=package_name,
-        search_query=search_query,
         sort_type=sort_type,
         is_desc=is_desc,
         page=page,
         page_size=page_size,
+        catalog_name=catalog_name,
+        package_name=package_name,
+        search_query=search_query,
     )

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-
-const API_BASE = '/api/v1'
+import { API_BASE } from './api'
 
 interface ChartDataPoint {
   date: string
@@ -9,7 +8,7 @@ interface ChartDataPoint {
 
 interface AggregatedPulls {
   total_pulls: number
-  trend: number | null
+  trend?: number
   chart_data: ChartDataPoint[]
 }
 
@@ -32,6 +31,7 @@ export interface Params {
 
 export interface PaginatedResponse {
   total_count: number
+  page_size: number
   items: ListItem[]
 }
 

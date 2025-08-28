@@ -4,7 +4,7 @@ import type { DateRange } from 'react-day-picker'
 import { format } from 'date-fns'
 import { useOcpVersions } from '../hooks/useOcpVersions'
 import type { DashboardPageSearchParams } from '../lib/schemas'
-import { Outlet, useNavigate, useSearch } from '@tanstack/react-router'
+import { Link, Outlet, useNavigate, useSearch } from '@tanstack/react-router'
 import { useSortTypes } from '../hooks/useSortTypes'
 
 export function DashboardPage() {
@@ -82,14 +82,15 @@ export function DashboardPage() {
           className={'w-15 h-15 sm:w-25 sm:h-25 mr-1 text-accent'}
           strokeWidth={1}
         />
-        <div>
+
+        <Link to="/" className="hover:cursor-pointer">
           <h1 className="text-2xl font-extrabold text-text-header sm:text-4xl md:text-5xl text-shadow-lg">
             Pullsar Dashboard
           </h1>
           <p className="sm:mt-4 max-w-2xl text-lg sm:text-2xl text-secondary">
             Operator Usage Overview
           </p>
-        </div>
+        </Link>
       </div>
 
       <Filters
