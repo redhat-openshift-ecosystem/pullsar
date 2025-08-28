@@ -4,12 +4,17 @@ import { ItemList } from '../../../components/ItemList'
 import { ItemStatsCard } from '../../../components/ItemStatsCard'
 import { shortBundleName, shortCatalogName } from '../../../lib/utils'
 
+interface URLParams {
+  catalogName: string
+  packageName: string
+}
+
 export const Route = createFileRoute('/dashboard/$catalogName/$packageName')({
   component: BundleListPage,
 })
 
 export function BundleListPage() {
-  const { catalogName, packageName } = useParams({
+  const { catalogName, packageName }: URLParams = useParams({
     from: '/dashboard/$catalogName/$packageName',
   })
 

@@ -3,6 +3,7 @@ import { useItems, type Params, type ListItem } from '../hooks/useItems'
 import CustomPagination from './CustomPagination'
 import { BreadcrumbNav } from './BreadcrumbNav'
 import { Skeleton } from './ui/skeleton'
+import type { DashboardPageSearchParams } from '../lib/schemas'
 
 interface Breadcrumb {
   to: string
@@ -21,7 +22,9 @@ interface Props {
 
 export function ItemList({ breadcrumbs, renderItem, pathParams }: Props) {
   const navigate = useNavigate({ from: '/dashboard' })
-  const searchParams = useSearch({ from: '/dashboard' })
+  const searchParams: DashboardPageSearchParams = useSearch({
+    from: '/dashboard',
+  })
 
   const useItemsParams: Params = {
     ...searchParams,
@@ -32,7 +35,7 @@ export function ItemList({ breadcrumbs, renderItem, pathParams }: Props) {
 
   const handlePageChange = (newPage: number) => {
     void navigate({
-      search: (prev) => ({ ...prev, page: newPage }),
+      search: (prev: DashboardPageSearchParams) => ({ ...prev, page: newPage }),
     })
   }
 
