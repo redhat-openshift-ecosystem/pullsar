@@ -297,7 +297,7 @@ def get_paginated_items(
     paginated_items = db.fetchall()
 
     if not paginated_items:
-        return {"total_count": total_count, "items": []}
+        return {"total_count": total_count, "page_size": page_size, "items": []}
 
     # fetch the chart data for the current page
     item_names_on_page = [row[0] for row in paginated_items]
