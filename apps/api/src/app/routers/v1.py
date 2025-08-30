@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response, HTTPException
 from psycopg2.extensions import cursor
 from datetime import date, timedelta
 from typing import Optional
+import io
+import csv
 
 from app import crud, schemas
 from app.database import get_db_cursor
@@ -151,4 +153,61 @@ def read_bundles_in_package(
         catalog_name=catalog_name,
         package_name=package_name,
         search_query=search_query,
+    )
+
+
+@router.get("/export/csv")
+async def export_items_to_csv(
+    ocp_version: str = Query(DEFAULT_OCP_VERSION),
+    start_date: date = get_default_start_date(),
+    end_date: date = get_default_end_date(),
+    search_query: Optional[str] = DEFAULT_SEARCH_QUERY,
+    sort_type: schemas.SortType = DEFAULT_SORT_TYPE,
+    is_desc: bool = DEFAULT_IS_DESC,
+    catalog_name: Optional[str] = None,
+    package_name: Optional[str] = None,
+    db: cursor = Depends(get_db_cursor),
+):
+    """Generates and returns a CSV file for the given scope and filters."""
+    level = "bundle" if package_name else "package" if catalog_name else "catalog"
+
+    try:
+        items = crud.get_all_items_for_export(
+            db,
+            level,
+            ocp_version,
+            start_date,
+            end_date,
+            sort_type,
+            is_desc,
+            catalog_name,
+            package_name,
+            search_query,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    date_headers = [
+        (start_date + timedelta(days=i)).isoformat()
+        for i in range((end_date - start_date).days + 1)
+    ]
+    writer.writerow(["Name", "Total Pulls", "Trend"] + date_headers)
+
+    for item in items:
+        pulls_by_date = {
+            str(p["date"]): p["pulls"] for p in item["stats"]["chart_data"]
+        }
+        row = [item["name"], item["stats"]["total_pulls"], item["stats"]["trend"]]
+        row.extend([pulls_by_date.get(d, 0) for d in date_headers])
+        writer.writerow(row)
+
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=pullsar_export_{date.today().isoformat()}.csv"
+        },
     )

@@ -3,6 +3,8 @@ from datetime import date, timedelta
 from typing import Any, Optional, Sequence
 import textwrap
 
+EXPORT_MAX_DAYS = 30
+
 
 def get_ocp_versions(db: cursor) -> list[str]:
     """Fetches a list of unique OCP versions from the database, sorted descending."""
@@ -74,7 +76,7 @@ def _convert_dates_to_str(chart_data: list[dict[str, Any]]) -> list[dict[str, An
     preparing the final API response.
     """
     for data_point in chart_data:
-        data_point["date"] = data_point["date"].strftime("%b %d")
+        data_point["date"] = data_point["date"].isoformat()
 
     return chart_data
 
@@ -309,3 +311,72 @@ def get_paginated_items(
     )
 
     return {"total_count": total_count, "page_size": page_size, "items": response_items}
+
+
+def get_all_items_for_export(
+    db: cursor,
+    level: str,
+    ocp_version: str,
+    start_date: date,
+    end_date: date,
+    sort_type: str,
+    is_desc: bool,
+    catalog_name: Optional[str] = None,
+    package_name: Optional[str] = None,
+    search_query: Optional[str] = None,
+) -> list[dict[str, Any]]:
+    """
+    Fetches all items matching the filters, without pagination, for CSV export.
+    This function mirrors the logic of get_paginated_items but without pagination.
+    """
+    if (end_date - start_date).days > EXPORT_MAX_DAYS:
+        raise ValueError(
+            f"The requested date range cannot exceed {EXPORT_MAX_DAYS} days for an export."
+        )
+
+    level_column_map = {
+        "catalog": "ba.catalog_name",
+        "package": "b.package",
+        "bundle": "b.name",
+    }
+    if level not in level_column_map:
+        raise ValueError("Invalid level provided.")
+
+    item_column = level_column_map[level]
+
+    # build the main query and its parameters
+    main_query, params = _build_main_query_and_params(
+        item_column,
+        ocp_version,
+        start_date,
+        end_date,
+        catalog_name,
+        package_name,
+        search_query,
+    )
+
+    # fetch all sorted items
+    sort_column_map = {
+        "name": "item_name",
+        "pulls": "total_pulls",
+    }
+    order_by_clause = f"ORDER BY {sort_column_map.get(sort_type, 'total_pulls')} {'DESC' if is_desc else 'ASC'}"
+
+    all_items_query = f"{main_query} {order_by_clause}"
+
+    db.execute(all_items_query, params)
+    all_aggregated_items = db.fetchall()
+
+    if not all_aggregated_items:
+        return []
+
+    # fetch the chart data for ALL the items found
+    all_item_names = [row[0] for row in all_aggregated_items]
+    chart_results = _fetch_chart_data(db, item_column, all_item_names, params)
+
+    # combine the datasets into the final response
+    response_items = _combine_results(
+        all_aggregated_items, chart_results, start_date, end_date
+    )
+
+    return response_items

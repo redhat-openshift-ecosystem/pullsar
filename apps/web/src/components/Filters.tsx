@@ -4,9 +4,14 @@ import { DateRangeSelector } from './DateRangeSelector'
 import SearchBar from './SearchBar'
 import { SortSelector } from './SortSelector'
 import { Button } from './ui/button'
-import { Download, Funnel } from 'lucide-react'
-import { useState } from 'react'
+import { Funnel } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Skeleton } from './ui/skeleton'
+import { useParams, useSearch } from '@tanstack/react-router'
+import { useExportCsv } from '../hooks/useExportCsv'
+import { differenceInDays, parseISO } from 'date-fns'
+import { ExportButton } from './ExportButton'
+import { EXPORT_MAX_DAYS } from '../lib/utils'
 
 interface Props {
   availableOcpVersions: string[]
@@ -40,6 +45,25 @@ export const Filters = ({
   isLoading,
 }: Props) => {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [exportPerformed, setExportPerformed] = useState(false)
+
+  const search = useSearch({ from: '/dashboard' })
+  const params = useParams({ strict: false })
+
+  const { exportData, isExporting } = useExportCsv(() =>
+    setExportPerformed(true)
+  )
+
+  useEffect(() => {
+    setExportPerformed(false)
+  }, [search, params])
+
+  const isExportMaxExceeded = useMemo(() => {
+    const from = search.start_date ? parseISO(search.start_date) : null
+    const to = search.end_date ? parseISO(search.end_date) : null
+    if (!from || !to) return false
+    return differenceInDays(to, from) > EXPORT_MAX_DAYS
+  }, [search.start_date, search.end_date])
 
   if (
     isLoading ||
@@ -105,9 +129,12 @@ export const Filters = ({
               />
             </div>
           </div>
-          <Button className="font-bold w-full sm:w-auto lg:self-end">
-            <Download strokeWidth={3} className="mr-2 h-4 w-4" /> Export as CSV
-          </Button>
+          <ExportButton
+            onClick={() => exportData(search)}
+            isExportMaxExceeded={isExportMaxExceeded}
+            isExporting={isExporting}
+            isDone={exportPerformed}
+          />
         </div>
       </div>
     </div>

@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+export const EXPORT_MAX_DAYS = 30
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -9,6 +11,14 @@ export const daysAgo = (n: number) => {
   const date = new Date()
   date.setDate(date.getDate() - n)
   return date.toISOString().split('T')[0]
+}
+
+export const formatDate = (isoDateString: string) => {
+  const date = new Date(isoDateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 export const capitalizeFirstLetter = (word: string) => {

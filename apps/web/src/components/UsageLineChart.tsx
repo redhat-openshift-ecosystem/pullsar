@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts'
 import { useTheme } from '../contexts/theme-context'
+import { formatDate } from '../lib/utils'
 
 interface ChartPoint {
   date: string
@@ -74,6 +75,7 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
           tickLine={false}
           stroke={secondary}
           dy={8}
+          tickFormatter={formatDate}
         />
         <YAxis fontSize={12} tickLine={false} stroke={secondary} />
         <Tooltip
