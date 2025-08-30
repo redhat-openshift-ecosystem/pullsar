@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { ChevronDown, Trash2, X } from 'lucide-react'
 import { type ListItem } from '../hooks/useItems'
 import { TrendIndicator } from './TrendIndicator'
@@ -6,6 +6,8 @@ import { UsageLineChart, LINE_COLORS } from './UsageLineChart'
 import { BreadcrumbNav, type Breadcrumb } from './BreadcrumbNav'
 import { shortBundleName, shortCatalogName } from '../lib/utils'
 import { Button } from './ui/button'
+
+type ColoredListItem = ListItem & { color: string }
 
 interface Props {
   items: ListItem[]
@@ -22,11 +24,21 @@ export function ComparisonTray({
   onItemRemove,
   onClearAll,
 }: Props) {
-  const [visibleItems, setVisibleItems] = useState<ListItem[]>(items)
+  const coloredItems = useMemo(
+    () =>
+      items.map((item, index) => ({
+        ...item,
+        color: LINE_COLORS[index % LINE_COLORS.length],
+      })),
+    [items]
+  )
+
+  const [visibleItems, setVisibleItems] =
+    useState<ColoredListItem[]>(coloredItems)
 
   useEffect(() => {
-    setVisibleItems(items)
-  }, [items])
+    setVisibleItems(coloredItems)
+  }, [coloredItems])
 
   useEffect(() => {
     if (items.length === 0) {
@@ -51,7 +63,7 @@ export function ComparisonTray({
     return itemName
   }
 
-  const handleToggleVisibility = (itemToToggle: ListItem) => {
+  const handleToggleVisibility = (itemToToggle: ColoredListItem) => {
     setVisibleItems((currentVisible) => {
       const isVisible = currentVisible.some(
         (item) => item.name === itemToToggle.name
@@ -88,8 +100,7 @@ export function ComparisonTray({
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
-            {items.map((item, index) => {
-              const color = LINE_COLORS[index % LINE_COLORS.length]
+            {coloredItems.map((item) => {
               const isVisible = visibleItems.some((v) => v.name === item.name)
 
               return (
@@ -109,7 +120,10 @@ export function ComparisonTray({
                     <X className="w-4 h-4" />
                   </button>
 
-                  <p className="font-bold truncate" style={{ color: color }}>
+                  <p
+                    className="font-bold truncate"
+                    style={{ color: item.color }}
+                  >
                     {getLabel(item.name)}
                   </p>
                   <p className="text-lg text-foreground font-bold">
@@ -127,6 +141,7 @@ export function ComparisonTray({
               series={visibleItems.map((item) => ({
                 name: getLabel(item.name),
                 data: item.stats.chart_data,
+                color: item.color,
               }))}
               isComparison={true}
             />

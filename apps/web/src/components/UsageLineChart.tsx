@@ -19,6 +19,7 @@ interface ChartPoint {
 interface Series {
   name: string
   data: ChartPoint[]
+  color?: string
 }
 
 interface Props {
@@ -93,7 +94,8 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
             type="monotone"
             dataKey={s.name}
             stroke={
-              isComparison ? LINE_COLORS[index % LINE_COLORS.length] : accent
+              s.color ||
+              (isComparison ? LINE_COLORS[index % LINE_COLORS.length] : accent)
             }
             strokeWidth={2}
             dot={isComparison ? false : { r: 2, fill: accent }}
