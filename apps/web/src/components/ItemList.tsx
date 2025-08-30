@@ -4,6 +4,14 @@ import CustomPagination from './CustomPagination'
 import { BreadcrumbNav } from './BreadcrumbNav'
 import { Skeleton } from './ui/skeleton'
 import type { DashboardPageSearchParams } from '../lib/schemas'
+import { cloneElement, useState, type ReactElement } from 'react'
+import { ComparisonTray } from './ComparisonTray'
+import { ChevronUp } from 'lucide-react'
+
+interface ItemCardPropsToInject {
+  isSelected?: boolean
+  onSelectItem?: (item: ListItem) => void
+}
 
 interface Breadcrumb {
   to: string
@@ -13,7 +21,7 @@ interface Breadcrumb {
 
 interface Props {
   breadcrumbs: Breadcrumb[]
-  renderItem: (item: ListItem) => React.ReactNode
+  renderItem: (item: ListItem) => ReactElement<ItemCardPropsToInject>
   pathParams?: {
     catalog_name?: string
     package_name?: string
@@ -32,6 +40,8 @@ export function ItemList({ breadcrumbs, renderItem, pathParams }: Props) {
   }
 
   const { data, isLoading } = useItems(useItemsParams)
+  const [selectedItems, setSelectedItems] = useState<ListItem[]>([])
+  const [isTrayOpen, setIsTrayOpen] = useState(false)
 
   const handlePageChange = (newPage: number) => {
     void navigate({
@@ -46,22 +56,25 @@ export function ItemList({ breadcrumbs, renderItem, pathParams }: Props) {
   const { items, total_count, page_size } = data
   const totalPages = Math.ceil(total_count / page_size)
 
+  const handleSelectItem = (itemToToggle: ListItem) => {
+    setSelectedItems((currentSelected) => {
+      const isAlreadySelected = currentSelected.some(
+        (item) => item.name === itemToToggle.name
+      )
+      if (isAlreadySelected) {
+        return currentSelected.filter((item) => item.name !== itemToToggle.name)
+      }
+      return [...currentSelected, itemToToggle]
+    })
+  }
+
   return (
-    <div className="mt-15 flex flex-col">
-      <BreadcrumbNav breadcrumbs={breadcrumbs} />
+    <div className="my-6 md:my-12 flex flex-col gap-6">
+      <BreadcrumbNav breadcrumbs={breadcrumbs} isInteractive={true} />
 
-      <div className="flex flex-col gap-4">
-        {items.map((item) => (
-          <div key={item.name}>{renderItem(item)}</div>
-        ))}
-      </div>
-
-      {items.length === 0 && (
-        <p className="mt-4 self-center font-bold">No items found.</p>
-      )}
-
+      {/* mobile - pagination on top of list on the left */}
       {totalPages > 1 && (
-        <div className="mt-8 self-end">
+        <div className="self-start flex lg:hidden">
           <CustomPagination
             pagination={{
               page: useItemsParams.page,
@@ -71,6 +84,67 @@ export function ItemList({ breadcrumbs, renderItem, pathParams }: Props) {
             handlePageChange={handlePageChange}
           />
         </div>
+      )}
+
+      <div className="flex flex-col gap-4 mb-10 lg:mb-4">
+        {items.map((item) => {
+          const isSelected = selectedItems.some(
+            (selected) => selected.name === item.name
+          )
+          const itemCard = renderItem(item)
+          return cloneElement(itemCard, {
+            key: item.name,
+            isSelected,
+            onSelectItem: handleSelectItem,
+          })
+        })}
+      </div>
+
+      {items.length === 0 && (
+        <p className="self-center font-bold">No items found.</p>
+      )}
+
+      {/* desktop - pagination below list on the right */}
+      {totalPages > 1 && (
+        <div className="self-end hidden lg:flex">
+          <CustomPagination
+            pagination={{
+              page: useItemsParams.page,
+              totalPages,
+              totalCount: total_count,
+            }}
+            handlePageChange={handlePageChange}
+          />
+        </div>
+      )}
+
+      {selectedItems.length > 0 && (
+        <div className="fixed bottom-0 lg:bottom-2 left-1/2 -translate-x-1/2 z-30 w-full lg:w-fit">
+          <button
+            onClick={() => setIsTrayOpen(true)}
+            className={`flex flex-col items-center text-center text-secondary hover:text-accent
+              hover:cursor-pointer transition-colors rounded-t-xl lg:rounded-b-xl border
+              border-border border-b-0 lg:border-b-1 bg-bg-comparison/95 w-full
+              `}
+          >
+            <div className="flex flex-col items-center p-2">
+              <ChevronUp className="w-10 h-10" />
+              <span className="font-semibold">
+                Show Comparison ({selectedItems.length})
+              </span>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {isTrayOpen && (
+        <ComparisonTray
+          items={selectedItems}
+          breadcrumbs={breadcrumbs}
+          onItemRemove={handleSelectItem}
+          onClose={() => setIsTrayOpen(false)}
+          onClearAll={() => setSelectedItems([])}
+        />
       )}
     </div>
   )

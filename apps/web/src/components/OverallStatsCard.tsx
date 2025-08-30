@@ -46,9 +46,12 @@ export const OverallStatsCard = ({
   const { total_pulls, trend, chart_data } = overallData
 
   return (
-    <div className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden">
+    <div
+      className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden hover:cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-        <div onClick={handleCardClick} className="hover:cursor-pointer hover:">
+        <div>
           <h3 className="text-2xl font-bold text-summary-accent flex items-center">
             All Operators Usage
             <ChevronsRight className="w-6 h-6 ml-2" />
@@ -82,8 +85,11 @@ export const OverallStatsCard = ({
             <p className="text-sm text-secondary">Trend</p>
           </div>
         </div>
-        <div className="w-full flex-grow h-48">
-          <UsageLineChart chartData={chart_data} />
+        <div
+          className="w-full flex-grow h-48"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <UsageLineChart series={[{ name: 'Pulls', data: chart_data }]} />
         </div>
       </div>
     </div>

@@ -11,6 +11,8 @@ export const buttonVariants = cva(
           'bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline:
           'border bg-background shadow-xs dark:bg-input/30 dark:border-input hover:cursor-pointer',
+        comparisonTray:
+          'border bg-background shadow-xs dark:bg-input/30 dark:border-input hover:cursor-pointer hover:text-accent hover:border-accent',
         secondary:
           'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
         ghost:

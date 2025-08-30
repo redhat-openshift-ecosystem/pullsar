@@ -33,7 +33,7 @@ export function DateRangeSelector({ dateRange, onDateChange }: Props) {
   }
 
   return (
-    <div>
+    <div onClick={(e) => e.stopPropagation()}>
       <label className="block text-sm font-medium text-secondary mb-1">
         Date Range
       </label>

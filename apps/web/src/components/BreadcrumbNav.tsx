@@ -4,7 +4,7 @@ import { Button } from './ui/button'
 
 const BREADCRUMB_ICONS = [Home, BookOpen, Package]
 
-interface Breadcrumb {
+export interface Breadcrumb {
   to: string
   label: string
   params?: Record<string, string>
@@ -12,9 +12,10 @@ interface Breadcrumb {
 
 interface Props {
   breadcrumbs: Breadcrumb[]
+  isInteractive: boolean
 }
 
-export function BreadcrumbNav({ breadcrumbs }: Props) {
+export function BreadcrumbNav({ breadcrumbs, isInteractive }: Props) {
   const size = breadcrumbs.length
   if (size === 0) {
     return null
@@ -25,15 +26,15 @@ export function BreadcrumbNav({ breadcrumbs }: Props) {
   const LastIcon = BREADCRUMB_ICONS[size - 1]
 
   return (
-    <div className="text-sm md:text-lg font-bold text-text-header mb-4">
+    <div className="text-sm md:text-lg font-bold text-text-header">
       {/* mobile - display only last item of the breadcrumbs and 'back' button */}
-      <div className="md:hidden flex justify-between items-center">
+      <div className="lg:hidden flex justify-between items-center">
         <div className="flex items-center gap-2 text-accent truncate">
           {LastIcon && <LastIcon className="w-5 h-5 flex-shrink-0" />}
           <span className="truncate">{lastCrumb.label}</span>
         </div>
 
-        {secondToLastCrumb && (
+        {isInteractive && secondToLastCrumb && (
           <Link to={secondToLastCrumb.to} params={secondToLastCrumb.params}>
             <Button size="sm" className="font-bold">
               <ArrowLeft className="w-4 h-4" strokeWidth={3} />
@@ -44,7 +45,7 @@ export function BreadcrumbNav({ breadcrumbs }: Props) {
       </div>
 
       {/* desktop - display all breadcrumbs */}
-      <div className="hidden md:flex items-center gap-2">
+      <div className="hidden lg:flex items-center gap-2">
         {breadcrumbs.map((crumb, index) => {
           const isLast = index === size - 1
           const Icon = BREADCRUMB_ICONS[index]
@@ -59,11 +60,11 @@ export function BreadcrumbNav({ breadcrumbs }: Props) {
                 params={crumb.params}
                 className={`hover:cursor-pointer hover:text-accent ${
                   isLast ? 'text-accent pointer-events-none' : ''
-                }`}
+                } ${isInteractive ? '' : 'pointer-events-none'}`}
               >
                 <span className="flex items-center gap-2">
                   {Icon && <Icon className="w-5 h-5" />}
-                  {crumb.label}
+                  <span className="truncate">{crumb.label}</span>
                 </span>
               </Link>
               {!isLast && <ChevronsRight className="w-5 h-5" />}
