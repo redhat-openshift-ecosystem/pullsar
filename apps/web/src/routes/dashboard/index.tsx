@@ -1,14 +1,28 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useSearch } from '@tanstack/react-router'
 import { ItemList } from '../../components/ItemList'
 import type { ListItem } from '../../hooks/useItems'
 import { ItemStatsCard } from '../../components/ItemStatsCard'
 import { shortCatalogName } from '../../lib/utils'
+import { useOverallPulls } from '../../hooks/useOverallPulls'
 
 export const Route = createFileRoute('/dashboard/')({
   component: CatalogListPage,
 })
 
 export function CatalogListPage() {
+  const { ocp_version, start_date, end_date } = useSearch({
+    from: '/dashboard',
+  })
+  const { data, isLoading } = useOverallPulls({
+    ocp_version,
+    start_date,
+    end_date,
+  })
+
+  const allOperatorsItem: ListItem | undefined = data
+    ? { name: 'All Operators', stats: data }
+    : undefined
+
   return (
     <ItemList
       pathParams={{}}
@@ -21,6 +35,8 @@ export function CatalogListPage() {
           linkParams={{ catalogName: catalog.name }}
         />
       )}
+      extraItem={allOperatorsItem}
+      isExtraItemLoading={isLoading}
     />
   )
 }

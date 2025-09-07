@@ -3,6 +3,8 @@ from datetime import date, timedelta
 from typing import Any, Optional, Sequence
 import textwrap
 
+# catalog name for fetching operators from all catalogs at once
+ALL_OPERATORS = "All Operators"
 EXPORT_MAX_DAYS = 30
 
 
@@ -148,7 +150,7 @@ def _build_main_query_and_params(
                     AND pc.pull_date BETWEEN %(start_date)s AND %(end_date)s
             WHERE
                 ba.ocp_version = %(ocp_version)s
-                {"AND ba.catalog_name = %(catalog_name)s" if catalog_name else ""}
+                {"AND ba.catalog_name = %(catalog_name)s" if catalog_name and catalog_name != ALL_OPERATORS else ""}
                 {"AND b.package = %(package_name)s" if package_name else ""}
                 {"AND " + item_column + " LIKE %(search_query)s" if search_query else ""}
             GROUP BY
@@ -192,7 +194,7 @@ def _fetch_chart_data(
         WHERE
             ba.ocp_version = %(ocp_version)s
             AND {item_column} IN %(item_names)s
-            {"AND ba.catalog_name = %(catalog_name)s" if "catalog_name" in params else ""}
+            {"AND ba.catalog_name = %(catalog_name)s" if "catalog_name" in params and params["catalog_name"] != ALL_OPERATORS else ""}
             {"AND b.package = %(package_name)s" if "package_name" in params else ""}
         GROUP BY
             item_name, pc.pull_date

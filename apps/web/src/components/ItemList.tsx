@@ -4,7 +4,13 @@ import CustomPagination from './CustomPagination'
 import { BreadcrumbNav } from './BreadcrumbNav'
 import { Skeleton } from './ui/skeleton'
 import type { DashboardPageSearchParams } from '../lib/schemas'
-import { cloneElement, useState, type ReactElement } from 'react'
+import {
+  cloneElement,
+  Fragment,
+  useMemo,
+  useState,
+  type ReactElement,
+} from 'react'
 import { ComparisonTray } from './ComparisonTray'
 import { ChevronUp } from 'lucide-react'
 
@@ -26,9 +32,17 @@ interface Props {
     catalog_name?: string
     package_name?: string
   }
+  extraItem?: ListItem
+  isExtraItemLoading?: boolean
 }
 
-export function ItemList({ breadcrumbs, renderItem, pathParams }: Props) {
+export function ItemList({
+  breadcrumbs,
+  renderItem,
+  pathParams,
+  extraItem,
+  isExtraItemLoading,
+}: Props) {
   const navigate = useNavigate({ from: '/dashboard' })
   const searchParams: DashboardPageSearchParams = useSearch({
     from: '/dashboard',
@@ -43,18 +57,26 @@ export function ItemList({ breadcrumbs, renderItem, pathParams }: Props) {
   const [selectedItems, setSelectedItems] = useState<ListItem[]>([])
   const [isTrayOpen, setIsTrayOpen] = useState(false)
 
+  const combinedItems = useMemo(() => {
+    const baseItems = data?.items || []
+    if (extraItem) {
+      return [extraItem, ...baseItems]
+    }
+    return baseItems
+  }, [data, extraItem])
+
   const handlePageChange = (newPage: number) => {
     void navigate({
       search: (prev: DashboardPageSearchParams) => ({ ...prev, page: newPage }),
     })
   }
 
-  if (isLoading || !data) {
+  if (isLoading || !data || isExtraItemLoading) {
     return getLoadingSkeleton()
   }
 
   const { items, total_count, page_size } = data
-  const totalPages = Math.ceil(total_count / page_size)
+  const totalPages = Math.ceil((total_count + (extraItem ? 1 : 0)) / page_size)
 
   const handleSelectItem = (itemToToggle: ListItem) => {
     setSelectedItems((currentSelected) => {
@@ -87,16 +109,22 @@ export function ItemList({ breadcrumbs, renderItem, pathParams }: Props) {
       )}
 
       <div className="flex flex-col gap-4 mb-10 lg:mb-4">
-        {items.map((item) => {
+        {combinedItems.map((item, index) => {
           const isSelected = selectedItems.some(
             (selected) => selected.name === item.name
           )
           const itemCard = renderItem(item)
-          return cloneElement(itemCard, {
-            key: item.name,
-            isSelected,
-            onSelectItem: handleSelectItem,
-          })
+          return (
+            <Fragment key={item.name}>
+              {cloneElement(itemCard, {
+                isSelected,
+                onSelectItem: handleSelectItem,
+              })}
+              {extraItem && index === 0 && (
+                <hr className="border-accent border-1" />
+              )}
+            </Fragment>
+          )
         })}
       </div>
 
