@@ -22,3 +22,6 @@ __pycache__/
 # other
 .turbo/
 .vscode/
+
+# exceptions
+!/apps/web/.env
