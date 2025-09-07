@@ -48,6 +48,12 @@ DB_HOST="localhost"
 DB_PORT="5432"
 ```
 
+- set client certificate paths for Pyxis API mutual TLS authentication (optional, defaults to Kerberos authentication):
+```
+CLIENT_CERT_PATH="tls.crt"
+CLIENT_KEY_PATH="tls.key"
+```
+
 ## Usage
 
 ### 1. start local Postgres database (optional):
