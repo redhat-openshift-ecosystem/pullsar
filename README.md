@@ -24,6 +24,12 @@ DB_PASSWORD="password"
 DB_HOST="localhost"
 DB_PORT="5432"
 ```
+- set API configuration (at least DB start date):
+```
+API_DB_START_DATE="2025-08-08"
+API_EXPORT_MAX_DAYS="30"
+API_ALL_OPERATORS_CATALOG="All Operators"
+```
 
 ### 3. start services (web, API, database):
 ```
@@ -38,9 +44,10 @@ podman-compose up -d
 pnpm install
 ```
 
-### 2. create `/apps/web/.env` to allow forwarding of requests to API:
+### 2. create `/apps/web/.env` to allow forwarding of requests to API and synchronize DB start date:
 ```
 VITE_API_PROXY_TARGET="http://localhost:8000"
+VITE_API_DB_START_DATE="2025-08-08"
 ```
 
 ### 3. run web and API:

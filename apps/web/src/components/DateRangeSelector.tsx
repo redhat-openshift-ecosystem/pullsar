@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
-import { parseISO } from 'date-fns'
+import { parseISO, subDays } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { type DateRange } from 'react-day-picker'
 import { Button } from './ui/button'
 import { Calendar } from './ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+
+const dbStartDate = parseISO(import.meta.env.VITE_API_DB_START_DATE)
+const yesterdayDate = () => subDays(new Date(), 1)
 
 interface Props {
   dateRange: { from?: string; to?: string }
@@ -55,6 +58,7 @@ export function DateRangeSelector({ dateRange, onDateChange }: Props) {
             selected={range}
             onSelect={(selectedRange) => setRange(selectedRange)}
             numberOfMonths={1}
+            disabled={{ before: dbStartDate, after: yesterdayDate() }}
           />
         </PopoverContent>
       </Popover>

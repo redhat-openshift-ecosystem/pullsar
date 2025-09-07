@@ -5,6 +5,9 @@ import { ItemStatsCard } from '../../components/ItemStatsCard'
 import { shortCatalogName } from '../../lib/utils'
 import { useOverallPulls } from '../../hooks/useOverallPulls'
 
+const allOperatorsCatalog =
+  import.meta.env.VITE_API_ALL_OPERATORS_CATALOG || 'All Operators'
+
 export const Route = createFileRoute('/dashboard/')({
   component: CatalogListPage,
 })
@@ -20,7 +23,7 @@ export function CatalogListPage() {
   })
 
   const allOperatorsItem: ListItem | undefined = data
-    ? { name: 'All Operators', stats: data }
+    ? { name: allOperatorsCatalog, stats: data }
     : undefined
 
   return (

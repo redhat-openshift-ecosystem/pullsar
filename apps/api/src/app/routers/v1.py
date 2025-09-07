@@ -7,6 +7,7 @@ import csv
 
 from app import crud, schemas
 from app.database import get_db_cursor
+from app.config import BASE_CONFIG
 
 router = APIRouter()
 
@@ -18,14 +19,38 @@ DEFAULT_SORT_TYPE = Query("pulls")
 DEFAULT_IS_DESC = Query(True)
 DEFAULT_PAGE = Query(1, ge=1)
 DEFAULT_PAGE_SIZE = Query(50, ge=1, le=100)
+DB_START_DATE = BASE_CONFIG.db_start_date
+
+
+def get_yesterday_date():
+    return date.today() - timedelta(1)
 
 
 def get_default_start_date():
-    return date.today() - timedelta(DEFAULT_DAYS_DELTA)
+    return get_yesterday_date() - timedelta(DEFAULT_DAYS_DELTA)
 
 
 def get_default_end_date():
-    return date.today()
+    return get_yesterday_date()
+
+
+def clamp_date(date: date) -> date:
+    """Fix the date to be inside the valid date range."""
+    yesterday = get_yesterday_date()
+    if date > yesterday:
+        return yesterday
+    if date < DB_START_DATE:
+        return DB_START_DATE
+    return date
+
+
+def clamp_date_range(start_date: date, end_date: date) -> tuple[date, date]:
+    """Make the provided date range valid."""
+    start, end = (clamp_date(start_date), clamp_date(end_date))
+    if start > end:
+        start = end
+
+    return (start, end)
 
 
 @router.get("/")
@@ -60,6 +85,7 @@ def read_overall_summary(
     db: cursor = Depends(get_db_cursor),
 ):
     """Retrieves overall pull count, trend and chart data combining all catalogs."""
+    start_date, end_date = clamp_date_range(start_date, end_date)
     return crud.get_overall_pulls(db, ocp_version, start_date, end_date)
 
 
@@ -76,6 +102,7 @@ def read_catalogs(
     db: cursor = Depends(get_db_cursor),
 ):
     """Retrieves a paginated and sorted list of catalogs with stats."""
+    start_date, end_date = clamp_date_range(start_date, end_date)
     return crud.get_paginated_items(
         db,
         level="catalog",
@@ -107,6 +134,7 @@ def read_packages_in_catalog(
     db: cursor = Depends(get_db_cursor),
 ):
     """Retrieves a paginated and sorted list of packages within a catalog."""
+    start_date, end_date = clamp_date_range(start_date, end_date)
     return crud.get_paginated_items(
         db,
         level="package",
@@ -140,6 +168,7 @@ def read_bundles_in_package(
     db: cursor = Depends(get_db_cursor),
 ):
     """Retrieves a paginated and sorted list of bundles within a package."""
+    start_date, end_date = clamp_date_range(start_date, end_date)
     return crud.get_paginated_items(
         db,
         level="bundle",
@@ -169,6 +198,7 @@ async def export_items_to_csv(
     db: cursor = Depends(get_db_cursor),
 ):
     """Generates and returns a CSV file for the given scope and filters."""
+    start_date, end_date = clamp_date_range(start_date, end_date)
     level = "bundle" if package_name else "package" if catalog_name else "catalog"
 
     try:

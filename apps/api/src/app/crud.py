@@ -3,9 +3,11 @@ from datetime import date, timedelta
 from typing import Any, Optional, Sequence
 import textwrap
 
+from app.config import BASE_CONFIG
+
 # catalog name for fetching operators from all catalogs at once
-ALL_OPERATORS = "All Operators"
-EXPORT_MAX_DAYS = 30
+ALL_OPERATORS = BASE_CONFIG.all_operators_catalog
+EXPORT_MAX_DAYS = BASE_CONFIG.export_max_days
 
 
 def get_ocp_versions(db: cursor) -> list[str]:
