@@ -36,7 +36,7 @@ export const OverallStatsCard = ({
   const navigate = useNavigate()
 
   const handleCardClick = () => {
-    void navigate({ to: '/dashboard' })
+    void navigate({ to: '/dashboard', search: true })
   }
 
   if (isLoading || overallData === undefined) {

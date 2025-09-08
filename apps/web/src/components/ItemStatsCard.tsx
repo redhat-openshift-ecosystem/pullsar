@@ -34,7 +34,17 @@ export function ItemStatsCard({
 
   const handleCardClick = () => {
     if (linkTo) {
-      void navigate({ to: linkTo, params: linkParams })
+      void navigate({
+        to: linkTo,
+        params: linkParams,
+        search: (prev) => {
+          return {
+            ocp_version: prev.ocp_version,
+            start_date: prev.start_date,
+            end_date: prev.end_date,
+          }
+        },
+      })
     }
   }
 

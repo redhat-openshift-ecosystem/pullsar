@@ -35,7 +35,17 @@ export function BreadcrumbNav({ breadcrumbs, isInteractive }: Props) {
         </div>
 
         {isInteractive && secondToLastCrumb && (
-          <Link to={secondToLastCrumb.to} params={secondToLastCrumb.params}>
+          <Link
+            to={secondToLastCrumb.to}
+            params={secondToLastCrumb.params}
+            search={(prev) => {
+              return {
+                ocp_version: prev.ocp_version,
+                start_date: prev.start_date,
+                end_date: prev.end_date,
+              }
+            }}
+          >
             <Button size="sm" className="font-bold">
               <ArrowLeft className="w-4 h-4" strokeWidth={3} />
               Back
@@ -58,6 +68,13 @@ export function BreadcrumbNav({ breadcrumbs, isInteractive }: Props) {
               <Link
                 to={crumb.to}
                 params={crumb.params}
+                search={(prev) => {
+                  return {
+                    ocp_version: prev.ocp_version,
+                    start_date: prev.start_date,
+                    end_date: prev.end_date,
+                  }
+                }}
                 className={`hover:cursor-pointer hover:text-accent ${
                   isLast ? 'text-accent pointer-events-none' : ''
                 } ${isInteractive ? '' : 'pointer-events-none'}`}

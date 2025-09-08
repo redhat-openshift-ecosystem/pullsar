@@ -83,7 +83,15 @@ export function DashboardPage() {
           strokeWidth={1}
         />
 
-        <Link to="/" className="hover:cursor-pointer">
+        <Link
+          to="/"
+          className="hover:cursor-pointer"
+          search={(prev) => ({
+            ocp_version: prev.ocp_version,
+            start_date: prev.start_date,
+            end_date: prev.end_date,
+          })}
+        >
           <h1 className="text-2xl font-extrabold text-text-header sm:text-4xl md:text-5xl text-shadow-lg">
             Pullsar Dashboard
           </h1>
