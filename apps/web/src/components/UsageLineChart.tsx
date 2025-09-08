@@ -9,7 +9,7 @@ import {
   YAxis,
 } from 'recharts'
 import { useTheme } from '../contexts/theme-context'
-import { formatDate } from '../lib/utils'
+import { formatDate, LINE_COLORS } from '../lib/utils'
 
 interface ChartPoint {
   date: string
@@ -26,19 +26,6 @@ interface Props {
   series: Series[]
   isComparison?: boolean
 }
-
-export const LINE_COLORS = [
-  '#0284c7', // blue
-  '#22c55e', // green
-  '#ef4444', // red
-  '#eab308', // yellow
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#14b8a6', // teal
-  '#f97316', // orange
-  '#84cc16', // lime
-  '#06b6d4', // cyan
-]
 
 export const UsageLineChart = ({ series, isComparison = false }: Props) => {
   const { theme } = useTheme()

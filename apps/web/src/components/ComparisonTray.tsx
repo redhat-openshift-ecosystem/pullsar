@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo } from 'react'
 import { ChevronDown, Trash2, X } from 'lucide-react'
 import { type ListItem } from '../hooks/useItems'
 import { TrendIndicator } from './TrendIndicator'
-import { UsageLineChart, LINE_COLORS } from './UsageLineChart'
+import { UsageLineChart } from './UsageLineChart'
 import { BreadcrumbNav, type Breadcrumb } from './BreadcrumbNav'
-import { shortBundleName, shortCatalogName } from '../lib/utils'
+import { LINE_COLORS, shortBundleName, shortCatalogName } from '../lib/utils'
 import { Button } from './ui/button'
 
 type ColoredListItem = ListItem & { color: string }

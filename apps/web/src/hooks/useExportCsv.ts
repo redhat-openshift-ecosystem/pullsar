@@ -8,11 +8,20 @@ interface ExportParams extends DashboardPageSearchParams {
   package_name?: string
 }
 
+interface URLParams {
+  catalog_name?: string
+  package_name?: string
+}
+
+interface ApiError {
+  detail: string
+}
+
 export function useExportCsv(onSuccess: () => void) {
   const [isExporting, setIsExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const pathParams = useParams({ strict: false })
+  const pathParams: URLParams = useParams({ strict: false })
 
   const exportData = async (search: DashboardPageSearchParams) => {
     setIsExporting(true)
@@ -54,7 +63,7 @@ export function useExportCsv(onSuccess: () => void) {
       const response = await fetch(apiUrl)
 
       if (!response.ok) {
-        const errorData = await response.json()
+        const errorData = (await response.json()) as ApiError
         throw new Error(errorData.detail || 'Failed to export data.')
       }
 

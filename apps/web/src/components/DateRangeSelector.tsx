@@ -6,7 +6,7 @@ import { Button } from './ui/button'
 import { Calendar } from './ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
-const dbStartDate = parseISO(import.meta.env.VITE_API_DB_START_DATE)
+const dbStartDate = parseISO(String(import.meta.env.VITE_API_DB_START_DATE))
 const yesterdayDate = () => subDays(new Date(), 1)
 
 interface Props {

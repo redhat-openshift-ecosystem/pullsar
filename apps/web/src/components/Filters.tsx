@@ -12,6 +12,12 @@ import { useExportCsv } from '../hooks/useExportCsv'
 import { differenceInDays, parseISO } from 'date-fns'
 import { ExportButton } from './ExportButton'
 import { EXPORT_MAX_DAYS } from '../lib/utils'
+import type { DashboardPageSearchParams } from '../lib/schemas'
+
+interface URLParams {
+  catalog_name?: string
+  package_name?: string
+}
 
 interface Props {
   availableOcpVersions: string[]
@@ -47,8 +53,8 @@ export const Filters = ({
   const [isExpanded, setIsExpanded] = useState(false)
   const [exportPerformed, setExportPerformed] = useState(false)
 
-  const search = useSearch({ from: '/dashboard' })
-  const params = useParams({ strict: false })
+  const search: DashboardPageSearchParams = useSearch({ from: '/dashboard' })
+  const params: URLParams = useParams({ strict: false })
 
   const { exportData, isExporting } = useExportCsv(() =>
     setExportPerformed(true)

@@ -4,18 +4,20 @@ import type { ListItem } from '../../hooks/useItems'
 import { ItemStatsCard } from '../../components/ItemStatsCard'
 import { shortCatalogName } from '../../lib/utils'
 import { useOverallPulls } from '../../hooks/useOverallPulls'
+import type { DashboardPageSearchParams } from '../../lib/schemas'
 
 const allOperatorsCatalog =
-  import.meta.env.VITE_API_ALL_OPERATORS_CATALOG || 'All Operators'
+  String(import.meta.env.VITE_API_ALL_OPERATORS_CATALOG) || 'All Operators'
 
 export const Route = createFileRoute('/dashboard/')({
   component: CatalogListPage,
 })
 
 export function CatalogListPage() {
-  const { ocp_version, start_date, end_date } = useSearch({
-    from: '/dashboard',
-  })
+  const { ocp_version, start_date, end_date }: DashboardPageSearchParams =
+    useSearch({
+      from: '/dashboard',
+    })
   const { data, isLoading } = useOverallPulls({
     ocp_version,
     start_date,

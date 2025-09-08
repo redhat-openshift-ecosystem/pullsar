@@ -1,6 +1,7 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useSearch } from '@tanstack/react-router'
 import { ChevronsRight, ArrowLeft, Home, BookOpen, Package } from 'lucide-react'
 import { Button } from './ui/button'
+import type { DashboardPageSearchParams } from '../lib/schemas'
 
 const BREADCRUMB_ICONS = [Home, BookOpen, Package]
 
@@ -16,6 +17,10 @@ interface Props {
 }
 
 export function BreadcrumbNav({ breadcrumbs, isInteractive }: Props) {
+  const currentSearch: DashboardPageSearchParams = useSearch({
+    from: '/dashboard',
+  })
+
   const size = breadcrumbs.length
   if (size === 0) {
     return null
@@ -38,11 +43,11 @@ export function BreadcrumbNav({ breadcrumbs, isInteractive }: Props) {
           <Link
             to={secondToLastCrumb.to}
             params={secondToLastCrumb.params}
-            search={(prev) => {
+            search={() => {
               return {
-                ocp_version: prev.ocp_version,
-                start_date: prev.start_date,
-                end_date: prev.end_date,
+                ...currentSearch,
+                page: undefined,
+                search_query: undefined,
               }
             }}
           >
@@ -68,11 +73,11 @@ export function BreadcrumbNav({ breadcrumbs, isInteractive }: Props) {
               <Link
                 to={crumb.to}
                 params={crumb.params}
-                search={(prev) => {
+                search={() => {
                   return {
-                    ocp_version: prev.ocp_version,
-                    start_date: prev.start_date,
-                    end_date: prev.end_date,
+                    ...currentSearch,
+                    page: undefined,
+                    search_query: undefined,
                   }
                 }}
                 className={`hover:cursor-pointer hover:text-accent ${

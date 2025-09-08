@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   ChevronDown,
   ChevronRight,
@@ -9,6 +9,7 @@ import {
 import type { ListItem } from '../hooks/useItems'
 import { UsageLineChart } from './UsageLineChart'
 import { ItemStats } from './ItemStats'
+import type { DashboardPageSearchParams } from '../lib/schemas'
 
 interface Props {
   label: string
@@ -27,6 +28,10 @@ export function ItemStatsCard({
   isSelected,
   onSelectItem,
 }: Props) {
+  const currentSearch: DashboardPageSearchParams = useSearch({
+    from: '/dashboard',
+  })
+
   const [isExpanded, setIsExpanded] = useState(false)
   const { name, stats } = item
 
@@ -37,11 +42,11 @@ export function ItemStatsCard({
       void navigate({
         to: linkTo,
         params: linkParams,
-        search: (prev) => {
+        search: () => {
           return {
-            ocp_version: prev.ocp_version,
-            start_date: prev.start_date,
-            end_date: prev.end_date,
+            ...currentSearch,
+            page: undefined,
+            search_query: undefined,
           }
         },
       })
@@ -94,7 +99,9 @@ export function ItemStatsCard({
               ${isSelected ? 'bg-bg-remove hover:bg-bg-remove/80 text-trend-down' : 'bg-bg-add hover:bg-bg-add/60 text-accent'}`}
             onClick={(e) => {
               e.stopPropagation()
-              onSelectItem && onSelectItem(item)
+              if (onSelectItem) {
+                onSelectItem(item)
+              }
             }}
           >
             {isSelected ? (

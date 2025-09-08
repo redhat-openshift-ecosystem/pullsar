@@ -8,6 +8,9 @@ import { Link, Outlet, useNavigate, useSearch } from '@tanstack/react-router'
 import { useSortTypes } from '../hooks/useSortTypes'
 
 export function DashboardPage() {
+  const currentSearch: DashboardPageSearchParams = useSearch({
+    from: '/dashboard',
+  })
   const {
     ocp_version,
     start_date,
@@ -15,7 +18,7 @@ export function DashboardPage() {
     search_query,
     sort_type,
     is_desc,
-  }: DashboardPageSearchParams = useSearch({ from: '/dashboard' })
+  } = currentSearch
   const navigate = useNavigate({ from: '/dashboard' })
 
   const { data: availableOcpVersions, isLoading: isLoadingOcpVersions } =
@@ -86,10 +89,12 @@ export function DashboardPage() {
         <Link
           to="/"
           className="hover:cursor-pointer"
-          search={(prev) => ({
-            ocp_version: prev.ocp_version,
-            start_date: prev.start_date,
-            end_date: prev.end_date,
+          search={() => ({
+            ...currentSearch,
+            search_query: undefined,
+            sort_type: undefined,
+            is_desc: undefined,
+            page: undefined,
           })}
         >
           <h1 className="text-2xl font-extrabold text-text-header sm:text-4xl md:text-5xl text-shadow-lg">

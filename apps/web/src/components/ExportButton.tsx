@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { Download } from 'lucide-react'
 
 interface Props {
-  onClick: () => void
+  onClick: () => Promise<void>
   isExportMaxExceeded: boolean
   isExporting: boolean
   isDone: boolean
@@ -56,7 +56,7 @@ export function ExportButton({
   return (
     <Button
       className="font-bold w-full sm:w-auto lg:self-end"
-      onClick={onClick}
+      onClick={() => void onClick()}
     >
       {buttonContent}
     </Button>

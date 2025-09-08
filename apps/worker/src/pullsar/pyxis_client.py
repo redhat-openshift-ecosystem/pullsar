@@ -1,5 +1,4 @@
 import requests
-import os
 from typing import List, Dict, Any
 from urllib.parse import quote
 from requests_kerberos import HTTPKerberosAuth, DISABLED
