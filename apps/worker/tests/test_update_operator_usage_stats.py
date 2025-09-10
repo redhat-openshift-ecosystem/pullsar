@@ -2,7 +2,7 @@ import pytest
 from pytest_mock import MockerFixture
 from pytest import CaptureFixture
 from datetime import date
-from typing import List
+from typing import List, Dict
 
 from pullsar import update_operator_usage_stats as stats
 from pullsar.operator_bundle_model import OperatorBundle
@@ -126,7 +126,7 @@ def test_resolve_repositories_success_with_multiple_bundles(
         "connect-org-b/repo-b": [bundles_to_translate[1]],
     }
     quay_map: RepositoryMap = {}
-    known_images_map: RepositoryMap = {}
+    known_images_map: Dict[str, str] = {}
 
     stats.resolve_not_quay_repositories(
         mock_pyxis_client, not_quay_map, quay_map, known_images_map
@@ -200,7 +200,9 @@ def test_update_image_pull_counts(
     mock_quay_client.get_repo_logs.return_value = quay_logs
     repo_map = {"org/repo": sample_bundles}
 
-    stats.update_image_pull_counts(mock_quay_client, repo_map, log_days=7)
+    stats.update_image_pull_counts(
+        mock_quay_client, repo_map, log_days=7, repo_path_to_logs={}
+    )
 
     assert sample_bundles[0].pull_count == {date(2025, 7, 14): 2}
     assert sample_bundles[1].pull_count == {}
@@ -220,7 +222,9 @@ def test_update_image_pull_counts_no_logs(
     mock_quay_client.get_repo_logs.return_value = []
     repo_map = {"org/repo": sample_bundles}
 
-    stats.update_image_pull_counts(mock_quay_client, repo_map, log_days=7)
+    stats.update_image_pull_counts(
+        mock_quay_client, repo_map, log_days=7, repo_path_to_logs={}
+    )
 
     for bundle in sample_bundles:
         assert bundle.pull_count == {}
@@ -230,7 +234,7 @@ def test_print_operator_usage_stats(
     capsys: CaptureFixture[str], sample_bundles: list[OperatorBundle]
 ) -> None:
     """Tests that only bundles with pull counts are printed."""
-    sample_bundles[0].pull_count["07/14/2025"] = 5
+    sample_bundles[0].pull_count[date(2025, 7, 14)] = 5
     repo_map = {"org/repo": sample_bundles}
 
     stats.print_operator_usage_stats(repo_map)
@@ -268,6 +272,7 @@ def test_update_operator_usage_stats_flow(mocker: MockerFixture) -> None:
         quay_client=mock_quay_client,
         pyxis_client=mock_pyxis_client,
         known_image_translations={},
+        repo_path_to_logs={},
         log_days=7,
         catalog_image="my-image:latest",
     )

@@ -1,7 +1,7 @@
 """The main module of the Pullsar application."""
 
 import logging
-from typing import Dict
+from typing import Dict, List
 
 from pullsar.config import (
     BaseConfig,
@@ -16,6 +16,7 @@ from pullsar.cli import parse_arguments, ParsedArgs
 from pullsar.quay_client import QuayClient
 from pullsar.db.manager import DatabaseManager
 from pullsar.pyxis_client import PyxisClient
+from pullsar.update_operator_usage_stats import PullLog
 
 
 def main() -> None:
@@ -42,11 +43,13 @@ def main() -> None:
             db = DatabaseManager()
             db.connect()
 
+        repo_path_to_logs: Dict[str, List[PullLog]] = {}
         for catalog in args.catalogs:
             repository_paths = update_operator_usage_stats(
                 quay_client,
                 pyxis_client,
                 known_image_translations,
+                repo_path_to_logs,
                 args.log_days,
                 catalog.image,
                 catalog.json_file,

@@ -193,7 +193,10 @@ def filter_pull_repo_logs(logs: List[QuayLog]) -> List[PullLog]:
 
 
 def update_image_pull_counts(
-    quay_client: QuayClient, repository_paths_map: RepositoryMap, log_days: int
+    quay_client: QuayClient,
+    repository_paths_map: RepositoryMap,
+    log_days: int,
+    repo_path_to_logs: Dict[str, List[PullLog]],
 ):
     """
     Looks up and updates pull counts of all the operator bundles defined in the given
@@ -205,22 +208,30 @@ def update_image_pull_counts(
         a quay repository and value being a list of OperatorBundle objects, images
         of which are stored in the repository.
         log_days (int): Update stats based on logs from the last 'log_days' completed days.
+        repo_path_to_logs (Dict[str, List[PullLog]]): Dictionary of all previously processed logs with.
+        Keys being repository paths and values being all filtered logs for that path.
     """
     for repository_path, operator_bundles in repository_paths_map.items():
-        logs = quay_client.get_repo_logs(repository_path, log_days)
-        if not logs:
-            logger.info(f"No logs found for repository path: {repository_path}")
+        pull_logs = []
+        if repository_path not in repo_path_to_logs:
+            logs = quay_client.get_repo_logs(repository_path, log_days)
+            pull_logs = filter_pull_repo_logs(logs)
+            repo_path_to_logs[repository_path] = pull_logs
+        else:
+            pull_logs = repo_path_to_logs[repository_path]
+
+        if not pull_logs:
+            logger.info(f"No pull logs found for repository path: {repository_path}")
             continue
 
         tag_to_operator_bundle, digest_to_operator_bundle = (
             create_local_tag_digest_maps(operator_bundles)
         )
-        pull_logs = filter_pull_repo_logs(logs)
         for log in pull_logs:
-            if log.get("digest") and log["digest"] in digest_to_operator_bundle:
+            if "digest" in log and log["digest"] in digest_to_operator_bundle:
                 pull_count = digest_to_operator_bundle[log["digest"]].pull_count
                 pull_count[log["date"]] = pull_count.get(log["date"], 0) + 1
-            elif log.get("tag"):
+            elif "tag" in log:
                 tag = tag_in_tag_map(log["tag"], tag_to_operator_bundle)
                 if tag:
                     pull_count = tag_to_operator_bundle[tag].pull_count
@@ -252,6 +263,7 @@ def update_operator_usage_stats(
     quay_client: QuayClient,
     pyxis_client: PyxisClient,
     known_image_translations: Dict[str, str],
+    repo_path_to_logs: Dict[str, List[PullLog]],
     log_days: int,
     catalog_image: str,
     catalog_json_file: Optional[str] = None,
@@ -266,6 +278,8 @@ def update_operator_usage_stats(
         quay_client (QuayClient): Quay client used for API requests.
         pyxis_client (PyxisClient): Pyxis client used for API requests.
         known_image_translations (Dict[str, str]): mapping from non-quay image to quay image
+        repo_path_to_logs (Dict[str, List[PullLog]]): Dictionary of all previously processed logs with.
+        Keys being repository paths and values being all filtered logs for that path.
         log_days (int): Update stats based on logs from the last 'log_days' completed days.
         catalog_image (str): Operators catalog image.
         catalog_json_file (Optional[str]): Pre-rendered operators catalog JSON file. Defaults to None.
@@ -296,7 +310,7 @@ def update_operator_usage_stats(
     update_image_digests(quay_client, no_digest_repos_map)
 
     logger.info("\nOperator bundles and their usage stats:")
-    update_image_pull_counts(quay_client, quay_repos_map, log_days)
+    update_image_pull_counts(quay_client, quay_repos_map, log_days, repo_path_to_logs)
 
     logger.info(f"\nOperators pulled at least once in the last {log_days} days:")
     print_operator_usage_stats(quay_repos_map)
