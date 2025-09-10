@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List, Tuple, TypedDict, NotRequired
+from typing import Optional, Dict, List, Tuple, TypedDict, NotRequired, Any
 from datetime import datetime, date
 
 from pullsar.config import BaseConfig, logger
@@ -13,6 +13,7 @@ from pullsar.pyxis_client import PyxisClient
 
 TagToOperatorBundleMap = Dict[str, OperatorBundle]
 DigestToOperatorBundleMap = Dict[str, OperatorBundle]
+PyxisImage = Dict[str, Any]
 
 
 class PullLog(TypedDict):
@@ -74,6 +75,7 @@ def resolve_not_quay_repositories(
     not_quay_repos_map: RepositoryMap,
     quay_repos_map: RepositoryMap,
     known_images_map: Dict[str, str],
+    repo_path_to_pyxis_images: Dict[str, List[PyxisImage]],
 ) -> None:
     """
     Resolves connect.redhat.com URLs to quay.io URLs using the Pyxis API
@@ -86,6 +88,9 @@ def resolve_not_quay_repositories(
         will be added.
         known_images_map (Dict[str, str]): mapping from non-quay image to quay image
         (e.g. known from previously processed catalogs in the same script run)
+        repo_path_to_pyxis_images (Dict[str, List[PyxisImage]]): Dictionary of all
+        previously gathered Pyxis images. Keys being repository paths and values being all
+        Pyxis images for that path.
     """
     logger.info(
         f"Attempting to resolve {len(not_quay_repos_map)} non-Quay repositories via Pyxis..."
@@ -96,9 +101,15 @@ def resolve_not_quay_repositories(
         "data.image_id,data.repositories.registry,data.repositories.repository"
     )
     for repo_path, bundles in not_quay_repos_map.items():
-        pyxis_images = pyxis_client.get_images_for_repository(
-            target_registry, repo_path, include_fields
-        )
+        pyxis_images = []
+        if repo_path not in repo_path_to_pyxis_images:
+            pyxis_images = pyxis_client.get_images_for_repository(
+                target_registry, repo_path, include_fields
+            )
+            repo_path_to_pyxis_images[repo_path] = pyxis_images
+        else:
+            pyxis_images = repo_path_to_pyxis_images[repo_path]
+
         if not pyxis_images:
             continue
 
@@ -122,7 +133,11 @@ def resolve_not_quay_repositories(
                         break
 
 
-def update_image_digests(quay_client: QuayClient, repository_paths_map: RepositoryMap):
+def update_image_digests(
+    quay_client: QuayClient,
+    repository_paths_map: RepositoryMap,
+    repo_paths_to_tags: Dict[str, List[QuayTag]],
+):
     """
     Looks up and updates image digests of all the operator bundles defined
     in the given repository paths map based on their defined tags using Quay API.
@@ -132,13 +147,21 @@ def update_image_digests(quay_client: QuayClient, repository_paths_map: Reposito
         repository_paths_map (RepositoryMap): Dictionary of key-value pairs,
         key being a quay repository and value being a list of OperatorBundle
         objects, images of which are stored in the repository.
+        repo_path_to_tags (Dict[str, List[QuayTag]]): Dictionary of all previously gathered tags.
+        Keys being repository paths and values being all Quay tags for that path.
     """
     for (
         repository_path,
         operator_bundles,
     ) in repository_paths_map.items():
+        tag_objects: List[QuayTag] = []
+        if repository_path not in repo_paths_to_tags:
+            tag_objects = quay_client.get_repo_tags(repository_path)
+            repo_paths_to_tags[repository_path] = tag_objects
+        else:
+            tag_objects = repo_paths_to_tags[repository_path]
+
         tag_to_operator_bundle, _ = create_local_tag_digest_maps(operator_bundles)
-        tag_objects: List[QuayTag] = quay_client.get_repo_tags(repository_path)
         for tag_object in tag_objects:
             tag = tag_in_tag_map(tag_object["name"], tag_to_operator_bundle)
             if tag:
@@ -264,6 +287,8 @@ def update_operator_usage_stats(
     pyxis_client: PyxisClient,
     known_image_translations: Dict[str, str],
     repo_path_to_logs: Dict[str, List[PullLog]],
+    repo_path_to_pyxis_images: Dict[str, List[PyxisImage]],
+    repo_path_to_tags: Dict[str, List[QuayTag]],
     log_days: int,
     catalog_image: str,
     catalog_json_file: Optional[str] = None,
@@ -279,7 +304,12 @@ def update_operator_usage_stats(
         pyxis_client (PyxisClient): Pyxis client used for API requests.
         known_image_translations (Dict[str, str]): mapping from non-quay image to quay image
         repo_path_to_logs (Dict[str, List[PullLog]]): Dictionary of all previously processed logs with.
-        Keys being repository paths and values being all filtered logs for that path.
+        Keys being repository paths and values being all filtered Quay logs for that path.
+        repo_path_to_pyxis_images (Dict[str, List[PyxisImage]]): Dictionary of all
+        previously gathered Pyxis images. Keys being repository paths and values being all
+        Pyxis images for that path.
+        repo_path_to_tags (Dict[str, List[QuayTag]]): Dictionary of all previously gathered tags.
+        Keys being repository paths and values being all Quay tags for that path.
         log_days (int): Update stats based on logs from the last 'log_days' completed days.
         catalog_image (str): Operators catalog image.
         catalog_json_file (Optional[str]): Pre-rendered operators catalog JSON file. Defaults to None.
@@ -303,11 +333,15 @@ def update_operator_usage_stats(
 
     logger.info("\nResolving non-Quay image URLs if any...")
     resolve_not_quay_repositories(
-        pyxis_client, not_quay_repos_map, quay_repos_map, known_image_translations
+        pyxis_client,
+        not_quay_repos_map,
+        quay_repos_map,
+        known_image_translations,
+        repo_path_to_pyxis_images,
     )
 
     logger.info("\nLooking up missing manifest digests if any...")
-    update_image_digests(quay_client, no_digest_repos_map)
+    update_image_digests(quay_client, no_digest_repos_map, repo_path_to_tags)
 
     logger.info("\nOperator bundles and their usage stats:")
     update_image_pull_counts(quay_client, quay_repos_map, log_days, repo_path_to_logs)

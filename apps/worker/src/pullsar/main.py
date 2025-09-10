@@ -13,10 +13,10 @@ from pullsar.update_operator_usage_stats import (
     update_operator_usage_stats,
 )
 from pullsar.cli import parse_arguments, ParsedArgs
-from pullsar.quay_client import QuayClient
+from pullsar.quay_client import QuayClient, QuayTag
 from pullsar.db.manager import DatabaseManager
 from pullsar.pyxis_client import PyxisClient
-from pullsar.update_operator_usage_stats import PullLog
+from pullsar.update_operator_usage_stats import PullLog, PyxisImage
 
 
 def main() -> None:
@@ -44,12 +44,16 @@ def main() -> None:
             db.connect()
 
         repo_path_to_logs: Dict[str, List[PullLog]] = {}
+        repo_path_to_pyxis_images: Dict[str, List[PyxisImage]] = {}
+        repo_path_to_tags: Dict[str, List[QuayTag]] = {}
         for catalog in args.catalogs:
             repository_paths = update_operator_usage_stats(
                 quay_client,
                 pyxis_client,
                 known_image_translations,
                 repo_path_to_logs,
+                repo_path_to_pyxis_images,
+                repo_path_to_tags,
                 args.log_days,
                 catalog.image,
                 catalog.json_file,

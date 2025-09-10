@@ -129,7 +129,7 @@ def test_resolve_repositories_success_with_multiple_bundles(
     known_images_map: Dict[str, str] = {}
 
     stats.resolve_not_quay_repositories(
-        mock_pyxis_client, not_quay_map, quay_map, known_images_map
+        mock_pyxis_client, not_quay_map, quay_map, known_images_map, {}
     )
 
     assert len(quay_map) == 2
@@ -160,7 +160,7 @@ def test_update_image_digests(
     ]
     repo_map = {"org/repo": sample_bundles}
 
-    stats.update_image_digests(mock_quay_client, repo_map)
+    stats.update_image_digests(mock_quay_client, repo_map, {})
 
     # digests were updated
     assert sample_bundles[0].digest == "sha256:digest_for_v1"
@@ -273,6 +273,8 @@ def test_update_operator_usage_stats_flow(mocker: MockerFixture) -> None:
         pyxis_client=mock_pyxis_client,
         known_image_translations={},
         repo_path_to_logs={},
+        repo_path_to_pyxis_images={},
+        repo_path_to_tags={},
         log_days=7,
         catalog_image="my-image:latest",
     )
