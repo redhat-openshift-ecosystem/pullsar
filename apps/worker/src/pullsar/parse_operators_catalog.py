@@ -122,9 +122,10 @@ def create_repository_paths_maps(
                             operator.package,
                             known_image_translations[operator.image],
                         )
-                        repository_paths_map.setdefault(repo_path, []).append(
-                            new_bundle
-                        )
+                        if new_bundle.repo_path:
+                            repository_paths_map.setdefault(
+                                new_bundle.repo_path, []
+                            ).append(new_bundle)
                     elif operator.registry == "registry.connect.redhat.com":
                         repository_paths_map_not_quay.setdefault(repo_path, []).append(
                             operator
