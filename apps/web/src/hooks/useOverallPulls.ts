@@ -3,7 +3,7 @@ import { API_BASE } from './api'
 
 interface OverallPullsApiResponse {
   total_pulls: number
-  trend?: number
+  trend: number
   chart_data: { date: string; pulls: number }[]
 }
 

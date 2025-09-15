@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from typing import Any, Optional, Sequence
 import textwrap
 from enum import Enum
+import numpy as np
 
 from app.config import BASE_CONFIG
 from app.schemas import SortType
@@ -65,18 +66,24 @@ def get_summary_stats(db: cursor) -> dict[str, int]:
     }
 
 
-def _calculate_trend(start: int, end: int) -> Optional[float]:
+def _calculate_trend(chart_data: list[dict[str, Any]]) -> float:
     """
-    Utility to calculate percentage trend between two values.
-    Returns percentage representing the change from value start
-    to value end. Returns None in special case of start == 0 and end > 0,
-    which would be a raise by 'infinity' %.
+    Calculates the trend as the slope of a linear regression of the time series.
     """
-    if start > 0:
-        return ((end - start) / start) * 100
-    elif end > 0:
-        return None
-    return 0.0
+    if len(chart_data) < 2:
+        return 0.0
+
+    pulls = np.array([point["pulls"] for point in chart_data])
+    if np.all(pulls == pulls[0]):
+        return 0.0
+
+    days = np.arange(len(pulls))
+
+    # use numpy's polyfit to find the slope of the best-fit line (degree 1),
+    # the result is a tuple (slope, intercept), we only need the slope
+    slope, _ = np.polyfit(days, pulls, 1)
+
+    return round(slope, 2)
 
 
 def _fill_date_gaps(
@@ -138,7 +145,7 @@ def get_overall_pulls(
         return {"total_pulls": 0, "trend": 0.0, "chart_data": []}
 
     total_pulls = sum(item["pulls"] for item in chart_data)
-    trend = _calculate_trend(chart_data[0]["pulls"], chart_data[-1]["pulls"])
+    trend = _calculate_trend(chart_data)
     _convert_dates_to_str(chart_data)
 
     return {"total_pulls": total_pulls, "trend": trend, "chart_data": chart_data}
@@ -172,7 +179,7 @@ def _build_main_query_and_params(
     query = f"""
         WITH AggregatedStats AS (
             SELECT
-                {item_column} AS item_name,
+                {item_column.value} AS item_name,
                 SUM(COALESCE(pc.pull_count, 0)) AS total_pulls
             FROM
                 bundles b
@@ -183,7 +190,7 @@ def _build_main_query_and_params(
                 ba.ocp_version = %(ocp_version)s
                 {"AND ba.catalog_name = %(catalog_name)s" if catalog_name and catalog_name != ALL_OPERATORS else ""}
                 {"AND b.package = %(package_name)s" if package_name else ""}
-                {"AND " + str(item_column) + " LIKE %(search_query)s" if search_query else ""}
+                {"AND " + item_column.value + " LIKE %(search_query)s" if search_query else ""}
             GROUP BY
                 item_name
         )
@@ -214,7 +221,7 @@ def _fetch_chart_data(
     """Fetches the daily pull count data for a specific list of items."""
     query = f"""
         SELECT
-            {item_column} AS item_name,
+            {item_column.value} AS item_name,
             pc.pull_date,
             SUM(COALESCE(pc.pull_count, 0)) AS daily_pulls
         FROM
@@ -224,7 +231,7 @@ def _fetch_chart_data(
                 AND pc.pull_date BETWEEN %(start_date)s AND %(end_date)s
         WHERE
             ba.ocp_version = %(ocp_version)s
-            AND {item_column} IN %(item_names)s
+            AND {item_column.value} IN %(item_names)s
             {"AND ba.catalog_name = %(catalog_name)s" if "catalog_name" in params and params["catalog_name"] != ALL_OPERATORS else ""}
             {"AND b.package = %(package_name)s" if "package_name" in params else ""}
         GROUP BY
@@ -255,8 +262,6 @@ def _combine_results(
     for name, total_pulls in paginated_items:
         sparse_chart_data = chart_data_map.get(name, [])
         full_chart_data = _fill_date_gaps(sparse_chart_data, start_date, end_date)
-        first_day_pulls = full_chart_data[0]["pulls"] if full_chart_data else 0
-        last_day_pulls = full_chart_data[-1]["pulls"] if full_chart_data else 0
 
         _convert_dates_to_str(full_chart_data)
 
@@ -265,9 +270,7 @@ def _combine_results(
                 "name": name,
                 "stats": {
                     "total_pulls": int(total_pulls),
-                    "trend": _calculate_trend(
-                        int(first_day_pulls), int(last_day_pulls)
-                    ),
+                    "trend": _calculate_trend(full_chart_data),
                     "chart_data": full_chart_data,
                 },
             }

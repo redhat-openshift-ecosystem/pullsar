@@ -8,7 +8,7 @@ interface ChartDataPoint {
 
 interface AggregatedPulls {
   total_pulls: number
-  trend?: number
+  trend: number
   chart_data: ChartDataPoint[]
 }
 

@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
 from enum import Enum
 
 
@@ -16,7 +15,7 @@ class AggregatedPulls(BaseModel):
     """
 
     total_pulls: int
-    trend: Optional[float]
+    trend: float
     chart_data: list[ChartDataPoint]
 
 

@@ -12,6 +12,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      API_DB_START_DATE: ${API_DB_START_DATE}
     depends_on:
       db:
         condition: service_healthy

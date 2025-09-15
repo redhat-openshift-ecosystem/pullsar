@@ -10,7 +10,7 @@ import { Skeleton } from './ui/skeleton'
 interface Props {
   overallData?: {
     total_pulls: number
-    trend?: number
+    trend: number
     chart_data: {
       date: string
       pulls: number
