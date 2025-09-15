@@ -13,9 +13,9 @@ router = APIRouter()
 
 DEFAULT_OCP_VERSION = "v4.18"
 DEFAULT_DAYS_DELTA = 14
-SORT_TYPES = ["pulls", "name"]
+SORT_TYPES = [schemas.SortType.PULLS, schemas.SortType.NAME]
 DEFAULT_SEARCH_QUERY = Query(None)
-DEFAULT_SORT_TYPE = Query("pulls")
+DEFAULT_SORT_TYPE = Query(schemas.SortType.PULLS)
 DEFAULT_IS_DESC = Query(True)
 DEFAULT_PAGE = Query(1, ge=1)
 DEFAULT_PAGE_SIZE = Query(50, ge=1, le=100)
@@ -105,7 +105,7 @@ def read_catalogs(
     start_date, end_date = clamp_date_range(start_date, end_date)
     return crud.get_paginated_items(
         db,
-        level="catalog",
+        level=crud.ItemLevel.CATALOG,
         ocp_version=ocp_version,
         start_date=start_date,
         end_date=end_date,
@@ -137,7 +137,7 @@ def read_packages_in_catalog(
     start_date, end_date = clamp_date_range(start_date, end_date)
     return crud.get_paginated_items(
         db,
-        level="package",
+        level=crud.ItemLevel.PACKAGE,
         ocp_version=ocp_version,
         start_date=start_date,
         end_date=end_date,
@@ -171,7 +171,7 @@ def read_bundles_in_package(
     start_date, end_date = clamp_date_range(start_date, end_date)
     return crud.get_paginated_items(
         db,
-        level="bundle",
+        level=crud.ItemLevel.BUNDLE,
         ocp_version=ocp_version,
         start_date=start_date,
         end_date=end_date,
@@ -199,7 +199,13 @@ async def export_items_to_csv(
 ):
     """Generates and returns a CSV file for the given scope and filters."""
     start_date, end_date = clamp_date_range(start_date, end_date)
-    level = "bundle" if package_name else "package" if catalog_name else "catalog"
+    level = (
+        crud.ItemLevel.BUNDLE
+        if package_name
+        else crud.ItemLevel.PACKAGE
+        if catalog_name
+        else crud.ItemLevel.CATALOG
+    )
 
     try:
         items = crud.get_all_items_for_export(

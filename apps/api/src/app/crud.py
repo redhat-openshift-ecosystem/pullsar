@@ -2,12 +2,32 @@ from psycopg2.extensions import cursor
 from datetime import date, timedelta
 from typing import Any, Optional, Sequence
 import textwrap
+from enum import Enum
 
 from app.config import BASE_CONFIG
+from app.schemas import SortType
+
+
+class ItemColumn(Enum):
+    CATALOG = "ba.catalog_name"
+    PACKAGE = "b.package"
+    BUNDLE = "b.name"
+
+
+class ItemLevel(Enum):
+    CATALOG = "catalog"
+    PACKAGE = "package"
+    BUNDLE = "bundle"
+
 
 # catalog name for fetching operators from all catalogs at once
 ALL_OPERATORS = BASE_CONFIG.all_operators_catalog
 EXPORT_MAX_DAYS = BASE_CONFIG.export_max_days
+LEVEL_TO_COLUMN = {
+    ItemLevel.CATALOG: ItemColumn.CATALOG,
+    ItemLevel.PACKAGE: ItemColumn.PACKAGE,
+    ItemLevel.BUNDLE: ItemColumn.BUNDLE,
+}
 
 
 def get_ocp_versions(db: cursor) -> list[str]:
@@ -125,7 +145,7 @@ def get_overall_pulls(
 
 
 def _build_main_query_and_params(
-    item_column: str,
+    item_column: ItemColumn,
     ocp_version: str,
     start_date: date,
     end_date: date,
@@ -133,18 +153,27 @@ def _build_main_query_and_params(
     package_name: Optional[str],
     search_query: Optional[str],
 ) -> tuple[str, dict[str, Any]]:
-    """Builds the CTE query to get aggregated stats needed for sorting and trend."""
+    """
+    Builds the CTE query to get aggregated stats needed for sorting and trend.
+
+    Args:
+        item_column (ItemColumn): Item name column based on scope/level (e.g. level 'package' -> column 'b.package').
+        ocp_version (str): OpenShift version associated with the query.
+        start_date (date): Date range start date.
+        end_date (date): Date range end date.
+        catalog_name (Optional[str]): For package level, specifies which catalog's packages to query.
+        package_name: (Optional[str]): For bundle level, specifies which package's bundles to query.
+        search_query: (Optional[str]): Filters all items with item column name matching this search query.
+
+    Returns:
+        query, params (tuple[str, dict[str, Any]]): Two values, first being a main query that applies correct scope
+        and search filter, second value being a dictionary of parameters.
+    """
     query = f"""
         WITH AggregatedStats AS (
             SELECT
                 {item_column} AS item_name,
-                SUM(COALESCE(pc.pull_count, 0)) AS total_pulls,
-                SUM(
-                    CASE WHEN pc.pull_date = %(start_date)s THEN COALESCE(pc.pull_count, 0) ELSE 0 END
-                ) AS first_day_pulls,
-                SUM(
-                    CASE WHEN pc.pull_date = %(end_date)s THEN COALESCE(pc.pull_count, 0) ELSE 0 END
-                ) AS last_day_pulls
+                SUM(COALESCE(pc.pull_count, 0)) AS total_pulls
             FROM
                 bundles b
                 JOIN bundle_appearances ba ON b.id = ba.bundle_id
@@ -154,11 +183,11 @@ def _build_main_query_and_params(
                 ba.ocp_version = %(ocp_version)s
                 {"AND ba.catalog_name = %(catalog_name)s" if catalog_name and catalog_name != ALL_OPERATORS else ""}
                 {"AND b.package = %(package_name)s" if package_name else ""}
-                {"AND " + item_column + " LIKE %(search_query)s" if search_query else ""}
+                {"AND " + str(item_column) + " LIKE %(search_query)s" if search_query else ""}
             GROUP BY
                 item_name
         )
-        SELECT item_name, total_pulls, first_day_pulls, last_day_pulls
+        SELECT item_name, total_pulls
         FROM AggregatedStats
     """
     params = {
@@ -178,7 +207,7 @@ def _build_main_query_and_params(
 
 def _fetch_chart_data(
     db: cursor,
-    item_column: str,
+    item_column: ItemColumn,
     item_names: list[str],
     params: dict[str, Any],
 ) -> Sequence[tuple]:
@@ -223,9 +252,12 @@ def _combine_results(
             )
 
     response_items = []
-    for name, total_pulls, first_pulls, last_pulls in paginated_items:
+    for name, total_pulls in paginated_items:
         sparse_chart_data = chart_data_map.get(name, [])
         full_chart_data = _fill_date_gaps(sparse_chart_data, start_date, end_date)
+        first_day_pulls = full_chart_data[0]["pulls"] if full_chart_data else 0
+        last_day_pulls = full_chart_data[-1]["pulls"] if full_chart_data else 0
+
         _convert_dates_to_str(full_chart_data)
 
         response_items.append(
@@ -233,7 +265,9 @@ def _combine_results(
                 "name": name,
                 "stats": {
                     "total_pulls": int(total_pulls),
-                    "trend": _calculate_trend(int(first_pulls), int(last_pulls)),
+                    "trend": _calculate_trend(
+                        int(first_day_pulls), int(last_day_pulls)
+                    ),
                     "chart_data": full_chart_data,
                 },
             }
@@ -243,11 +277,11 @@ def _combine_results(
 
 def get_paginated_items(
     db: cursor,
-    level: str,
+    level: ItemLevel,
     ocp_version: str,
     start_date: date,
     end_date: date,
-    sort_type: str,
+    sort_type: SortType,
     is_desc: bool,
     page: int,
     page_size: int,
@@ -258,15 +292,10 @@ def get_paginated_items(
     """
     Orchestrates fetching, sorting (by pulls/name), and paginating item stats.
     """
-    level_column_map = {
-        "catalog": "ba.catalog_name",
-        "package": "b.package",
-        "bundle": "b.name",
-    }
-    if level not in level_column_map:
+    if level not in LEVEL_TO_COLUMN:
         raise ValueError("Invalid level provided.")
 
-    item_column = level_column_map[level]
+    item_column = LEVEL_TO_COLUMN[level]
 
     # build the main query and its parameters
     main_query, params = _build_main_query_and_params(
@@ -287,8 +316,8 @@ def get_paginated_items(
 
     # fetch one page of sorted items
     sort_column_map = {
-        "name": "item_name",
-        "pulls": "total_pulls",
+        SortType.NAME: "item_name",
+        SortType.PULLS: "total_pulls",
     }
     order_by_clause = f"ORDER BY {sort_column_map.get(sort_type, 'total_pulls')} {'DESC' if is_desc else 'ASC'}"
     pagination_clause = "LIMIT %(page_size)s OFFSET %(offset)s"
@@ -319,11 +348,11 @@ def get_paginated_items(
 
 def get_all_items_for_export(
     db: cursor,
-    level: str,
+    level: ItemLevel,
     ocp_version: str,
     start_date: date,
     end_date: date,
-    sort_type: str,
+    sort_type: SortType,
     is_desc: bool,
     catalog_name: Optional[str] = None,
     package_name: Optional[str] = None,
@@ -338,15 +367,10 @@ def get_all_items_for_export(
             f"The requested date range cannot exceed {EXPORT_MAX_DAYS} days for an export."
         )
 
-    level_column_map = {
-        "catalog": "ba.catalog_name",
-        "package": "b.package",
-        "bundle": "b.name",
-    }
-    if level not in level_column_map:
+    if level not in LEVEL_TO_COLUMN:
         raise ValueError("Invalid level provided.")
 
-    item_column = level_column_map[level]
+    item_column = LEVEL_TO_COLUMN[level]
 
     # build the main query and its parameters
     main_query, params = _build_main_query_and_params(
@@ -361,11 +385,10 @@ def get_all_items_for_export(
 
     # fetch all sorted items
     sort_column_map = {
-        "name": "item_name",
-        "pulls": "total_pulls",
+        SortType.NAME: "item_name",
+        SortType.PULLS: "total_pulls",
     }
     order_by_clause = f"ORDER BY {sort_column_map.get(sort_type, 'total_pulls')} {'DESC' if is_desc else 'ASC'}"
-
     all_items_query = f"{main_query} {order_by_clause}"
 
     db.execute(all_items_query, params)

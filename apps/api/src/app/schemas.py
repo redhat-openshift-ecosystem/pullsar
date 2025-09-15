@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional, Literal
+from typing import Optional
+from enum import Enum
 
 
 class ChartDataPoint(BaseModel):
@@ -43,4 +44,6 @@ class PaginatedListResponse(BaseModel):
     items: list[ListItem]
 
 
-SortType = Literal["name", "pulls"]
+class SortType(Enum):
+    PULLS = "pulls"
+    NAME = "name"
