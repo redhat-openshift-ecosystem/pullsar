@@ -108,6 +108,7 @@ def resolve_not_quay_repositories(
             )
             repo_path_to_pyxis_images[repo_path] = pyxis_images
         else:
+            logger.info(f"Reusing stored Pyxis images for repository: {repo_path}")
             pyxis_images = repo_path_to_pyxis_images[repo_path]
 
         if not pyxis_images:
@@ -159,6 +160,7 @@ def update_image_digests(
             tag_objects = quay_client.get_repo_tags(repository_path)
             repo_paths_to_tags[repository_path] = tag_objects
         else:
+            logger.info(f"Reusing stored tags for repository: {repository_path}")
             tag_objects = repo_paths_to_tags[repository_path]
 
         tag_to_operator_bundle, _ = create_local_tag_digest_maps(operator_bundles)
@@ -241,6 +243,7 @@ def update_image_pull_counts(
             pull_logs = filter_pull_repo_logs(logs)
             repo_path_to_logs[repository_path] = pull_logs
         else:
+            logger.info(f"Reusing stored logs for repository: {repository_path}")
             pull_logs = repo_path_to_logs[repository_path]
 
         if not pull_logs:
