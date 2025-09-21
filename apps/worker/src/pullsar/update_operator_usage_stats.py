@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List, Tuple, TypedDict, NotRequired, Any
+from typing import Optional, Dict, List, Tuple
 from datetime import datetime, date
 
 from pullsar.config import BaseConfig, logger
@@ -10,16 +10,10 @@ from pullsar.parse_operators_catalog import (
 from pullsar.operator_bundle_model import OperatorBundle
 from pullsar.quay_client import QuayClient, QuayLog, QuayTag
 from pullsar.pyxis_client import PyxisClient
+from pullsar.cached_context import CachedContext, PullLog, PyxisImage
 
 TagToOperatorBundleMap = Dict[str, OperatorBundle]
 DigestToOperatorBundleMap = Dict[str, OperatorBundle]
-PyxisImage = Dict[str, Any]
-
-
-class PullLog(TypedDict):
-    date: date
-    tag: NotRequired[str]
-    digest: NotRequired[str]
 
 
 def tag_in_tag_map(tag: str, tag_map: TagToOperatorBundleMap) -> str | None:
@@ -288,10 +282,7 @@ def print_operator_usage_stats(repository_paths_map: RepositoryMap):
 def update_operator_usage_stats(
     quay_client: QuayClient,
     pyxis_client: PyxisClient,
-    known_image_translations: Dict[str, str],
-    repo_path_to_logs: Dict[str, List[PullLog]],
-    repo_path_to_pyxis_images: Dict[str, List[PyxisImage]],
-    repo_path_to_tags: Dict[str, List[QuayTag]],
+    cache: CachedContext,
     log_days: int,
     catalog_image: str,
     catalog_json_file: Optional[str] = None,
@@ -305,14 +296,7 @@ def update_operator_usage_stats(
     Args:
         quay_client (QuayClient): Quay client used for API requests.
         pyxis_client (PyxisClient): Pyxis client used for API requests.
-        known_image_translations (Dict[str, str]): mapping from non-quay image to quay image
-        repo_path_to_logs (Dict[str, List[PullLog]]): Dictionary of all previously processed logs with.
-        Keys being repository paths and values being all filtered Quay logs for that path.
-        repo_path_to_pyxis_images (Dict[str, List[PyxisImage]]): Dictionary of all
-        previously gathered Pyxis images. Keys being repository paths and values being all
-        Pyxis images for that path.
-        repo_path_to_tags (Dict[str, List[QuayTag]]): Dictionary of all previously gathered tags.
-        Keys being repository paths and values being all Quay tags for that path.
+        cache (CachedContext): Data cached during single run, see CachedContext class for details.
         log_days (int): Update stats based on logs from the last 'log_days' completed days.
         catalog_image (str): Operators catalog image.
         catalog_json_file (Optional[str]): Pre-rendered operators catalog JSON file. Defaults to None.
@@ -330,7 +314,8 @@ def update_operator_usage_stats(
 
     quay_repos_map, no_digest_repos_map, not_quay_repos_map = (
         create_repository_paths_maps(
-            catalog_json_file or BaseConfig.CATALOG_JSON_FILE, known_image_translations
+            catalog_json_file or BaseConfig.CATALOG_JSON_FILE,
+            cache.known_image_translations,
         )
     )
 
@@ -339,15 +324,17 @@ def update_operator_usage_stats(
         pyxis_client,
         not_quay_repos_map,
         quay_repos_map,
-        known_image_translations,
-        repo_path_to_pyxis_images,
+        cache.known_image_translations,
+        cache.repo_path_to_pyxis_images,
     )
 
     logger.info("\nLooking up missing manifest digests if any...")
-    update_image_digests(quay_client, no_digest_repos_map, repo_path_to_tags)
+    update_image_digests(quay_client, no_digest_repos_map, cache.repo_path_to_tags)
 
     logger.info("\nOperator bundles and their usage stats:")
-    update_image_pull_counts(quay_client, quay_repos_map, log_days, repo_path_to_logs)
+    update_image_pull_counts(
+        quay_client, quay_repos_map, log_days, cache.repo_path_to_logs
+    )
 
     logger.info(f"\nOperators pulled at least once in the last {log_days} days:")
     print_operator_usage_stats(quay_repos_map)

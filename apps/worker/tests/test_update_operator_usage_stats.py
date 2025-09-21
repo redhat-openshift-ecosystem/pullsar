@@ -9,6 +9,7 @@ from pullsar.operator_bundle_model import OperatorBundle
 from pullsar.quay_client import QuayClient
 from pullsar.pyxis_client import PyxisClient
 from pullsar.parse_operators_catalog import RepositoryMap
+from pullsar.cached_context import CachedContext
 
 
 @pytest.fixture
@@ -271,10 +272,7 @@ def test_update_operator_usage_stats_flow(mocker: MockerFixture) -> None:
     stats.update_operator_usage_stats(
         quay_client=mock_quay_client,
         pyxis_client=mock_pyxis_client,
-        known_image_translations={},
-        repo_path_to_logs={},
-        repo_path_to_pyxis_images={},
-        repo_path_to_tags={},
+        cache=CachedContext(),
         log_days=7,
         catalog_image="my-image:latest",
     )

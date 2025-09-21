@@ -45,17 +45,11 @@ def test_main_flow_with_db_and_debug(mocker: MockerFixture) -> None:
         mocker.ANY,
         mocker.ANY,
         mocker.ANY,
-        mocker.ANY,
-        mocker.ANY,
-        mocker.ANY,
         7,
         "image:v1",
         None,
     )
     mock_update_stats.assert_any_call(
-        mocker.ANY,
-        mocker.ANY,
-        mocker.ANY,
         mocker.ANY,
         mocker.ANY,
         mocker.ANY,
