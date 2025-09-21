@@ -30,6 +30,19 @@ LEVEL_TO_COLUMN = {
     ItemLevel.BUNDLE: ItemColumn.BUNDLE,
 }
 
+# selected column names used in the queries
+# ATTENTION: If you were to change these, please, also change
+# them in the _build_main_query_and_params() function that uses them,
+# because then when this main query is executed with the order_by_clause
+# appended to it, the order clause depends on these column names.
+# The final query building and execution is done in get_paginated_items()
+# and get_all_items_for_export() functions.
+SORT_COLUMN_MAP = {
+    SortType.NAME: "item_name",
+    SortType.PULLS: "total_pulls",
+}
+DEFAULT_SORT_COLUMN = "total_pulls"
+
 
 def get_ocp_versions(db: cursor) -> list[str]:
     """Fetches a list of unique OCP versions from the database, sorted descending."""
@@ -318,11 +331,7 @@ def get_paginated_items(
     total_count = result[0] if result else 0
 
     # fetch one page of sorted items
-    sort_column_map = {
-        SortType.NAME: "item_name",
-        SortType.PULLS: "total_pulls",
-    }
-    order_by_clause = f"ORDER BY {sort_column_map.get(sort_type, 'total_pulls')} {'DESC' if is_desc else 'ASC'}"
+    order_by_clause = f"ORDER BY {SORT_COLUMN_MAP.get(sort_type, DEFAULT_SORT_COLUMN)} {'DESC' if is_desc else 'ASC'}"
     pagination_clause = "LIMIT %(page_size)s OFFSET %(offset)s"
     paginated_query = f"{main_query} {order_by_clause} {pagination_clause}"
 
@@ -387,11 +396,7 @@ def get_all_items_for_export(
     )
 
     # fetch all sorted items
-    sort_column_map = {
-        SortType.NAME: "item_name",
-        SortType.PULLS: "total_pulls",
-    }
-    order_by_clause = f"ORDER BY {sort_column_map.get(sort_type, 'total_pulls')} {'DESC' if is_desc else 'ASC'}"
+    order_by_clause = f"ORDER BY {SORT_COLUMN_MAP.get(sort_type, DEFAULT_SORT_COLUMN)} {'DESC' if is_desc else 'ASC'}"
     all_items_query = f"{main_query} {order_by_clause}"
 
     db.execute(all_items_query, params)
