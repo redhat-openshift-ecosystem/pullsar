@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { parseISO, subDays } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { type DateRange } from 'react-day-picker'
 import { Button } from './ui/button'
 import { Calendar } from './ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { useDbStartDate } from '../hooks/useDbStartDate'
 
-const dbStartDate = parseISO(String(import.meta.env.VITE_API_DB_START_DATE))
 const yesterdayDate = () => subDays(new Date(), 1)
 
 interface Props {
@@ -16,6 +16,12 @@ interface Props {
 
 export function DateRangeSelector({ dateRange, onDateChange }: Props) {
   const [isOpen, setIsOpen] = useState(false)
+  const { data: dbStartDateString } = useDbStartDate()
+  const dbStartDate = useMemo(
+    () => (dbStartDateString ? parseISO(dbStartDateString) : null),
+    [dbStartDateString]
+  )
+
   const [range, setRange] = useState<DateRange | undefined>(() => {
     return dateRange.from && dateRange.to
       ? { from: parseISO(dateRange.from), to: parseISO(dateRange.to) }
@@ -58,7 +64,10 @@ export function DateRangeSelector({ dateRange, onDateChange }: Props) {
             selected={range}
             onSelect={(selectedRange) => setRange(selectedRange)}
             numberOfMonths={1}
-            disabled={{ before: dbStartDate, after: yesterdayDate() }}
+            disabled={{
+              before: dbStartDate || range?.from,
+              after: yesterdayDate(),
+            }}
           />
         </PopoverContent>
       </Popover>

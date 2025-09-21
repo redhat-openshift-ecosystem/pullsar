@@ -19,7 +19,10 @@ DEFAULT_SORT_TYPE = Query(schemas.SortType.PULLS)
 DEFAULT_IS_DESC = Query(True)
 DEFAULT_PAGE = Query(1, ge=1)
 DEFAULT_PAGE_SIZE = Query(50, ge=1, le=100)
-DB_START_DATE = BASE_CONFIG.db_start_date
+
+
+def get_db_start_date() -> date:
+    return BASE_CONFIG.db_start_date or date.today()
 
 
 def get_yesterday_date():
@@ -37,10 +40,11 @@ def get_default_end_date():
 def clamp_date(date: date) -> date:
     """Fix the date to be inside the valid date range."""
     yesterday = get_yesterday_date()
+    db_start_date = get_db_start_date()
     if date > yesterday:
         return yesterday
-    if date < DB_START_DATE:
-        return DB_START_DATE
+    if date < db_start_date:
+        return db_start_date
     return date
 
 
@@ -57,6 +61,14 @@ def clamp_date_range(start_date: date, end_date: date) -> tuple[date, date]:
 def read_api_root():
     """Returns a simple API welcome message."""
     return {"message": "Welcome to the Pullsar API"}
+
+
+@router.get("/db-start-date", response_model=schemas.DBStartDate)
+def read_db_start_date(db_start_date: date = Depends(get_db_start_date)):
+    """
+    Returns the earliest date from which data is available in the database.
+    """
+    return {"db_start_date": db_start_date}
 
 
 @router.get("/ocp-versions", response_model=list[str])

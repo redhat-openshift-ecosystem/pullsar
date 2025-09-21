@@ -25,4 +25,3 @@ def mock_env_vars() -> None:
     monkeypatch.setenv("DB_PASSWORD", "test_password")
     monkeypatch.setenv("DB_HOST", "localhost")
     monkeypatch.setenv("DB_PORT", "5432")
-    monkeypatch.setenv("API_DB_START_DATE", "2025-08-08")

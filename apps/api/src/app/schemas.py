@@ -1,5 +1,12 @@
 from pydantic import BaseModel
 from enum import Enum
+from datetime import date
+
+
+class DBStartDate(BaseModel):
+    """Represents the earliest date from which data is available in the database"""
+
+    db_start_date: date
 
 
 class ChartDataPoint(BaseModel):

@@ -4,6 +4,9 @@ from dotenv import load_dotenv
 from dataclasses import dataclass
 from typing import Optional
 from datetime import date
+from psycopg2.extensions import cursor
+
+from app.db_utils import fetch_db_start_date
 
 
 # set up logging
@@ -41,9 +44,9 @@ def _load_db_conf() -> DBConfig:
 class BaseConfig:
     """A dataclass to hold general configurable variables."""
 
-    db_start_date: date
     export_max_days: int
     all_operators_catalog: str
+    db_start_date: Optional[date] = None
 
 
 def _load_base_conf() -> BaseConfig:
@@ -53,15 +56,18 @@ def _load_base_conf() -> BaseConfig:
     """
     load_dotenv()
 
-    start_date_str = os.getenv("API_DB_START_DATE")
-    if not start_date_str:
-        raise ValueError("API_DB_START_DATE environment variable is not set.")
-
     return BaseConfig(
-        db_start_date=date.fromisoformat(start_date_str),
         export_max_days=int(os.getenv("API_EXPORT_MAX_DAYS", "30")),
         all_operators_catalog=os.getenv("API_ALL_OPERATORS_CATALOG", "All Operators"),
     )
+
+
+def load_db_dependent_config(db_cursor: cursor) -> None:
+    """
+    Fetches config values from the database and populates the base config object.
+    This function should be called during application startup.
+    """
+    BASE_CONFIG.db_start_date = fetch_db_start_date(db_cursor)
 
 
 DB_CONFIG = _load_db_conf()
