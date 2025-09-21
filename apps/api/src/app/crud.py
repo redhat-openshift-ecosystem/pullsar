@@ -225,6 +225,28 @@ def _build_main_query_and_params(
     return query, params
 
 
+def _build_count_query(
+    item_column: ItemColumn,
+    catalog_name: Optional[str],
+    package_name: Optional[str],
+    search_query: Optional[str],
+) -> str:
+    """
+    Builds an efficient query string to count distinct items.
+    """
+    return f"""
+        SELECT COUNT(DISTINCT {item_column.value})
+        FROM
+            bundles b
+            JOIN bundle_appearances ba ON b.id = ba.bundle_id
+        WHERE
+            ba.ocp_version = %(ocp_version)s
+            {"AND ba.catalog_name = %(catalog_name)s" if catalog_name and catalog_name != ALL_OPERATORS else ""}
+            {"AND b.package = %(package_name)s" if package_name else ""}
+            {"AND " + item_column.value + " LIKE %(search_query)s" if search_query else ""}
+    """
+
+
 def _fetch_chart_data(
     db: cursor,
     item_column: ItemColumn,
@@ -325,7 +347,9 @@ def get_paginated_items(
     )
 
     # get the total count of items
-    count_query = f"SELECT COUNT(*) FROM ({main_query}) AS total"
+    count_query = _build_count_query(
+        item_column, catalog_name, package_name, search_query
+    )
     db.execute(count_query, params)
     result = db.fetchone()
     total_count = result[0] if result else 0
