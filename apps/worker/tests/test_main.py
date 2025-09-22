@@ -4,6 +4,7 @@ from pytest_mock import MockerFixture
 from pullsar.main import main
 from pullsar.cli import ParsedArgs, ParsedCatalogArg
 from pullsar.db.manager import DatabaseManager
+from pullsar.stats_resolver import OperatorUsageStatsResolver
 
 
 def test_main_flow_with_db_and_debug(mocker: MockerFixture) -> None:
@@ -20,13 +21,15 @@ def test_main_flow_with_db_and_debug(mocker: MockerFixture) -> None:
         ],
     )
     mocker.patch("pullsar.main.parse_arguments", return_value=mock_args)
-
     mocker.patch("pullsar.main.load_quay_api_tokens", return_value={})
     mocker.patch("pullsar.main.QuayClient")
     mocker.patch("pullsar.main.is_database_configured", return_value=True)
-    mock_update_stats = mocker.patch(
-        "pullsar.main.update_operator_usage_stats", return_value={"org/repo": []}
+    mock_resolver_instance = mocker.Mock(spec=OperatorUsageStatsResolver)
+    mock_resolver_instance.update_operator_usage_stats.return_value = {"org/repo": []}
+    mocker.patch(
+        "pullsar.main.OperatorUsageStatsResolver", return_value=mock_resolver_instance
     )
+
     mock_set_level = mocker.patch("pullsar.config.logger.setLevel")
 
     mock_db_instance = mocker.Mock(spec=DatabaseManager)
@@ -40,17 +43,15 @@ def test_main_flow_with_db_and_debug(mocker: MockerFixture) -> None:
     mock_db_class.assert_called_once()
     mock_db_instance.connect.assert_called_once()
 
-    assert mock_update_stats.call_count == 2
-    mock_update_stats.assert_any_call(
-        mocker.ANY,
+    assert mock_resolver_instance.update_operator_usage_stats.call_count == 2
+    mock_resolver_instance.update_operator_usage_stats.assert_any_call(
         mocker.ANY,
         mocker.ANY,
         7,
         "image:v1",
         None,
     )
-    mock_update_stats.assert_any_call(
-        mocker.ANY,
+    mock_resolver_instance.update_operator_usage_stats.assert_any_call(
         mocker.ANY,
         mocker.ANY,
         7,
@@ -77,8 +78,10 @@ def test_main_flow_with_dry_run(mocker: MockerFixture) -> None:
     mocker.patch("pullsar.main.load_quay_api_tokens")
     mocker.patch("pullsar.main.QuayClient")
     mocker.patch("pullsar.main.is_database_configured", return_value=True)
+    mock_resolver_instance = mocker.Mock(spec=OperatorUsageStatsResolver)
+    mock_resolver_instance.update_operator_usage_stats.return_value = {"org/repo": []}
     mocker.patch(
-        "pullsar.main.update_operator_usage_stats", return_value={"org/repo": []}
+        "pullsar.main.OperatorUsageStatsResolver", return_value=mock_resolver_instance
     )
 
     mock_db_class = mocker.patch("pullsar.main.DatabaseManager")
@@ -102,8 +105,10 @@ def test_main_flow_with_db_not_configured(mocker: MockerFixture) -> None:
     mocker.patch("pullsar.main.load_quay_api_tokens")
     mocker.patch("pullsar.main.QuayClient")
     mocker.patch("pullsar.main.is_database_configured", return_value=False)
+    mock_resolver_instance = mocker.Mock(spec=OperatorUsageStatsResolver)
+    mock_resolver_instance.update_operator_usage_stats.return_value = {"org/repo": []}
     mocker.patch(
-        "pullsar.main.update_operator_usage_stats", return_value={"org/repo": []}
+        "pullsar.main.OperatorUsageStatsResolver", return_value=mock_resolver_instance
     )
 
     mock_db_class = mocker.patch("pullsar.main.DatabaseManager")
