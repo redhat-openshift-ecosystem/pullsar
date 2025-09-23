@@ -24,8 +24,26 @@ DB_PASSWORD="password"
 DB_HOST="localhost"
 DB_PORT="5432"
 ```
+- set API configuration (optional):
+```
+API_EXPORT_MAX_DAYS="30"
+API_ALL_OPERATORS_CATALOG="All Operators"
+```
 
-### 3. start services (web, API, database):
+### 3. perform one time configuration of DB start date (for API restriction) by creating table app_metadata in your PostgreSQL DB and inserting the db_start_date, e.g.:
+```
+CREATE TABLE app_metadata (
+    key VARCHAR(50) PRIMARY KEY,
+    value VARCHAR(255) NOT NULL,
+    description TEXT,
+    last_updated TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO app_metadata (key, value, description)
+VALUES ('db_start_date', '2025-08-08', 'The earliest date from which pull count data is available.');
+```
+
+### 4. start services (web, API, database):
 ```
 podman-compose up -d
 ```
@@ -38,9 +56,11 @@ podman-compose up -d
 pnpm install
 ```
 
-### 2. create `/apps/web/.env` to allow forwarding of requests to API:
+### 2. create `/apps/web/.env` to allow forwarding of requests to API and synchronize config:
 ```
 VITE_API_PROXY_TARGET="http://localhost:8000"
+VITE_API_EXPORT_MAX_DAYS="30"
+VITE_API_ALL_OPERATORS_CATALOG="All Operators"
 ```
 
 ### 3. run web and API:

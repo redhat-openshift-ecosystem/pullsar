@@ -79,6 +79,10 @@ class BaseConfig(object):
         port=int(os.getenv("DB_PORT", 5432)),
     )
 
+    # for Pyxis API mutual TLS authentication
+    CLIENT_CERT_PATH = os.environ.get("CLIENT_CERT_PATH")
+    CLIENT_KEY_PATH = os.environ.get("CLIENT_KEY_PATH")
+
 
 def is_database_configured() -> bool:
     """Checks if database is configured for the script.

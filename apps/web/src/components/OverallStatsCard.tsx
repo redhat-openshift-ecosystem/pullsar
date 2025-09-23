@@ -10,7 +10,7 @@ import { Skeleton } from './ui/skeleton'
 interface Props {
   overallData?: {
     total_pulls: number
-    trend?: number
+    trend: number
     chart_data: {
       date: string
       pulls: number
@@ -36,7 +36,7 @@ export const OverallStatsCard = ({
   const navigate = useNavigate()
 
   const handleCardClick = () => {
-    void navigate({ to: '/dashboard' })
+    void navigate({ to: '/dashboard', search: true })
   }
 
   if (isLoading || overallData === undefined) {
@@ -46,9 +46,12 @@ export const OverallStatsCard = ({
   const { total_pulls, trend, chart_data } = overallData
 
   return (
-    <div className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden">
+    <div
+      className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden hover:cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-        <div onClick={handleCardClick} className="hover:cursor-pointer hover:">
+        <div>
           <h3 className="text-2xl font-bold text-summary-accent flex items-center">
             All Operators Usage
             <ChevronsRight className="w-6 h-6 ml-2" />
@@ -72,7 +75,7 @@ export const OverallStatsCard = ({
       <div className="border-t border-border pt-4 flex flex-col md:flex-row items-center gap-6">
         <div className="flex-shrink-0 grid grid-cols-2 gap-6 text-center">
           <div>
-            <p className="text-3xl lg:text-5xl font-bold text-accent">
+            <p className="text-3xl lg:text-4xl font-bold text-accent">
               {total_pulls.toLocaleString()}
             </p>
             <p className="text-sm text-secondary">Total Pulls</p>
@@ -82,8 +85,11 @@ export const OverallStatsCard = ({
             <p className="text-sm text-secondary">Trend</p>
           </div>
         </div>
-        <div className="w-full flex-grow h-48">
-          <UsageLineChart chartData={chart_data} />
+        <div
+          className="w-full flex-grow h-48"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <UsageLineChart series={[{ name: 'Pulls', data: chart_data }]} />
         </div>
       </div>
     </div>

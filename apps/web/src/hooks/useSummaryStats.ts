@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { API_BASE } from './api'
 
 interface SummaryStatsApiResponse {
   total_catalogs: number
@@ -8,7 +9,7 @@ interface SummaryStatsApiResponse {
 }
 
 const fetchSummaryStats = async (): Promise<SummaryStatsApiResponse> => {
-  const response = await fetch('/api/v1/summary')
+  const response = await fetch(`${API_BASE}/summary`)
   if (!response.ok) throw new Error('Failed to fetch summary stats')
   const data = (await response.json()) as SummaryStatsApiResponse
   return data

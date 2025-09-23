@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
+import { API_BASE } from './api'
 
 interface OverallPullsApiResponse {
   total_pulls: number
-  trend?: number
+  trend: number
   chart_data: { date: string; pulls: number }[]
 }
 
@@ -20,7 +21,7 @@ const fetchOverallPulls = async (
     start_date: params.start_date,
     end_date: params.end_date,
   })
-  const response = await fetch(`/api/v1/overall?${searchParams.toString()}`)
+  const response = await fetch(`${API_BASE}/overall?${searchParams.toString()}`)
   if (!response.ok) throw new Error('Failed to fetch overall pull statistics')
   const data = (await response.json()) as OverallPullsApiResponse
   return data

@@ -12,6 +12,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      API_DB_START_DATE: ${API_DB_START_DATE}
     depends_on:
       db:
         condition: service_healthy
@@ -22,7 +23,7 @@ services:
       dockerfile: ./apps/web/Containerfile
     container_name: pullsar-web
     ports:
-      - "8080:80"
+      - "8080:8080"
     depends_on:
       - api
 

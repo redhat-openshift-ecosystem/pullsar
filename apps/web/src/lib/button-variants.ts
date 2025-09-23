@@ -6,16 +6,21 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90',
+          'bg-bg-add text-accent shadow-xs hover:bg-bg-add/80 hover:cursor-pointer',
         destructive:
           'bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline:
           'border bg-background shadow-xs dark:bg-input/30 dark:border-input hover:cursor-pointer',
+        comparisonTray:
+          'border bg-background shadow-xs dark:bg-input/30 dark:border-input hover:cursor-pointer hover:text-accent hover:border-accent',
         secondary:
           'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
         ghost:
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
+        pageActive:
+          'bg-bg-add text-accent shadow-xs hover:cursor-pointer border border-accent',
+        page: 'bg-card/50 text-secondary shadow-xs hover:bg-bg-add hover:text-accent hover:border-accent hover:cursor-pointer border border-border',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',

@@ -19,12 +19,12 @@ export function OcpVersionSelector({
   onVersionChange,
 }: Props) {
   return (
-    <div>
+    <div onClick={(e) => e.stopPropagation()}>
       <label className="block text-sm font-medium text-secondary mb-1">
         OCP Version
       </label>
       <Select value={currentVersion} onValueChange={onVersionChange}>
-        <SelectTrigger className="justify-start text-left font-normal bg-input border-border">
+        <SelectTrigger className="justify-start text-left font-normal bg-input border-border w-full">
           <SelectValue placeholder="Select a version" />
         </SelectTrigger>
         <SelectContent>

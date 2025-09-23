@@ -18,12 +18,42 @@ export const homePageSearchDefaults = {
 }
 
 export const homePageSearchSchema = z.object({
-  ocp_version: z
-    .string()
-    .optional()
-    .default(homePageSearchDefaults.ocp_version),
-  start_date: zodDateString
-    .optional()
-    .default(homePageSearchDefaults.start_date),
-  end_date: zodDateString.optional().default(homePageSearchDefaults.end_date),
+  ocp_version: z.string().default(homePageSearchDefaults.ocp_version),
+  start_date: zodDateString.default(homePageSearchDefaults.start_date),
+  end_date: zodDateString.default(homePageSearchDefaults.end_date),
+})
+
+export interface DashboardPageSearchParams {
+  ocp_version: string
+  start_date: string
+  end_date: string
+  search_query: string
+  sort_type: string
+  is_desc: boolean
+  page: number
+}
+
+export const dashboardPageSearchDefaults = {
+  ocp_version: 'v4.18',
+  start_date: daysAgo(15),
+  end_date: daysAgo(1),
+  search_query: '',
+  sort_type: 'pulls',
+  is_desc: true,
+  page: 1,
+}
+
+export const dashboardPageSearchSchema = z.object({
+  ocp_version: z.string().default(dashboardPageSearchDefaults.ocp_version),
+  start_date: zodDateString.default(dashboardPageSearchDefaults.start_date),
+  end_date: zodDateString.default(dashboardPageSearchDefaults.end_date),
+  search_query: z.string().default(dashboardPageSearchDefaults.search_query),
+  sort_type: z.string().default(dashboardPageSearchDefaults.sort_type),
+  is_desc: z.boolean().default(dashboardPageSearchDefaults.is_desc),
+  page: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(dashboardPageSearchDefaults.page),
 })

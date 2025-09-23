@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 from urllib.parse import quote
 from requests_kerberos import HTTPKerberosAuth, DISABLED
 
-from pullsar.config import logger
+from pullsar.config import logger, BaseConfig
 
 
 class PyxisClient:
@@ -13,7 +13,21 @@ class PyxisClient:
         self.base_url = base_url
         self.session = requests.Session()
         self.session.headers.update({"Accept": "application/json"})
-        self.kerberos_auth = HTTPKerberosAuth(mutual_authentication=DISABLED)
+        self.auth_method = None
+
+        cert_path = BaseConfig.CLIENT_CERT_PATH
+        key_path = BaseConfig.CLIENT_KEY_PATH
+
+        if cert_path and key_path:
+            logger.info(
+                "Found client certificate paths. Configuring mTLS authentication for Pyxis."
+            )
+            self.session.cert = (cert_path, key_path)
+        else:
+            logger.info(
+                "Client certificate paths not found. Falling back to Kerberos authentication for Pyxis."
+            )
+            self.auth_method = HTTPKerberosAuth(mutual_authentication=DISABLED)
 
     def get_images_for_repository(
         self, registry: str, repo_path: str, include: str
@@ -44,7 +58,7 @@ class PyxisClient:
 
             try:
                 response = self.session.get(
-                    api_url, params=params, auth=self.kerberos_auth
+                    api_url, params=params, auth=self.auth_method
                 )
                 response.raise_for_status()
                 data = response.json()

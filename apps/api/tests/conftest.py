@@ -1,7 +1,19 @@
 import pytest
+from fastapi.testclient import TestClient
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="module")
+def client(mock_env_vars: None) -> TestClient:
+    """
+    A fixture that creates a TestClient for the FastAPI app.
+    It's scoped to 'module' so the app is imported only once per test file.
+    """
+    from app.main import app
+
+    return TestClient(app)
+
+
+@pytest.fixture(scope="module")
 def mock_env_vars() -> None:
     """
     A fixture that automatically mocks the necessary environment

@@ -1,11 +1,17 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react'
 
 type Theme = 'dark' | 'light'
 
 type ThemeProviderProps = {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 type ThemeProviderState = {
@@ -19,12 +25,16 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
 )
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const [theme, setTheme] = useState<Theme>(() => {
+    const storedTheme = localStorage.getItem('theme') as Theme | null
+    return storedTheme || 'dark'
+  })
 
   useEffect(() => {
     const root = window.document.documentElement
     root.classList.remove('light', 'dark')
     root.classList.add(theme)
+    localStorage.setItem('theme', theme)
   }, [theme])
 
   const toggleTheme = () => {
@@ -40,7 +50,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext)
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider')
   }
   return context

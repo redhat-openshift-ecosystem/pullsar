@@ -7,7 +7,7 @@ authors = [{name = "Jakub Durkac", email = "jakubdurkac@gmail.com"}]
 license = {text = "Apache-2.0"}
 readme = "README.md"
 packages = [{include = "app", from = "src"}]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -18,6 +18,7 @@ fastapi = "^0.116.1"
 uvicorn = "^0.35.0"
 psycopg2-binary = "^2.9.10"
 dotenv = "^0.9.9"
+numpy = "^2.3.3"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.12.1"
