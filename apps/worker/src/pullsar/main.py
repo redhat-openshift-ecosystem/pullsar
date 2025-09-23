@@ -1,7 +1,6 @@
 """The main module of the Pullsar application."""
 
 import logging
-from typing import Dict
 
 from pullsar.config import (
     BaseConfig,
@@ -9,8 +8,8 @@ from pullsar.config import (
     load_quay_api_tokens,
     is_database_configured,
 )
-from pullsar.update_operator_usage_stats import (
-    update_operator_usage_stats,
+from pullsar.stats_resolver import (
+    OperatorUsageStatsResolver,
 )
 from pullsar.cli import parse_arguments, ParsedArgs
 from pullsar.quay_client import QuayClient
@@ -33,7 +32,7 @@ def main() -> None:
         base_url=BaseConfig.QUAY_API_BASE_URL, api_tokens=BaseConfig.QUAY_API_TOKENS
     )
     pyxis_client = PyxisClient(base_url=BaseConfig.PYXIS_API_BASE_URL)
-    known_image_translations: Dict[str, str] = {}
+    stats_resolver = OperatorUsageStatsResolver()
 
     db = None
     is_db_allowed = is_database_configured() and not args.dry_run
@@ -43,10 +42,9 @@ def main() -> None:
             db.connect()
 
         for catalog in args.catalogs:
-            repository_paths = update_operator_usage_stats(
+            repository_paths = stats_resolver.update_operator_usage_stats(
                 quay_client,
                 pyxis_client,
-                known_image_translations,
                 args.log_days,
                 catalog.image,
                 catalog.json_file,
