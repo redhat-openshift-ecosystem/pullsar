@@ -63,9 +63,12 @@ class BaseConfig(object):
     QUAY_API_TOKENS: Dict[str, str] = {}
     QUAY_API_BASE_URL = "https://quay.io/api/v1"
     PYXIS_API_BASE_URL = "https://pyxis.engineering.redhat.com/v1"
+    PYXIS_PUBLIC_API_BASE_URL = "https://catalog.redhat.com/api/containers/v1/"
 
     # destination for output rendered JSON operators catalog files
     CATALOG_JSON_FILE = "operators_catalog.json"
+    # floor for dynamically resolved OCP versions via public Pyxis
+    MIN_OCP_VERSION = "4.8"
     LOG_DAYS_DEFAULT = 7
     LOG_DAYS_MIN = 1
     LOG_DAYS_MAX = 30  # Quay limit
