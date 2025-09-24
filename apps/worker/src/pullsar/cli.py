@@ -32,15 +32,18 @@ def discover_catalog_versions(
     """
     logger.info(f"Discovering supported OCP versions for base image: {base_image}")
     try:
+        filter = f"path ~= '{base_image}' and organization != 'deleted'"
+        include = "data.path"
         indices = pyxis_client.get_operator_indices(
-            ocp_versions_range=BaseConfig.MIN_OCP_VERSION
+            ocp_versions_range=BaseConfig.MIN_OCP_VERSION,
+            include=include,
+            filter=filter,
         )
 
         discovered_catalogs = []
         for index in indices:
-            org = index.get("organization")
             path = index.get("path")
-            if path and path.startswith(base_image) and org != "deleted":
+            if path:
                 logger.info(f"Discovered: {path}")
                 discovered_catalogs.append(ParsedCatalogArg(image=path, json_file=None))
 
@@ -52,8 +55,8 @@ def discover_catalog_versions(
         discovered_catalogs.sort(key=lambda x: x.image)
         return discovered_catalogs
 
-    except Exception as e:
-        logger.error(f"Failed to discover catalog versions from Pyxis API: {e}")
+    except Exception:
+        logger.exception("Failed to discover catalog versions from Pyxis API.")
         exit(1)
 
 

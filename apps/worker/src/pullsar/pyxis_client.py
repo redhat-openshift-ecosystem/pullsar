@@ -1,5 +1,5 @@
 import requests
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from urllib.parse import quote
 from requests_kerberos import HTTPKerberosAuth, DISABLED
 
@@ -109,13 +109,20 @@ class PyxisClientPublic(_BasePyxisClient):
     Used for discovering externally available data.
     """
 
-    def get_operator_indices(self, ocp_versions_range: str) -> List[Dict[str, Any]]:
+    def get_operator_indices(
+        self,
+        ocp_versions_range: str,
+        include: Optional[str] = None,
+        filter: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Fetches all operator indices from the public Pyxis API for a given OCP version.
 
         Args:
             ocp_versions_range (str): OCP version range, e.g. '4.8' means version 4.8 and above,
                 see Pyxis API endpoint operators/indices for more details on the range format.
+            include (Optional[str]): The fields to include in the API response.
+            filter (Optional[str]): The filter to query results by.
 
         Returns:
             List[Dict[str, Any]]: List of all supported index data objects. Key fields include
@@ -124,6 +131,10 @@ class PyxisClientPublic(_BasePyxisClient):
         """
         endpoint = "operators/indices"
         params = {"ocp_versions_range": ocp_versions_range}
+        if filter:
+            params["filter"] = filter
+        if include:
+            params["include"] = include
 
         all_indices = self._fetch_paginated_data(endpoint, params)
         return all_indices
