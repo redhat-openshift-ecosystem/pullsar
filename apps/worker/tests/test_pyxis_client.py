@@ -80,12 +80,15 @@ def test_get_images_request_fails(
         side_effect=requests.exceptions.RequestException("Connection error"),
     )
 
-    images = client.get_images_for_repository(
-        "registry.connect.redhat.com", "my-org/my-repo", "data.image_id"
-    )
+    registry = "registry.connect.redhat.com"
+    repo_path = "my-org/my-repo"
+    images = client.get_images_for_repository(registry, repo_path, "data.image_id")
 
     assert images == []
-    assert "Pyxis API request failed for repo my-org/my-repo" in caplog.text
+    assert (
+        f"Pyxis API request failed for endpoint repositories/registry/{registry}/repository/"
+        in caplog.text
+    )
     assert "Connection error" in caplog.text
 
 
