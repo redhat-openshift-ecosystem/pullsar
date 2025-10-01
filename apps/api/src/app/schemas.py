@@ -4,7 +4,7 @@ from datetime import date
 
 
 class DBStartDate(BaseModel):
-    """Represents the earliest date from which data is available in the database"""
+    """Represents the earliest date from which data is available in the database."""
 
     db_start_date: date
 

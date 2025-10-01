@@ -4,6 +4,9 @@ WORKDIR /app
 
 RUN npm install -g pnpm
 
+ARG VITE_API_EXPORT_MAX_DAYS
+ARG VITE_API_ALL_OPERATORS_CATALOG
+
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY package.json ./
 COPY apps/web/ ./apps/web/
