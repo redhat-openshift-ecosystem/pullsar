@@ -104,7 +104,7 @@ export const Filters = ({
 
         {/* mobile - vertical section expanded/hidden with 'funnel' button, 
             desktop - lg:flex makes sure items are always visible
-            on big screen and the layout becomes horizontal */}
+            on wide screen and the layout becomes horizontal */}
         <div
           className={`
             ${isExpanded ? 'flex' : 'hidden'} flex-col gap-4 mt-4

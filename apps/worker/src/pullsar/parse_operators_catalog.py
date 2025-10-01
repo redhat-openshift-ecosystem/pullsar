@@ -20,7 +20,7 @@ def render_operator_catalog(catalog_image: str, output_file: str) -> bool:
         the rendered JSON catalog.
 
     Returns:
-        bool: True if render was successful, else False
+        bool: True if render was successful, else False.
     """
     command = ["opm", "render", catalog_image, "-o", "json"]
 
