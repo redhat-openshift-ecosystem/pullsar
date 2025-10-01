@@ -98,5 +98,9 @@ jobs:
           
           echo "Building and pushing image: ${IMAGE_TAG}"
           
-          podman build -f ./apps/${{ matrix.service }}/Containerfile -t ${IMAGE_TAG} .
+          podman build \
+            --build-arg VITE_API_EXPORT_MAX_DAYS="${{ secrets.VITE_API_EXPORT_MAX_DAYS }}" \
+            --build-arg VITE_API_ALL_OPERATORS_CATALOG="${{ secrets.VITE_API_ALL_OPERATORS_CATALOG }}" \
+            -f ./apps/${{ matrix.service }}/Containerfile \
+            -t ${IMAGE_TAG} .
           podman push ${IMAGE_TAG}

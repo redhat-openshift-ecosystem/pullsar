@@ -6,8 +6,10 @@ import { shortCatalogName } from '../../lib/utils'
 import { useOverallPulls } from '../../hooks/useOverallPulls'
 import type { DashboardPageSearchParams } from '../../lib/schemas'
 
-const allOperatorsCatalog =
-  String(import.meta.env.VITE_API_ALL_OPERATORS_CATALOG) || 'All Operators'
+const catalogImport = import.meta.env.VITE_API_ALL_OPERATORS_CATALOG as
+  | string
+  | undefined
+const allOperatorsCatalog = catalogImport ?? 'All Operators'
 
 export const Route = createFileRoute('/dashboard/')({
   component: CatalogListPage,
