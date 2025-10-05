@@ -76,10 +76,11 @@ jobs:
         id: tagging
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
+          GIT_SHA=$(git rev-parse --short "$GITHUB_SHA")
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "suffix=pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+            echo "suffix=pr-${{ github.event.number }}-${GIT_SHA}" >> "$GITHUB_OUTPUT"
           else
-            echo "suffix=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
+            echo "suffix=${GIT_SHA}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Log in to Quay.io
