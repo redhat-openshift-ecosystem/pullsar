@@ -63,12 +63,16 @@ def read_api_root():
     return {"message": "Welcome to the Pullsar API"}
 
 
-@router.get("/db-start-date", response_model=schemas.DBStartDate)
-def read_db_start_date(db_start_date: date = Depends(get_db_start_date)):
+@router.get("/config", response_model=schemas.ApiConfig)
+def read_api_config(db_start_date: date = Depends(get_db_start_date)):
     """
-    Returns the earliest date from which data is available in the database.
+    Returns the API configuration.
     """
-    return {"db_start_date": db_start_date}
+    return {
+        "db_start_date": db_start_date,
+        "export_max_days": BASE_CONFIG.export_max_days,
+        "all_operators_catalog": BASE_CONFIG.all_operators_catalog,
+    }
 
 
 @router.get("/ocp-versions", response_model=list[str])

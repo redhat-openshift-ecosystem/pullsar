@@ -5,7 +5,7 @@ import { type DateRange } from 'react-day-picker'
 import { Button } from './ui/button'
 import { Calendar } from './ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
-import { useDbStartDate } from '../hooks/useDbStartDate'
+import { useApiConfig } from '../hooks/useApiConfig'
 
 const yesterdayDate = () => subDays(new Date(), 1)
 
@@ -16,10 +16,11 @@ interface Props {
 
 export function DateRangeSelector({ dateRange, onDateChange }: Props) {
   const [isOpen, setIsOpen] = useState(false)
-  const { data: dbStartDateString } = useDbStartDate()
+
+  const { data: apiConfig } = useApiConfig()
   const dbStartDate = useMemo(
-    () => (dbStartDateString ? parseISO(dbStartDateString) : null),
-    [dbStartDateString]
+    () => (apiConfig?.db_start_date ? parseISO(apiConfig.db_start_date) : null),
+    [apiConfig?.db_start_date]
   )
 
   const [range, setRange] = useState<DateRange | undefined>(() => {
