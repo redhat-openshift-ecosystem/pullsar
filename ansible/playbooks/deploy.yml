@@ -1,0 +1,25 @@
+---
+- name: "Deploy Pullsar application to the '{{ env }}' environment"
+  hosts: "pullsar-{{ env }}"
+  connection: local
+  gather_facts: false
+
+  vars_files:
+    - "vaults/{{ env }}/secrets.yml"
+
+  environment:
+    K8S_AUTH_API_KEY: "{{ openshift_token }}"
+    K8S_AUTH_HOST: "{{ openshift_server }}"
+
+  roles:
+    - role: project_setup
+      tags: always
+
+    - role: api
+      tags: api
+
+    - role: web
+      tags: web
+
+    - role: worker
+      tags: worker

@@ -1,0 +1,69 @@
+---
+- name: "Ensure project namespace '{{ namespace }}' exists"
+  kubernetes.core.k8s:
+    name: "{{ namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: "Create or update the API configuration"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ namespace }}"
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: pullsar-config
+      data:
+        API_ALL_OPERATORS_CATALOG: "{{ api_all_operators_catalog }}"
+        API_EXPORT_MAX_DAYS: "{{ api_export_max_days | string }}"
+
+- name: "Create or update PostgreSQL credentials secret"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: postgres-credentials
+      stringData: "{{ postgres_credentials }}"
+
+- name: "Create or update Quay API token secret"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: quay-api-tokens
+      stringData:
+        QUAY_API_TOKENS_JSON: "{{ quay_api_tokens }}"
+
+- name: "Create or update worker registry auth secret"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: worker-registry-auth
+      data:
+        auth.json: "{{ worker_registry_auth | b64encode }}"
+
+- name: "Create or update service account TLS secret"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: pullsar-sa-cert
+      type: kubernetes.io/tls
+      data:
+        tls.crt: "{{ pullsar_sa_cert_crt | b64encode }}"
+        tls.key: "{{ pullsar_sa_cert_key | b64encode }}"

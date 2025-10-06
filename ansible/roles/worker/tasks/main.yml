@@ -1,0 +1,8 @@
+---
+- name: "Create or update worker CronJobs"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'worker-cronjob.yml') }}"
+  loop: "{{ worker_catalogs }}"
+  loop_control:
+    loop_var: catalog_item

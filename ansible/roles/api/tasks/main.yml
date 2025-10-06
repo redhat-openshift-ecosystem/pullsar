@@ -1,0 +1,10 @@
+---
+- name: "Create or update API Deployment"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'api-deployment.yml') }}"
+
+- name: "Create or update API Service"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'api-service.yml') }}"

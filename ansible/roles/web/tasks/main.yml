@@ -1,0 +1,15 @@
+---
+- name: "Create or update Web Deployment"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'web-deployment.yml') }}"
+
+- name: "Create or update Web Service"
+  kubernetes.core._k8s:
+    state: present
+    definition: "{{ lookup('template', 'web-service.yml') }}"
+
+- name: "Create or update Web Route"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'web-route.yml') }}"

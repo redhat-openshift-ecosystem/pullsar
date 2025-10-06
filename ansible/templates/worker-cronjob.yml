@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "worker-{{ catalog_item.name }}"
+  namespace: "{{ namespace }}"
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: pullsar-worker
+            image: "{{ image_repo }}:worker-{{ image_suffix }}"
+
+            command:
+              - "python"
+              - "-m"
+              - "pullsar.main"
+              - "--catalog-base-image"
+              - "{{ catalog_item.base_image }}"
+              - "--log-days"
+              - "1"
+
+            envFrom:
+            - secretRef:
+                name: postgres-credentials
+            - secretRef:
+                name: quay-api-tokens
+
+            env:
+            - name: REGISTRY_AUTH_FILE
+              value: /etc/worker-secrets/auth.json
+            - name: CLIENT_CERT_PATH
+              value: /etc/certs/tls.crt
+            - name: CLIENT_KEY_PATH
+              value: /etc/certs/tls.key
+              
+            volumeMounts:
+            - name: auth-file-volume
+              mountPath: /etc/worker-secrets
+              readOnly: true
+            - name: service-account-cert-volume
+              mountPath: /etc/certs
+              readOnly: true
+
+          volumes:
+          - name: auth-file-volume
+            secret:
+              secretName: worker-registry-auth
+          - name: service-account-cert-volume
+            secret:
+              secretName: pullsar-sa-cert
+
+          restartPolicy: Never

@@ -207,3 +207,6 @@ node_modules
 !apps/web/package.json
 !tsconfig.*
 !.prettierrc.json
+
+# Ansible
+.vault-password

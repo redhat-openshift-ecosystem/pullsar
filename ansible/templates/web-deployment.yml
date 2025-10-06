@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pullsar-web
+  namespace: "{{ namespace }}"
+  labels:
+    app: pullsar-web
+spec:
+  replicas: "{{ web_replicas }}"
+  selector:
+    matchLabels:
+      app: pullsar-web
+  template:
+    metadata:
+      labels:
+        app: pullsar-web
+    spec:
+      containers:
+      - name: web
+        image: "{{ image_repo }}:web-{{ image_suffix }}"
+        ports:
+        - containerPort: 8080
