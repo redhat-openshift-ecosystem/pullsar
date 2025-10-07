@@ -3,10 +3,12 @@ from enum import Enum
 from datetime import date
 
 
-class DBStartDate(BaseModel):
-    """Represents the earliest date from which data is available in the database"""
+class ApiConfig(BaseModel):
+    """Represents the API configuration."""
 
     db_start_date: date
+    export_max_days: int
+    all_operators_catalog: str
 
 
 class ChartDataPoint(BaseModel):

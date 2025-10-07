@@ -5,9 +5,9 @@ import { ItemStatsCard } from '../../components/ItemStatsCard'
 import { shortCatalogName } from '../../lib/utils'
 import { useOverallPulls } from '../../hooks/useOverallPulls'
 import type { DashboardPageSearchParams } from '../../lib/schemas'
+import { useApiConfig } from '../../hooks/useApiConfig'
 
-const allOperatorsCatalog =
-  String(import.meta.env.VITE_API_ALL_OPERATORS_CATALOG) || 'All Operators'
+const DEFAULT_ALL_OPERATORS_CATALOG = 'All Operators'
 
 export const Route = createFileRoute('/dashboard/')({
   component: CatalogListPage,
@@ -18,6 +18,11 @@ export function CatalogListPage() {
     useSearch({
       from: '/dashboard',
     })
+
+  const { data: apiConfig, isLoading: isApiConfigLoading } = useApiConfig()
+  const allOperatorsCatalog =
+    apiConfig?.all_operators_catalog ?? DEFAULT_ALL_OPERATORS_CATALOG
+
   const { data, isLoading } = useOverallPulls({
     ocp_version,
     start_date,
@@ -41,7 +46,7 @@ export function CatalogListPage() {
         />
       )}
       extraItem={allOperatorsItem}
-      isExtraItemLoading={isLoading}
+      isExtraItemLoading={isLoading || isApiConfigLoading}
     />
   )
 }

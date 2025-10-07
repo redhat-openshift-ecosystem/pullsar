@@ -1,4 +1,3 @@
-import { EXPORT_MAX_DAYS } from '../lib/utils'
 import { Button } from './ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { Download } from 'lucide-react'
@@ -8,6 +7,7 @@ interface Props {
   isExportMaxExceeded: boolean
   isExporting: boolean
   isDone: boolean
+  exportMaxDays: number
 }
 
 export function ExportButton({
@@ -15,6 +15,7 @@ export function ExportButton({
   isExportMaxExceeded,
   isExporting,
   isDone,
+  exportMaxDays,
 }: Props) {
   const buttonContent = (
     <>
@@ -25,7 +26,7 @@ export function ExportButton({
 
   const getTooltipMessage = () => {
     if (isExportMaxExceeded) {
-      return `Range exceeds ${EXPORT_MAX_DAYS} days.`
+      return `Range exceeds ${exportMaxDays} days.`
     }
     if (isDone) {
       return 'Change filters to export again.'

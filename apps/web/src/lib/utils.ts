@@ -1,9 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-export const EXPORT_MAX_DAYS =
-  Number(import.meta.env.VITE_API_EXPORT_MAX_DAYS) || 30
-
 // comparison chart colors
 export const LINE_COLORS = [
   '#0284c7', // blue

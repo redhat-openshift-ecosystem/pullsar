@@ -11,8 +11,10 @@ import { useParams, useSearch } from '@tanstack/react-router'
 import { useExportCsv } from '../hooks/useExportCsv'
 import { differenceInDays, parseISO } from 'date-fns'
 import { ExportButton } from './ExportButton'
-import { EXPORT_MAX_DAYS } from '../lib/utils'
 import type { DashboardPageSearchParams } from '../lib/schemas'
+import { useApiConfig } from '../hooks/useApiConfig'
+
+const DEFAULT_EXPORT_MAX_DAYS = 30
 
 interface URLParams {
   catalog_name?: string
@@ -56,6 +58,8 @@ export const Filters = ({
   const search: DashboardPageSearchParams = useSearch({ from: '/dashboard' })
   const params: URLParams = useParams({ strict: false })
 
+  const { data: apiConfig } = useApiConfig()
+
   const { exportData, isExporting } = useExportCsv(() =>
     setExportPerformed(true)
   )
@@ -65,11 +69,12 @@ export const Filters = ({
   }, [search, params])
 
   const isExportMaxExceeded = useMemo(() => {
+    const exportMaxDays = apiConfig?.export_max_days ?? DEFAULT_EXPORT_MAX_DAYS
     const from = search.start_date ? parseISO(search.start_date) : null
     const to = search.end_date ? parseISO(search.end_date) : null
     if (!from || !to) return false
-    return differenceInDays(to, from) > EXPORT_MAX_DAYS
-  }, [search.start_date, search.end_date])
+    return differenceInDays(to, from) > exportMaxDays
+  }, [search.start_date, search.end_date, apiConfig])
 
   if (
     isLoading ||
@@ -104,7 +109,7 @@ export const Filters = ({
 
         {/* mobile - vertical section expanded/hidden with 'funnel' button, 
             desktop - lg:flex makes sure items are always visible
-            on big screen and the layout becomes horizontal */}
+            on wide screen and the layout becomes horizontal */}
         <div
           className={`
             ${isExpanded ? 'flex' : 'hidden'} flex-col gap-4 mt-4
@@ -140,6 +145,9 @@ export const Filters = ({
             isExportMaxExceeded={isExportMaxExceeded}
             isExporting={isExporting}
             isDone={exportPerformed}
+            exportMaxDays={
+              apiConfig?.export_max_days ?? DEFAULT_EXPORT_MAX_DAYS
+            }
           />
         </div>
       </div>
