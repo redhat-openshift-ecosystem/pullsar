@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: "worker-{{ catalog_item.name }}"
+  name: "pullsar-worker-{{ catalog_item.name }}"
   namespace: "{{ namespace }}"
 spec:
   schedule: "0 2 * * *"
