@@ -57,6 +57,9 @@ jobs:
     outputs:
       image_suffix: ${{ steps.vars.outputs.image_suffix }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Generate image suffix
         id: vars
         run: |
@@ -118,6 +121,7 @@ jobs:
     needs: build-and-push
     outputs:
       ansible_tags: ${{ steps.vars.outputs.ansible_tags }}
+      should_deploy: ${{ steps.vars.outputs.should_deploy }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
