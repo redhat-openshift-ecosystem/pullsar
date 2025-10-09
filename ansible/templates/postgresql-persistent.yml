@@ -28,21 +28,11 @@ metadata:
     openshift.io/support-url: https://access.redhat.com
     samples.operator.openshift.io/version: 4.18.21
     tags: database,postgresql
-  creationTimestamp: "2021-07-27T18:39:32Z"
-  labels:
-    samples.operator.openshift.io/managed: "true"
   name: postgresql-persistent
-  namespace: openshift
-  resourceVersion: "2673535493"
-  uid: 8dc9aa48-0b02-43a1-bd14-dd09b71f3ab6
 objects:
 - apiVersion: v1
   kind: Secret
   metadata:
-    annotations:
-      template.openshift.io/expose-database_name: '{.data[''database-name'']}'
-      template.openshift.io/expose-password: '{.data[''database-password'']}'
-      template.openshift.io/expose-username: '{.data[''database-user'']}'
     name: ${DATABASE_SERVICE_NAME}
   stringData:
     database-name: ${POSTGRESQL_DATABASE}
@@ -51,22 +41,14 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
-    annotations:
-      template.openshift.io/expose-uri: postgres://{.spec.clusterIP}:{.spec.ports[?(.name=="postgresql")].port}
     name: ${DATABASE_SERVICE_NAME}
   spec:
     ports:
     - name: postgresql
-      nodePort: 0
       port: 5432
-      protocol: TCP
       targetPort: 5432
     selector:
       name: ${DATABASE_SERVICE_NAME}
-    sessionAffinity: None
-    type: ClusterIP
-  status:
-    loadBalancer: {}
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -80,8 +62,6 @@ objects:
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
-    annotations:
-      template.alpha.openshift.io/wait-for-ready: "true"
     name: ${DATABASE_SERVICE_NAME}
   spec:
     replicas: 1
@@ -95,8 +75,7 @@ objects:
           name: ${DATABASE_SERVICE_NAME}
       spec:
         containers:
-        - capabilities: {}
-          env:
+        - env:
           - name: POSTGRESQL_USER
             valueFrom:
               secretKeyRef:
@@ -112,8 +91,7 @@ objects:
               secretKeyRef:
                 key: database-name
                 name: ${DATABASE_SERVICE_NAME}
-          image: ' '
-          imagePullPolicy: IfNotPresent
+          image: '${POSTGRESQL_IMAGE}'
           livenessProbe:
             exec:
               command:
@@ -134,33 +112,20 @@ objects:
           resources:
             limits:
               memory: ${MEMORY_LIMIT}
-          securityContext:
-            capabilities: {}
-            privileged: false
-          terminationMessagePath: /dev/termination-log
           volumeMounts:
           - mountPath: /var/lib/pgsql/data
             name: ${DATABASE_SERVICE_NAME}-data
-        dnsPolicy: ClusterFirst
-        restartPolicy: Always
         volumes:
         - name: ${DATABASE_SERVICE_NAME}-data
           persistentVolumeClaim:
             claimName: ${DATABASE_SERVICE_NAME}
     triggers:
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - postgresql
-        from:
-          kind: ImageStreamTag
-          name: postgresql:${POSTGRESQL_VERSION}
-          namespace: ${NAMESPACE}
-        lastTriggeredImage: ""
-      type: ImageChange
     - type: ConfigChange
-  status: {}
 parameters:
+- description: The full pull spec for the PostgreSQL image, resolved from the ImageStream.
+  displayName: PostgreSQL Image Name
+  name: POSTGRESQL_IMAGE
+  required: true
 - description: Maximum amount of memory the container can use.
   displayName: Memory Limit
   name: MEMORY_LIMIT

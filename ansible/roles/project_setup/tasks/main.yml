@@ -61,11 +61,20 @@
         tls.crt: "{{ pullsar_sa_cert_crt | b64encode }}"
         tls.key: "{{ pullsar_sa_cert_key | b64encode }}"
 
+- name: "Find the full image name for the specified PostgreSQL version"
+  kubernetes.core.k8s_info:
+    api_version: image.openshift.io/v1
+    kind: ImageStreamTag
+    name: "postgresql:{{ postgres_version }}"
+    namespace: openshift
+  register: postgres_imagestream_tag
+
 - name: "Process the official OpenShift PostgreSQL template"
   community.okd.openshift_process:
     src: "../templates/postgresql-persistent.yml"
     namespace_target: "{{ project_namespace }}"
     parameters:
+      POSTGRESQL_IMAGE: "{{ postgres_imagestream_tag.resources[0].image.dockerImageReference }}"
       POSTGRESQL_USER: "{{ postgres_credentials.DB_USER }}"
       POSTGRESQL_PASSWORD: "{{ postgres_credentials.DB_PASSWORD }}"
       POSTGRESQL_DATABASE: "{{ postgres_credentials.DB_NAME }}"
