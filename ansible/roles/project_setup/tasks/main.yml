@@ -1,15 +1,8 @@
 ---
-- name: "Ensure project namespace '{{ namespace }}' exists"
-  kubernetes.core.k8s:
-    name: "{{ namespace }}"
-    api_version: v1
-    kind: Namespace
-    state: present
-
 - name: "Create or update the API configuration"
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ namespace }}"
+    namespace: "{{ project_namespace }}"
     definition:
       apiVersion: v1
       kind: ConfigMap
@@ -22,7 +15,7 @@
 - name: "Create or update PostgreSQL credentials secret"
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ namespace }}"
+    namespace: "{{ project_namespace }}"
     definition:
       apiVersion: v1
       kind: Secret
@@ -33,7 +26,7 @@
 - name: "Create or update Quay API token secret"
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ namespace }}"
+    namespace: "{{ project_namespace }}"
     definition:
       apiVersion: v1
       kind: Secret
@@ -45,7 +38,7 @@
 - name: "Create or update worker registry auth secret"
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ namespace }}"
+    namespace: "{{ project_namespace }}"
     definition:
       apiVersion: v1
       kind: Secret
@@ -57,7 +50,7 @@
 - name: "Create or update service account TLS secret"
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ namespace }}"
+    namespace: "{{ project_namespace }}"
     definition:
       apiVersion: v1
       kind: Secret
@@ -71,7 +64,7 @@
 - name: "Create or update PostgreSQL from official OpenShift template"
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ namespace }}"
+    namespace: "{{ project_namespace }}"
     definition: "{{ lookup('template', 'postgresql-persistent.yml') }}"
     parameters:
       POSTGRESQL_USER: "{{ postgres_credentials.DB_USER }}"
@@ -85,7 +78,7 @@
 - name: "Create ConfigMap for database migration script"
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ namespace }}"
+    namespace: "{{ project_namespace }}"
     definition:
       apiVersion: v1
       kind: ConfigMap
@@ -97,5 +90,5 @@
 - name: "Run database migration job"
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ namespace }}"
+    namespace: "{{ project_namespace }}"
     definition: "{{ lookup('template', 'postgresql-migration-job.yml') }}"

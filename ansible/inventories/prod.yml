@@ -3,7 +3,7 @@ pullsar-prod:
     localhost:
       ansible_connection: local
   vars:
-    namespace: "pullsar-prod"
+    project_namespace: "pullsar-prod"
     api_replicas: 2
     web_replicas: 2
     api_all_operators_catalog: "All Operators"

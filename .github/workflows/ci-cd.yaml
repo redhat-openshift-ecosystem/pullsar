@@ -169,9 +169,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install required Python libraries
+        run: pip install kubernetes openshift
+
       - name: Run Ansible deployment for stage
+        working-directory: ./ansible
+        env:
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
         run: |
-          ansible-playbook ansible/playbooks/deploy.yml \
+          ansible-playbook playbooks/deploy.yml \
+            --vault-password-file <(echo "$ANSIBLE_VAULT_PASSWORD") \
             ${{ needs.set-ansible-tags.outputs.ansible_tags }} \
             -e "env=stage" \
             -e "openshift_server=${{ secrets.OPENSHIFT_SERVER_STAGE }}" \
@@ -188,9 +195,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install required Python libraries
+        run: pip install kubernetes openshift
+
       - name: Run Ansible deployment for production
+        working-directory: ./ansible
+        env:
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
         run: |
-          ansible-playbook ansible/playbooks/deploy.yml \
+          ansible-playbook playbooks/deploy.yml \
+            --vault-password-file <(echo "$ANSIBLE_VAULT_PASSWORD") \
             ${{ needs.set-ansible-tags.outputs.ansible_tags }} \
             -e "env=prod" \
             -e "openshift_server=${{ secrets.OPENSHIFT_SERVER_PROD }}" \

@@ -3,7 +3,7 @@ pullsar-stage:
     localhost:
       ansible_connection: local
   vars:
-    namespace: "pullsar-stage"
+    project_namespace: "pullsar-stage"
     api_replicas: 1
     web_replicas: 1
     api_all_operators_catalog: "All Operators"

@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   generateName: "postgresql-migration-job-"
-  namespace: "{{ namespace }}"
+  namespace: "{{ project_namespace }}"
 spec:
   template:
     spec:

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pullsar-api
-  namespace: "{{ namespace }}"
+  namespace: "{{ project_namespace }}"
   labels:
     app: pullsar-api
 spec:

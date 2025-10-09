@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: "pullsar-worker-{{ catalog_item.name }}"
-  namespace: "{{ namespace }}"
+  namespace: "{{ project_namespace }}"
 spec:
   schedule: "0 2 * * *"
   concurrencyPolicy: Forbid

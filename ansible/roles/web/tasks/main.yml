@@ -5,7 +5,7 @@
     definition: "{{ lookup('template', 'web-deployment.yml') }}"
 
 - name: "Create or update Web Service"
-  kubernetes.core._k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'web-service.yml') }}"
 
