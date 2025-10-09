@@ -1,4 +1,4 @@
-pullsar-stage:
+pullsar_stage:
   hosts:
     localhost:
       ansible_connection: local

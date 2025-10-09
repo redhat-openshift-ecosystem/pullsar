@@ -61,11 +61,10 @@
         tls.crt: "{{ pullsar_sa_cert_crt | b64encode }}"
         tls.key: "{{ pullsar_sa_cert_key | b64encode }}"
 
-- name: "Create or update PostgreSQL from official OpenShift template"
-  kubernetes.core.k8s:
-    state: present
-    namespace: "{{ project_namespace }}"
-    definition: "{{ lookup('template', '../templates/postgresql-persistent.yml') }}"
+- name: "Process the official OpenShift PostgreSQL template"
+  community.okd.openshift_process:
+    src: "../templates/postgresql-persistent.yml"
+    namespace_target: "{{ project_namespace }}"
     parameters:
       POSTGRESQL_USER: "{{ postgres_credentials.DB_USER }}"
       POSTGRESQL_PASSWORD: "{{ postgres_credentials.DB_PASSWORD }}"
@@ -74,6 +73,16 @@
       VOLUME_CAPACITY: "{{ postgres_volume_capacity }}"
       POSTGRESQL_VERSION: "{{ postgres_version }}"
       MEMORY_LIMIT: "{{ postgres_memory_limit }}"
+    state: rendered
+  register: processed_template
+
+- name: "Apply the processed PostgreSQL template objects"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition: "{{ item }}"
+    apply: true
+  loop: "{{ processed_template.resources }}"
 
 - name: "Create ConfigMap for database migration script"
   kubernetes.core.k8s:
@@ -85,7 +94,7 @@
       metadata:
         name: postgresql-migration-script
       data:
-        V1__initial_setup.sql: "{{ lookup('file', '../../files/migrations/V1__initial_setup.sql') }}"
+        V1__initial_setup.sql: "{{ lookup('file', '../files/migrations/V1__initial_setup.sql') }}"
 
 - name: "Run database migration job"
   kubernetes.core.k8s:

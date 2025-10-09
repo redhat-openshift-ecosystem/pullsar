@@ -1,6 +1,6 @@
 ---
 - name: "Deploy Pullsar application to the '{{ env }}' environment"
-  hosts: "pullsar-{{ env }}"
+  hosts: "pullsar_{{ env }}"
   connection: local
   gather_facts: false
 

@@ -6,7 +6,7 @@ metadata:
   labels:
     app: pullsar-api
 spec:
-  replicas: "{{ api_replicas }}"
+  replicas: {{ api_replicas }}
   selector:
     matchLabels:
       app: pullsar-api

@@ -1,4 +1,4 @@
-pullsar-prod:
+pullsar_prod:
   hosts:
     localhost:
       ansible_connection: local
