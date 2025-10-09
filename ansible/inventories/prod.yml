@@ -15,3 +15,7 @@ pullsar-prod:
         base_image: "registry.redhat.io/redhat/community-operator-index"
       - name: "redhat-marketplace-index"
         base_image: "registry.redhat.io/redhat/redhat-marketplace-index"
+
+    postgres_volume_capacity: "5Gi"
+    postgres_version: "15-el8"
+    postgres_memory_limit: "1Gi"

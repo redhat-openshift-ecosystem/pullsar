@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: "postgresql-migration-job-"
+  namespace: "{{ namespace }}"
+spec:
+  template:
+    spec:
+      containers:
+      - name: migration
+        image: "postgres:15"
+        command:
+          - "/bin/sh"
+          - "-c"
+          - |
+            echo "Waiting for database to be available..."
+            until psql -h {{ postgres_credentials.DB_HOST }} -c '\q'; do
+              >&2 echo "Postgres is unavailable - sleeping"
+              sleep 2
+            done
+
+            echo "Database is available. Running migration script..."
+            psql -h {{ postgres_credentials.DB_HOST }} -f /migrations/V1__initial_setup.sql
+            echo "Migration complete."
+      env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: DB_PASSWORD
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: DB_USER
+        - name: PGDATABASE
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: DB_NAME
+      volumeMounts:
+        - name: migration-script
+          mountPath: /migrations
+      volumes:
+        - name: migration-script
+          configMap:
+            name: postgresql-migration-script
+      restartPolicy: Never
+  backoffLimit: 4
