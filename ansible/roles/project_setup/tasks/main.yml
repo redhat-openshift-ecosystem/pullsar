@@ -32,8 +32,8 @@
       kind: Secret
       metadata:
         name: quay-api-tokens
-      stringData:
-        QUAY_API_TOKENS_JSON: "{{ quay_api_tokens }}"
+      data:
+        QUAY_API_TOKENS_JSON: "{{ quay_api_tokens | b64encode }}"
 
 - name: "Create or update worker registry auth secret"
   kubernetes.core.k8s:
@@ -65,7 +65,7 @@
   kubernetes.core.k8s:
     state: present
     namespace: "{{ project_namespace }}"
-    definition: "{{ lookup('template', 'postgresql-persistent.yml') }}"
+    definition: "{{ lookup('template', '../templates/postgresql-persistent.yml') }}"
     parameters:
       POSTGRESQL_USER: "{{ postgres_credentials.DB_USER }}"
       POSTGRESQL_PASSWORD: "{{ postgres_credentials.DB_PASSWORD }}"
@@ -91,4 +91,4 @@
   kubernetes.core.k8s:
     state: present
     namespace: "{{ project_namespace }}"
-    definition: "{{ lookup('template', 'postgresql-migration-job.yml') }}"
+    definition: "{{ lookup('template', '../templates/postgresql-migration-job.yml') }}"
