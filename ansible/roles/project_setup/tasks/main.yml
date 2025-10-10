@@ -1,0 +1,112 @@
+---
+- name: "Create or update the API configuration"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: pullsar-config
+      data:
+        API_ALL_OPERATORS_CATALOG: "{{ api_all_operators_catalog }}"
+        API_EXPORT_MAX_DAYS: "{{ api_export_max_days | string }}"
+
+- name: "Create or update PostgreSQL credentials secret"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: postgres-credentials
+      stringData: "{{ postgres_credentials }}"
+
+- name: "Create or update Quay API token secret"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: quay-api-tokens
+      data:
+        QUAY_API_TOKENS_JSON: "{{ quay_api_tokens | b64encode }}"
+
+- name: "Create or update worker registry auth secret"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: worker-registry-auth
+      data:
+        auth.json: "{{ worker_registry_auth | b64encode }}"
+
+- name: "Create or update service account TLS secret"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: pullsar-sa-cert
+      type: kubernetes.io/tls
+      data:
+        tls.crt: "{{ pullsar_sa_cert_crt | b64encode }}"
+        tls.key: "{{ pullsar_sa_cert_key | b64encode }}"
+
+- name: "Find the full image name for the specified PostgreSQL version"
+  kubernetes.core.k8s_info:
+    api_version: image.openshift.io/v1
+    kind: ImageStreamTag
+    name: "postgresql:{{ postgres_version }}"
+    namespace: openshift
+  register: postgres_imagestream_tag
+
+- name: "Process the official OpenShift PostgreSQL template"
+  community.okd.openshift_process:
+    src: "../templates/postgresql-persistent.yml"
+    namespace_target: "{{ project_namespace }}"
+    parameters:
+      POSTGRESQL_IMAGE: "{{ postgres_imagestream_tag.resources[0].image.dockerImageReference }}"
+      POSTGRESQL_USER: "{{ postgres_credentials.DB_USER }}"
+      POSTGRESQL_PASSWORD: "{{ postgres_credentials.DB_PASSWORD }}"
+      POSTGRESQL_DATABASE: "{{ postgres_credentials.DB_NAME }}"
+      DATABASE_SERVICE_NAME: "{{ postgres_credentials.DB_HOST }}"
+      VOLUME_CAPACITY: "{{ postgres_volume_capacity }}"
+      POSTGRESQL_VERSION: "{{ postgres_version }}"
+      MEMORY_LIMIT: "{{ postgres_memory_limit }}"
+    state: rendered
+  register: processed_template
+
+- name: "Apply the processed PostgreSQL template objects"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition: "{{ item }}"
+    apply: true
+  loop: "{{ processed_template.resources }}"
+
+- name: "Create ConfigMap for database migration script"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: postgresql-migration-script
+      data:
+        V1__initial_setup.sql: "{{ lookup('file', '../files/migrations/V1__initial_setup.sql') }}"
+
+- name: "Run database migration job"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition: "{{ lookup('template', '../templates/postgresql-migration-job.yml') }}"

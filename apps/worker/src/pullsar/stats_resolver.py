@@ -183,7 +183,7 @@ class OperatorUsageStatsResolver:
             datetime_str (str): datetime, e.g.: "Mon, 09 Jun 2025 16:23:18 -0000"
 
         Returns:
-            date: extracted date object
+            date: Extracted date object.
         """
         dt = datetime.strptime(datetime_str, "%a, %d %b %Y %H:%M:%S %z")
         return dt.date()

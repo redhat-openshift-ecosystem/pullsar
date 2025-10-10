@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: pullsar-web
+  namespace: "{{ project_namespace }}"
+spec:
+  to:
+    kind: Service
+    name: web
+  port:
+    targetPort: 8080-tcp
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
