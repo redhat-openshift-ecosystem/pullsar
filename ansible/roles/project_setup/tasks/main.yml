@@ -96,7 +96,7 @@
             port: 5432
             targetPort: 5432
         selector:
-          app: "{{ postgres_credentials.DB_HOST }}"
+          name: "{{ postgres_credentials.DB_HOST }}"
 
 - name: "Ensure the PostgreSQL Deployment exists"
   kubernetes.core.k8s:
@@ -111,11 +111,11 @@
         replicas: 1
         selector:
           matchLabels:
-            app: "{{ postgres_credentials.DB_HOST }}"
+            name: "{{ postgres_credentials.DB_HOST }}"
         template:
           metadata:
             labels:
-              app: "{{ postgres_credentials.DB_HOST }}"
+              name: "{{ postgres_credentials.DB_HOST }}"
           spec:
             containers:
               - name: postgresql

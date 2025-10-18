@@ -11,19 +11,19 @@ spec:
     spec:
       containers:
       - name: migration
-        image: "postgres:15"
+        image: "registry.redhat.io/rhel8/postgresql-{{ postgres_version }}"
         command:
           - "/bin/sh"
           - "-c"
           - |
             echo "Waiting for database to be available..."
-            until psql -h {{ postgres_credentials.DB_HOST }} -U {{ postgres_credentials.DB_USER }} -c '\q'; do
+            until psql -h {{ postgres_credentials.DB_HOST }} -U {{ postgres_credentials.DB_USER }} -d {{ postgres_credentials.DB_NAME }} -c '\q'; do
               >&2 echo "Postgres is unavailable - sleeping"
-              sleep 2
+              sleep 5
             done
 
             echo "Database is available. Running migration script..."
-            psql -h {{ postgres_credentials.DB_HOST }} -U {{ postgres_credentials.DB_USER }} -f /migrations/V1__initial_setup.sql
+            psql -h {{ postgres_credentials.DB_HOST }} -U {{ postgres_credentials.DB_USER }} -d {{ postgres_credentials.DB_NAME }} -f /migrations/V1__initial_setup.sql
             echo "Migration complete."
         env:
           - name: PGPASSWORD
