@@ -13,6 +13,7 @@
         API_EXPORT_MAX_DAYS: "{{ api_export_max_days | string }}"
 
 - name: "Create or update PostgreSQL credentials secret"
+  no_log: true
   kubernetes.core.k8s:
     state: present
     namespace: "{{ project_namespace }}"
@@ -24,6 +25,7 @@
       stringData: "{{ postgres_credentials }}"
 
 - name: "Create or update Quay API token secret"
+  no_log: true
   kubernetes.core.k8s:
     state: present
     namespace: "{{ project_namespace }}"
@@ -36,6 +38,7 @@
         QUAY_API_TOKENS_JSON: "{{ quay_api_tokens | b64encode }}"
 
 - name: "Create or update worker registry auth secret"
+  no_log: true
   kubernetes.core.k8s:
     state: present
     namespace: "{{ project_namespace }}"
@@ -48,6 +51,7 @@
         auth.json: "{{ worker_registry_auth | b64encode }}"
 
 - name: "Create or update service account TLS secret"
+  no_log: true
   kubernetes.core.k8s:
     state: present
     namespace: "{{ project_namespace }}"
