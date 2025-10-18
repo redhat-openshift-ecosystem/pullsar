@@ -121,6 +121,7 @@ jobs:
             --extra-vars "env=stage"
             --extra-vars "image_repo=${{ secrets.QUAY_REPO }}"
             --extra-vars "image_suffix=${{ needs.set-image-suffix.outputs.image_suffix }}"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
 
   deploy-prod:
     name: Deploy to production
@@ -143,3 +144,4 @@ jobs:
             --extra-vars "env=prod"
             --extra-vars "image_repo=${{ secrets.QUAY_REPO }}"
             --extra-vars "image_suffix=${{ needs.set-image-suffix.outputs.image_suffix }}"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
