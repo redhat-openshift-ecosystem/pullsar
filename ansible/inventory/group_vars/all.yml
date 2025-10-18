@@ -2,4 +2,4 @@
 api_all_operators_catalog: "All Operators"
 api_export_max_days: 30
 
-postgres_version: "15-el8"
+postgres_version: "15"

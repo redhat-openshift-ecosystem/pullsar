@@ -65,37 +65,96 @@
         tls.crt: "{{ pullsar_sa_cert_crt | b64encode }}"
         tls.key: "{{ pullsar_sa_cert_key | b64encode }}"
 
-- name: "Find the full image name for the specified PostgreSQL version"
-  kubernetes.core.k8s_info:
-    api_version: image.openshift.io/v1
-    kind: ImageStreamTag
-    name: "postgresql:{{ postgres_version }}"
-    namespace: openshift
-  register: postgres_imagestream_tag
-
-- name: "Process the official OpenShift PostgreSQL template"
-  community.okd.openshift_process:
-    src: "../roles/project_setup/templates/postgresql-persistent.yml"
-    namespace_target: "{{ project_namespace }}"
-    parameters:
-      POSTGRESQL_IMAGE: "{{ postgres_imagestream_tag.resources[0].image.dockerImageReference }}"
-      POSTGRESQL_USER: "{{ postgres_credentials.DB_USER }}"
-      POSTGRESQL_PASSWORD: "{{ postgres_credentials.DB_PASSWORD }}"
-      POSTGRESQL_DATABASE: "{{ postgres_credentials.DB_NAME }}"
-      DATABASE_SERVICE_NAME: "{{ postgres_credentials.DB_HOST }}"
-      VOLUME_CAPACITY: "{{ postgres_volume_capacity }}"
-      POSTGRESQL_VERSION: "{{ postgres_version }}"
-      MEMORY_LIMIT: "{{ postgres_memory_limit }}"
-    state: rendered
-  register: processed_template
-
-- name: "Apply the processed PostgreSQL template objects"
+- name: "Ensure a PersistentVolumeClaim exists for PostgreSQL"
   kubernetes.core.k8s:
     state: present
     namespace: "{{ project_namespace }}"
-    definition: "{{ item }}"
-    apply: true
-  loop: "{{ processed_template.resources }}"
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: "{{ postgres_credentials.DB_HOST }}-pvc"
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: "{{ postgres_volume_capacity }}"
+
+- name: "Ensure the PostgreSQL Service exists"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: "{{ postgres_credentials.DB_HOST }}"
+      spec:
+        ports:
+          - name: postgresql
+            port: 5432
+            targetPort: 5432
+        selector:
+          app: "{{ postgres_credentials.DB_HOST }}"
+
+- name: "Ensure the PostgreSQL Deployment exists"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: "{{ postgres_credentials.DB_HOST }}"
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: "{{ postgres_credentials.DB_HOST }}"
+        template:
+          metadata:
+            labels:
+              app: "{{ postgres_credentials.DB_HOST }}"
+          spec:
+            containers:
+              - name: postgresql
+                image: "registry.redhat.io/rhel8/postgresql-{{ postgres_version }}"
+                ports:
+                  - containerPort: 5432
+                env:
+                  - name: POSTGRESQL_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: DB_USER
+                  - name: POSTGRESQL_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: DB_PASSWORD
+                  - name: POSTGRESQL_DATABASE
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: DB_NAME
+                volumeMounts:
+                  - name: postgresql-data
+                    mountPath: /var/lib/pgsql/data
+                readinessProbe:
+                  exec:
+                    command: ["/usr/libexec/check-container"]
+                  initialDelaySeconds: 5
+                  timeoutSeconds: 1
+                livenessProbe:
+                  exec:
+                    command: ["/usr/libexec/check-container", "--live"]
+                  initialDelaySeconds: 120
+                  timeoutSeconds: 10
+            volumes:
+              - name: postgresql-data
+                persistentVolumeClaim:
+                  claimName: "{{ postgres_credentials.DB_HOST }}-pvc"
 
 - name: "Create ConfigMap for database migration script"
   kubernetes.core.k8s:

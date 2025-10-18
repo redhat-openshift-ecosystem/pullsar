@@ -110,7 +110,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Install Ansible requirements
         run: |
-          pipx inject ansible-core openshift
+          pipx inject ansible-core openshift kubernetes
       - name: Deploy to stage
         uses: dawidd6/action-ansible-playbook@v4
         with:
@@ -132,7 +132,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Install Ansible requirements
         run: |
-          pipx inject ansible-core openshift
+          pipx inject ansible-core openshift kubernetes
       - name: Deploy to production
         uses: dawidd6/action-ansible-playbook@v4
         with:
