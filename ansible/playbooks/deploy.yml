@@ -15,11 +15,5 @@
     - role: project_setup
       tags: always
 
-    - role: api
-      tags: api
-
-    - role: web
-      tags: web
-
-    - role: worker
-      tags: worker
+    - role: app
+      tags: app

@@ -71,7 +71,7 @@
 
 - name: "Process the official OpenShift PostgreSQL template"
   community.okd.openshift_process:
-    src: "../templates/postgresql-persistent.yml"
+    src: "../roles/project_setup/templates/postgresql-persistent.yml"
     namespace_target: "{{ project_namespace }}"
     parameters:
       POSTGRESQL_IMAGE: "{{ postgres_imagestream_tag.resources[0].image.dockerImageReference }}"
@@ -103,10 +103,10 @@
       metadata:
         name: postgresql-migration-script
       data:
-        V1__initial_setup.sql: "{{ lookup('file', '../files/migrations/V1__initial_setup.sql') }}"
+        V1__initial_setup.sql: "{{ lookup('file', 'migrations/V1__initial_setup.sql') }}"
 
 - name: "Run database migration job"
   kubernetes.core.k8s:
     state: present
     namespace: "{{ project_namespace }}"
-    definition: "{{ lookup('template', '../templates/postgresql-migration-job.yml') }}"
+    definition: "{{ lookup('template', 'postgresql-migration-job.yml') }}"
