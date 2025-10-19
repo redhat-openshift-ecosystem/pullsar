@@ -138,6 +138,9 @@
                       secretKeyRef:
                         name: postgres-credentials
                         key: DB_NAME
+                resources:
+                  limits:
+                    memory: "{{ postgres_memory_limit }}"
                 volumeMounts:
                   - name: postgresql-data
                     mountPath: /var/lib/pgsql/data
