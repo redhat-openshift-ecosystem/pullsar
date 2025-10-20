@@ -10,6 +10,7 @@ import type { ListItem } from '../hooks/useItems'
 import { UsageLineChart } from './UsageLineChart'
 import { ItemStats } from './ItemStats'
 import type { DashboardPageSearchParams } from '../lib/schemas'
+import { CustomTooltip } from './CustomTooltip'
 
 interface Props {
   label: string
@@ -60,6 +61,12 @@ export function ItemStatsCard({
   )
 
   const WrapperComponent = linkTo ? 'button' : 'div'
+  const hideOrShowText = isExpanded ? 'Hide' : 'Show'
+  const addOrRemoveComparisonText = (label = '') => {
+    return isSelected
+      ? `Remove ${label} from comparison.`
+      : `Add ${label} to comparison.`
+  }
 
   return (
     <WrapperComponent
@@ -71,19 +78,22 @@ export function ItemStatsCard({
     >
       <div className="flex items-center gap-3">
         <div className="flex flex-grow items-center gap-2 min-w-0">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setIsExpanded(!isExpanded)
-            }}
-            className="p-1 rounded-md hover:cursor-pointer self-center"
-          >
-            {isExpanded ? (
-              <ChevronDown className="w-8 h-8 text-secondary" />
-            ) : (
-              <ChevronRight className="w-8 h-8 text-secondary" />
-            )}
-          </button>
+          <CustomTooltip content={`${hideOrShowText} details.`}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsExpanded(!isExpanded)
+              }}
+              className="p-1 rounded-md hover:cursor-pointer self-center"
+              aria-label={`${hideOrShowText} details of ${label}.`}
+            >
+              {isExpanded ? (
+                <ChevronDown className="w-8 h-8 text-secondary" />
+              ) : (
+                <ChevronRight className="w-8 h-8 text-secondary" />
+              )}
+            </button>
+          </CustomTooltip>
 
           <div className="text-left">
             <Title />
@@ -98,22 +108,25 @@ export function ItemStatsCard({
             <ItemStats stats={stats} layout="desktop" />
           </div>
 
-          <button
-            className={`p-2 rounded-full cursor-pointer
+          <CustomTooltip content={addOrRemoveComparisonText()}>
+            <button
+              className={`p-2 rounded-full cursor-pointer
               ${isSelected ? 'bg-bg-remove hover:bg-bg-remove/80 text-trend-down' : 'bg-bg-add hover:bg-bg-add/60 text-accent'}`}
-            onClick={(e) => {
-              e.stopPropagation()
-              if (onSelectItem) {
-                onSelectItem(item)
-              }
-            }}
-          >
-            {isSelected ? (
-              <MinusCircle className="w-8 h-8 md:w-10 md:h-10" />
-            ) : (
-              <PlusCircle className="w-8 h-8 md:w-10 md:h-10" />
-            )}
-          </button>
+              onClick={(e) => {
+                e.stopPropagation()
+                if (onSelectItem) {
+                  onSelectItem(item)
+                }
+              }}
+              aria-label={addOrRemoveComparisonText(label)}
+            >
+              {isSelected ? (
+                <MinusCircle className="w-8 h-8 md:w-10 md:h-10" />
+              ) : (
+                <PlusCircle className="w-8 h-8 md:w-10 md:h-10" />
+              )}
+            </button>
+          </CustomTooltip>
         </div>
       </div>
 

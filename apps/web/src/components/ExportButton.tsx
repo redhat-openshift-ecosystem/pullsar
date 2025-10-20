@@ -1,5 +1,5 @@
+import { CustomTooltip } from './CustomTooltip'
 import { Button } from './ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { Download } from 'lucide-react'
 
 interface Props {
@@ -39,18 +39,13 @@ export function ExportButton({
 
   if (isExportMaxExceeded || isExporting || isDone) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="w-full sm:w-auto lg:self-end">
-            <Button className="font-bold w-full sm:w-auto lg:self-end" disabled>
-              {buttonContent}
-            </Button>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{getTooltipMessage()}</p>
-        </TooltipContent>
-      </Tooltip>
+      <CustomTooltip content={getTooltipMessage()}>
+        <div className="w-full sm:w-auto lg:self-end">
+          <Button className="font-bold w-full sm:w-auto lg:self-end" disabled>
+            {buttonContent}
+          </Button>
+        </div>
+      </CustomTooltip>
     )
   }
 

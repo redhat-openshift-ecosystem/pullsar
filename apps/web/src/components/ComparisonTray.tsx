@@ -7,6 +7,7 @@ import { BreadcrumbNav, type Breadcrumb } from './BreadcrumbNav'
 import { LINE_COLORS, shortBundleName, shortCatalogName } from '../lib/utils'
 import { Button } from './ui/button'
 import FocusLock from 'react-focus-lock'
+import { CustomTooltip } from './CustomTooltip'
 
 type ColoredListItem = ListItem & { color: string }
 
@@ -109,34 +110,40 @@ export function ComparisonTray({
                 const isVisible = visibleItems.some((v) => v.name === item.name)
 
                 return (
-                  <button
-                    key={item.name}
-                    onClick={() => handleToggleVisibility(item)}
-                    className={`bg-card/50 border border-border p-2 rounded-md flex flex-col items-left
-                    text-left relative cursor-pointer transition-opacity ${!isVisible && 'opacity-40'}`}
-                  >
+                  <CustomTooltip content="Toggle item visibility.">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onItemRemove(item)
-                      }}
-                      className="absolute top-1 right-1 p-0.5 text-secondary"
+                      key={item.name}
+                      onClick={() => handleToggleVisibility(item)}
+                      className={`bg-card/50 border border-border p-2 rounded-md flex flex-col items-left
+                    text-left relative cursor-pointer transition-opacity ${!isVisible && 'opacity-40'}`}
+                      aria-label={`Toggle visibility of ${getLabel(item.name)}.`}
                     >
-                      <X className="w-4 h-4" />
-                    </button>
+                      <CustomTooltip content={'Remove item.'}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onItemRemove(item)
+                          }}
+                          className="absolute top-1 right-1 p-0.5 text-secondary"
+                          aria-label={`Remove ${getLabel(item.name)} from comparison.`}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </CustomTooltip>
 
-                    <p
-                      className="font-bold truncate"
-                      style={{ color: item.color }}
-                    >
-                      {getLabel(item.name)}
-                    </p>
-                    <p className="text-lg text-foreground font-bold">
-                      {item.stats.total_pulls.toLocaleString()}
-                    </p>
-                    <p className="text-md text-secondary">Total Pulls</p>
-                    <TrendIndicator trend={item.stats.trend} size="sm" />
-                  </button>
+                      <p
+                        className="font-bold truncate"
+                        style={{ color: item.color }}
+                      >
+                        {getLabel(item.name)}
+                      </p>
+                      <p className="text-lg text-foreground font-bold">
+                        {item.stats.total_pulls.toLocaleString()}
+                      </p>
+                      <p className="text-md text-secondary">Total Pulls</p>
+                      <TrendIndicator trend={item.stats.trend} size="sm" />
+                    </button>
+                  </CustomTooltip>
                 )
               })}
             </div>

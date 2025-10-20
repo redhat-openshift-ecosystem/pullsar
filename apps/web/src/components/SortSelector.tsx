@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from './ui/select'
 import { capitalizeFirstLetter } from '../lib/utils'
+import { CustomTooltip } from './CustomTooltip'
 
 interface Props {
   types: string[]
@@ -25,6 +26,10 @@ export function SortSelector({
   onTypeChange,
   onDirectionChange,
 }: Props) {
+  const tooltipText = isDesc
+    ? 'Sort in ascending order.'
+    : 'Sort in descending order.'
+
   return (
     <div>
       <label className="block text-sm font-medium text-secondary mb-1">
@@ -46,13 +51,20 @@ export function SortSelector({
             </SelectGroup>
           </SelectContent>
         </Select>
-        <Button
-          className="flex items-center justify-center aspect-square
+        <CustomTooltip content={tooltipText}>
+          <Button
+            className="flex items-center justify-center aspect-square
           rounded-l-none"
-          onClick={() => onDirectionChange(!isDesc)}
-        >
-          {isDesc ? <ArrowDown strokeWidth={3} /> : <ArrowUp strokeWidth={3} />}
-        </Button>
+            onClick={() => onDirectionChange(!isDesc)}
+            aria-label={tooltipText}
+          >
+            {isDesc ? (
+              <ArrowDown strokeWidth={3} />
+            ) : (
+              <ArrowUp strokeWidth={3} />
+            )}
+          </Button>
+        </CustomTooltip>
       </div>
     </div>
   )

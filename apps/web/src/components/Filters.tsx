@@ -102,6 +102,7 @@ export const Filters = ({
           <Button
             className={`lg:hidden flex self-end ${isExpanded && 'bg-bg-active text-text-header'}`}
             onClick={() => setIsExpanded(!isExpanded)}
+            aria-label="Toggle filters."
           >
             <Funnel strokeWidth={3} />
           </Button>

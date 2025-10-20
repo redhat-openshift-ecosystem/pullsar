@@ -49,6 +49,7 @@ export const OverallStatsCard = ({
     <button
       className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden hover:cursor-pointer w-full text-left"
       onClick={handleCardClick}
+      aria-label="Go to operator usage dashboard."
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
         <div>

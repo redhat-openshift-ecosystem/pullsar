@@ -2,6 +2,7 @@ import { Input } from './ui/input'
 import { Search } from 'lucide-react'
 import { Button } from './ui/button'
 import { useEffect, useState } from 'react'
+import { CustomTooltip } from './CustomTooltip'
 
 interface Props {
   placeholder: string
@@ -19,6 +20,8 @@ const SearchBar = ({ placeholder, currentQuery, onSearchSubmit }: Props) => {
     onSearchSubmit(inputValue)
   }
 
+  const tooltipText = 'Run search.'
+
   return (
     <div className="w-full">
       <label className="block text-sm font-medium text-secondary mb-1">
@@ -33,12 +36,15 @@ const SearchBar = ({ placeholder, currentQuery, onSearchSubmit }: Props) => {
           onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
           className="rounded-r-none"
         />
-        <Button
-          className="flex items-center justify-center aspect-square rounded-l-none"
-          onClick={handleSearchSubmit}
-        >
-          <Search strokeWidth={3} />
-        </Button>
+        <CustomTooltip content={tooltipText}>
+          <Button
+            className="flex items-center justify-center aspect-square rounded-l-none"
+            onClick={handleSearchSubmit}
+            aria-label={tooltipText}
+          >
+            <Search strokeWidth={3} />
+          </Button>
+        </CustomTooltip>
       </div>
     </div>
   )
