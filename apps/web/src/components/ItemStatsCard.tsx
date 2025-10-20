@@ -59,11 +59,15 @@ export function ItemStatsCard({
     </h3>
   )
 
+  const WrapperComponent = linkTo ? 'button' : 'div'
+
   return (
-    <div
-      className={`bg-card/50 border border-border rounded-lg p-3 overflow-hidden
-        ${isSelected && 'outline-3 outline-accent'} ${linkTo && 'hover:cursor-pointer hover:outline-3 hover:outline-accent'}`}
-      onClick={handleCardClick}
+    <WrapperComponent
+      type={linkTo ? 'button' : undefined}
+      onClick={linkTo ? handleCardClick : undefined}
+      className={`bg-card/50 border border-border rounded-lg p-3 overflow-hidden w-full text-left
+        ${isSelected && 'outline-3 outline-accent'} 
+        ${linkTo && 'hover:cursor-pointer hover:outline-3 hover:outline-accent focus:outline-none focus-visible:ring-2'}`}
     >
       <div className="flex items-center gap-3">
         <div className="flex flex-grow items-center gap-2 min-w-0">
@@ -122,6 +126,6 @@ export function ItemStatsCard({
           </div>
         </div>
       )}
-    </div>
+    </WrapperComponent>
   )
 }

@@ -46,8 +46,8 @@ export const OverallStatsCard = ({
   const { total_pulls, trend, chart_data } = overallData
 
   return (
-    <div
-      className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden hover:cursor-pointer"
+    <button
+      className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden hover:cursor-pointer w-full text-left"
       onClick={handleCardClick}
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
@@ -92,7 +92,7 @@ export const OverallStatsCard = ({
           <UsageLineChart series={[{ name: 'Pulls', data: chart_data }]} />
         </div>
       </div>
-    </div>
+    </button>
   )
 }
 
