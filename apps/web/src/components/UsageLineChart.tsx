@@ -9,7 +9,28 @@ import {
   YAxis,
 } from 'recharts'
 import { useTheme } from '../contexts/theme-context'
-import { formatDate, LINE_COLORS } from '../lib/utils'
+import { formatDate, ICON_SHAPES, LINE_COLORS } from '../lib/utils'
+
+interface DotProps {
+  cx?: number
+  cy?: number
+  stroke?: string
+  seriesIndex: number
+}
+
+const CustomizedDot = (props: DotProps) => {
+  const { cx, cy, stroke, seriesIndex } = props
+  const IconComponent = ICON_SHAPES[seriesIndex % ICON_SHAPES.length]
+  if (cx === undefined || cy === undefined) {
+    return null
+  }
+
+  return (
+    <g transform={`translate(${cx - 8}, ${cy - 8})`}>
+      <IconComponent color={stroke} fill={stroke} size={16} />
+    </g>
+  )
+}
 
 interface ChartPoint {
   date: string
@@ -85,7 +106,13 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
               (isComparison ? LINE_COLORS[index % LINE_COLORS.length] : accent)
             }
             strokeWidth={2}
-            dot={isComparison ? false : { r: 2, fill: accent }}
+            dot={
+              isComparison ? (
+                <CustomizedDot seriesIndex={index} />
+              ) : (
+                { r: 2, fill: accent }
+              )
+            }
           />
         ))}
       </LineChart>

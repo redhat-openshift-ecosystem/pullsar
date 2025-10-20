@@ -4,12 +4,20 @@ import { type ListItem } from '../hooks/useItems'
 import { TrendIndicator } from './TrendIndicator'
 import { UsageLineChart } from './UsageLineChart'
 import { BreadcrumbNav, type Breadcrumb } from './BreadcrumbNav'
-import { LINE_COLORS, shortBundleName, shortCatalogName } from '../lib/utils'
+import {
+  ICON_SHAPES,
+  LINE_COLORS,
+  shortBundleName,
+  shortCatalogName,
+} from '../lib/utils'
 import { Button } from './ui/button'
 import FocusLock from 'react-focus-lock'
 import { CustomTooltip } from './CustomTooltip'
 
-type ColoredListItem = ListItem & { color: string }
+type ColoredListItem = ListItem & {
+  color: string
+  IconShape: React.ElementType
+}
 
 interface Props {
   items: ListItem[]
@@ -31,6 +39,7 @@ export function ComparisonTray({
       items.map((item, index) => ({
         ...item,
         color: LINE_COLORS[index % LINE_COLORS.length],
+        IconShape: ICON_SHAPES[index % LINE_COLORS.length],
       })),
     [items]
   )
@@ -107,16 +116,17 @@ export function ComparisonTray({
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
               {coloredItems.map((item) => {
-                const isVisible = visibleItems.some((v) => v.name === item.name)
+                const { name, stats, color, IconShape } = item
+                const isVisible = visibleItems.some((v) => v.name === name)
 
                 return (
                   <CustomTooltip content="Toggle item visibility.">
                     <button
-                      key={item.name}
+                      key={name}
                       onClick={() => handleToggleVisibility(item)}
                       className={`bg-card/50 border border-border p-2 rounded-md flex flex-col items-left
                     text-left relative cursor-pointer transition-opacity ${!isVisible && 'opacity-40'}`}
-                      aria-label={`Toggle visibility of ${getLabel(item.name)}.`}
+                      aria-label={`Toggle visibility of ${getLabel(name)}.`}
                     >
                       <CustomTooltip content={'Remove item.'}>
                         <button
@@ -125,23 +135,27 @@ export function ComparisonTray({
                             onItemRemove(item)
                           }}
                           className="absolute top-1 right-1 p-0.5 text-secondary"
-                          aria-label={`Remove ${getLabel(item.name)} from comparison.`}
+                          aria-label={`Remove ${getLabel(name)} from comparison.`}
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </CustomTooltip>
 
+                      <div className="absolute bottom-1 right-1 p-0.5">
+                        <IconShape color={color} fill={color} size={16} />
+                      </div>
+
                       <p
                         className="font-bold truncate"
-                        style={{ color: item.color }}
+                        style={{ color: color }}
                       >
-                        {getLabel(item.name)}
+                        {getLabel(name)}
                       </p>
                       <p className="text-lg text-foreground font-bold">
-                        {item.stats.total_pulls.toLocaleString()}
+                        {stats.total_pulls.toLocaleString()}
                       </p>
                       <p className="text-md text-secondary">Total Pulls</p>
-                      <TrendIndicator trend={item.stats.trend} size="sm" />
+                      <TrendIndicator trend={stats.trend} size="sm" />
                     </button>
                   </CustomTooltip>
                 )
