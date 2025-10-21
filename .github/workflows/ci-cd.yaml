@@ -45,6 +45,11 @@ jobs:
       - name: Run linters for all apps
         run: pnpm lint
 
+      - name: Install and run Ansible Lint
+        run: |
+          pip install ansible-lint
+          ansible-lint ansible/roles/ ansible/inventory/
+
       - name: Run tests for all apps
         run: pnpm test
 
