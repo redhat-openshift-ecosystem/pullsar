@@ -104,7 +104,9 @@ jobs:
     name: Deploy to stage
     runs-on: ubuntu-latest
     needs: [set-image-suffix, build-and-push]
-    if: github.event_name == 'pull_request'
+    if: |
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-stage')) ||
+      (github.ref == 'refs/heads/main' && github.event_name == 'push')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -126,7 +128,7 @@ jobs:
   deploy-prod:
     name: Deploy to production
     runs-on: ubuntu-latest
-    needs: [set-image-suffix, build-and-push]
+    needs: [set-image-suffix, build-and-push, deploy-stage]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout repository
