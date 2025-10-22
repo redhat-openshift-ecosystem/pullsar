@@ -25,3 +25,6 @@ __pycache__/
 
 # exceptions
 !/apps/web/.env
+
+# Ansible
+.vault-password

@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pullsar-api
+  namespace: "{{ project_namespace }}"
+  labels:
+    app: pullsar-api
+spec:
+  replicas: {{ api_replicas }}
+  selector:
+    matchLabels:
+      app: pullsar-api
+  template:
+    metadata:
+      labels:
+        app: pullsar-api
+    spec:
+      containers:
+      - name: api
+        image: "{{ image_repo }}:api-{{ image_suffix }}"
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - secretRef:
+            name: postgres-credentials
+        - configMapRef:
+            name: pullsar-config

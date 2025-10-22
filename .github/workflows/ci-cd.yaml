@@ -1,4 +1,4 @@
-name: Test, build and push
+name: Test, build, push and deploy
 
 on:
   push:
@@ -45,46 +45,51 @@ jobs:
       - name: Run linters for all apps
         run: pnpm lint
 
+      - name: Install and run Ansible Lint
+        run: |
+          pip install ansible-lint
+          ansible-galaxy collection install -r ansible/playbooks/requirements.yml
+          ansible-lint ansible/roles/ ansible/inventory/
+
       - name: Run tests for all apps
         run: pnpm test
 
       - name: Build all apps
         run: pnpm build
 
-  build-and-push:
-    name: Build and push images of changed services
+  set-image-suffix:
+    name: Generate image suffix
     runs-on: ubuntu-latest
-    needs: test-and-lint
+    outputs:
+      image_suffix: ${{ steps.vars.outputs.image_suffix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      - name: Generate image suffix
+        id: vars
+        run: |
+          GIT_SHA=$(git rev-parse --short "$GITHUB_SHA")
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "image_suffix=pr-${{ github.event.number }}-${GIT_SHA}" >> "$GITHUB_OUTPUT"
+          else
+            echo "image_suffix=${GIT_SHA}" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-push:
+    name: Build and push all service images
+    runs-on: ubuntu-latest
+    needs: [set-image-suffix, test-and-lint]
     strategy:
       matrix:
         service: [worker, api, web]
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Check for changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: apps/${{ matrix.service }}/**
-
-      - name: Determine image tag suffix
-        id: tagging
-        if: steps.changed-files.outputs.any_changed == 'true'
-        run: |
-          GIT_SHA=$(git rev-parse --short "$GITHUB_SHA")
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "suffix=pr-${{ github.event.number }}-${GIT_SHA}" >> "$GITHUB_OUTPUT"
-          else
-            echo "suffix=${GIT_SHA}" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Log in to Quay.io
-        if: steps.changed-files.outputs.any_changed == 'true'
         uses: redhat-actions/podman-login@v1
         with:
           registry: quay.io
@@ -92,12 +97,59 @@ jobs:
           password: ${{ secrets.QUAY_PASSWORD }}
 
       - name: Build and push image
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          SUFFIX="${{ steps.tagging.outputs.suffix }}"
+          SUFFIX="${{ needs.set-image-suffix.outputs.image_suffix }}"
           IMAGE_TAG="${{ secrets.QUAY_REPO }}:${{ matrix.service }}-${SUFFIX}"
           
           echo "Building and pushing image: ${IMAGE_TAG}"
           
           podman build -f ./apps/${{ matrix.service }}/Containerfile -t ${IMAGE_TAG} .
           podman push ${IMAGE_TAG}
+
+  deploy-stage:
+    name: Deploy to stage
+    runs-on: ubuntu-latest
+    needs: [set-image-suffix, build-and-push]
+    if: |
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-stage')) ||
+      (github.ref == 'refs/heads/main' && github.event_name == 'push')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Ansible requirements
+        run: |
+          pipx inject ansible-core openshift kubernetes
+      - name: Deploy to stage
+        uses: dawidd6/action-ansible-playbook@v4
+        with:
+          playbook: playbooks/deploy.yml
+          directory: ./ansible
+          vault_password: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+          options: |
+            --extra-vars "env=stage"
+            --extra-vars "image_repo=${{ secrets.QUAY_REPO }}"
+            --extra-vars "image_suffix=${{ needs.set-image-suffix.outputs.image_suffix }}"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"
+
+  deploy-prod:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    needs: [set-image-suffix, build-and-push, deploy-stage]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Ansible requirements
+        run: |
+          pipx inject ansible-core openshift kubernetes
+      - name: Deploy to production
+        uses: dawidd6/action-ansible-playbook@v4
+        with:
+          playbook: playbooks/deploy.yml
+          directory: ./ansible
+          vault_password: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+          options: |
+            --extra-vars "env=prod"
+            --extra-vars "image_repo=${{ secrets.QUAY_REPO }}"
+            --extra-vars "image_suffix=${{ needs.set-image-suffix.outputs.image_suffix }}"
+            --extra-vars "ansible_python_interpreter=/opt/pipx/venvs/ansible-core/bin/python3"

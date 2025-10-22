@@ -1,0 +1,17 @@
+---
+env: prod
+project_namespace: pullsar-prod
+ocp_host: https://api.pipelines-prod.ijdb.p1.openshiftapps.com:6443
+
+api_replicas: 2
+web_replicas: 2
+worker_catalogs:
+  - name: "certified-operator-index"
+    base_image: "registry.redhat.io/redhat/certified-operator-index"
+  - name: "community-operator-index"
+    base_image: "registry.redhat.io/redhat/community-operator-index"
+  - name: "redhat-marketplace-index"
+    base_image: "registry.redhat.io/redhat/redhat-marketplace-index"
+
+postgres_volume_capacity: "10Gi"
+postgres_memory_limit: "1Gi"

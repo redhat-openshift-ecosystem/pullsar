@@ -328,7 +328,7 @@ def get_paginated_items(
     search_query: Optional[str] = None,
 ) -> dict[str, Any]:
     """
-    Orchestrates fetching, sorting (by pulls/name), and paginating item stats.
+    Orchestrates fetching, sorting (by pulls/name) and paginating item stats.
     """
     if level not in LEVEL_TO_COLUMN:
         raise ValueError("Invalid level provided.")

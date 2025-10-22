@@ -1,0 +1,13 @@
+---
+env: stage
+project_namespace: pullsar-stage
+ocp_host: https://api.pipelines-stage.0ce8.p1.openshiftapps.com:6443
+
+api_replicas: 1
+web_replicas: 1
+worker_catalogs:
+  - name: "redhat-marketplace-index"
+    base_image: "registry.redhat.io/redhat/redhat-marketplace-index"
+
+postgres_volume_capacity: "5Gi"
+postgres_memory_limit: "512Mi"

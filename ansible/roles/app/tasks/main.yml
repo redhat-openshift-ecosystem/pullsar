@@ -1,0 +1,33 @@
+---
+- name: "Create or update API Deployment"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'api-deployment.yml') }}"
+
+- name: "Create or update API Service"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'api-service.yml') }}"
+
+- name: "Create or update Web Deployment"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'web-deployment.yml') }}"
+
+- name: "Create or update Web Service"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'web-service.yml') }}"
+
+- name: "Create or update Web Route"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'web-route.yml') }}"
+
+- name: "Create or update worker CronJobs"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'worker-cronjob.yml') }}"
+  loop: "{{ worker_catalogs }}"
+  loop_control:
+    loop_var: catalog_item

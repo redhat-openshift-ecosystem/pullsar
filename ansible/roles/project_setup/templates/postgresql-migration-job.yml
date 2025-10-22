@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: "postgresql-migration-job-"
+  namespace: "{{ project_namespace }}"
+spec:
+  backoffLimit: 4
+  activeDeadlineSeconds: 900
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      containers:
+      - name: migration
+        image: "registry.redhat.io/rhel8/postgresql-{{ postgres_version }}"
+        command:
+          - "/bin/sh"
+          - "-c"
+          - |
+            echo "Waiting for database to be available..."
+            until psql -h {{ postgres_credentials.DB_HOST }} -U {{ postgres_credentials.DB_USER }} -d {{ postgres_credentials.DB_NAME }} -c '\q'; do
+              >&2 echo "Postgres is unavailable - sleeping"
+              sleep 5
+            done
+
+            echo "Database is available. Running migration script..."
+            psql -h {{ postgres_credentials.DB_HOST }} -U {{ postgres_credentials.DB_USER }} -d {{ postgres_credentials.DB_NAME }} -f /migrations/V1__initial_setup.sql
+            echo "Migration complete."
+        env:
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgres-credentials
+                key: DB_PASSWORD
+          - name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: postgres-credentials
+                key: DB_USER
+          - name: PGDATABASE
+            valueFrom:
+              secretKeyRef:
+                name: postgres-credentials
+                key: DB_NAME
+        volumeMounts:
+          - name: migration-script
+            mountPath: /migrations
+      volumes:
+        - name: migration-script
+          configMap:
+            name: postgresql-migration-script
+      restartPolicy: Never

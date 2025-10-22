@@ -1,0 +1,178 @@
+---
+- name: "Create or update the API configuration"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: pullsar-config
+      data:
+        API_ALL_OPERATORS_CATALOG: "{{ api_all_operators_catalog }}"
+        API_EXPORT_MAX_DAYS: "{{ api_export_max_days | string }}"
+
+- name: "Create or update PostgreSQL credentials secret"
+  no_log: true
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: postgres-credentials
+      stringData: "{{ postgres_credentials }}"
+
+- name: "Create or update Quay API token secret"
+  no_log: true
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: quay-api-tokens
+      data:
+        QUAY_API_TOKENS_JSON: "{{ quay_api_tokens | b64encode }}"
+
+- name: "Create or update worker registry auth secret"
+  no_log: true
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: worker-registry-auth
+      data:
+        auth.json: "{{ worker_registry_auth | b64encode }}"
+
+- name: "Create or update service account TLS secret"
+  no_log: true
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: pullsar-sa-cert
+      type: kubernetes.io/tls
+      data:
+        tls.crt: "{{ pullsar_sa_cert_crt | b64encode }}"
+        tls.key: "{{ pullsar_sa_cert_key | b64encode }}"
+
+- name: "Ensure a PersistentVolumeClaim exists for PostgreSQL"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: "{{ postgres_credentials.DB_HOST }}-pvc"
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: "{{ postgres_volume_capacity }}"
+
+- name: "Ensure the PostgreSQL Service exists"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: "{{ postgres_credentials.DB_HOST }}"
+      spec:
+        ports:
+          - name: postgresql
+            port: 5432
+            targetPort: 5432
+        selector:
+          name: "{{ postgres_credentials.DB_HOST }}"
+
+- name: "Ensure the PostgreSQL Deployment exists"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: "{{ postgres_credentials.DB_HOST }}"
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            name: "{{ postgres_credentials.DB_HOST }}"
+        template:
+          metadata:
+            labels:
+              name: "{{ postgres_credentials.DB_HOST }}"
+          spec:
+            containers:
+              - name: postgresql
+                image: "registry.redhat.io/rhel8/postgresql-{{ postgres_version }}"
+                ports:
+                  - containerPort: 5432
+                env:
+                  - name: POSTGRESQL_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: DB_USER
+                  - name: POSTGRESQL_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: DB_PASSWORD
+                  - name: POSTGRESQL_DATABASE
+                    valueFrom:
+                      secretKeyRef:
+                        name: postgres-credentials
+                        key: DB_NAME
+                resources:
+                  limits:
+                    memory: "{{ postgres_memory_limit }}"
+                volumeMounts:
+                  - name: postgresql-data
+                    mountPath: /var/lib/pgsql/data
+                readinessProbe:
+                  exec:
+                    command: ["/usr/libexec/check-container"]
+                  initialDelaySeconds: 5
+                  timeoutSeconds: 1
+                livenessProbe:
+                  exec:
+                    command: ["/usr/libexec/check-container", "--live"]
+                  initialDelaySeconds: 120
+                  timeoutSeconds: 10
+            volumes:
+              - name: postgresql-data
+                persistentVolumeClaim:
+                  claimName: "{{ postgres_credentials.DB_HOST }}-pvc"
+
+- name: "Create ConfigMap for database migration script"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: postgresql-migration-script
+      data:
+        V1__initial_setup.sql: "{{ lookup('file', 'migrations/V1__initial_setup.sql') }}"
+
+- name: "Run database migration job"
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ project_namespace }}"
+    definition: "{{ lookup('template', 'postgresql-migration-job.yml') }}"
