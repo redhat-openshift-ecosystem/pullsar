@@ -54,9 +54,6 @@ jobs:
       - name: Run tests for all apps
         run: pnpm test
 
-      - name: Build all apps
-        run: pnpm build
-
   set-image-suffix:
     name: Generate image suffix
     runs-on: ubuntu-latest
