@@ -19,7 +19,10 @@ export function OcpVersionSelector({
   onVersionChange,
 }: Props) {
   return (
-    <div onClick={(e) => e.stopPropagation()}>
+    <div
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
       <label className="block text-sm font-medium text-secondary mb-1">
         OCP Version
       </label>

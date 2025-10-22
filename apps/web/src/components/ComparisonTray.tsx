@@ -85,6 +85,15 @@ export function ComparisonTray({
     })
   }
 
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    itemToToggle: ColoredListItem
+  ) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleToggleVisibility(itemToToggle)
+    }
+  }
+
   return (
     <FocusLock>
       <div className="fixed bottom-0 left-0 w-full h-full bg-bg-comparison/95 z-40 flex flex-col items-center justify-center border border-border overflow-y-auto">
@@ -120,25 +129,30 @@ export function ComparisonTray({
                 const isVisible = visibleItems.some((v) => v.name === name)
 
                 return (
-                  <CustomTooltip content="Toggle item visibility.">
-                    <button
+                  <CustomTooltip key={name} content="Toggle item visibility.">
+                    <div
                       key={name}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => handleToggleVisibility(item)}
+                      onKeyDown={(e) => handleKeyDown(e, item)}
                       className={`bg-card/50 border border-border p-2 rounded-md flex flex-col items-left
                     text-left relative cursor-pointer transition-opacity ${!isVisible && 'opacity-40'}`}
                       aria-label={`Toggle visibility of ${getLabel(name)}.`}
                     >
                       <CustomTooltip content={'Remove item.'}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onItemRemove(item)
-                          }}
-                          className="absolute top-1 right-1 p-0.5 text-secondary"
-                          aria-label={`Remove ${getLabel(name)} from comparison.`}
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
                         >
-                          <X className="w-4 h-4" />
-                        </button>
+                          <button
+                            onClick={() => onItemRemove(item)}
+                            className="absolute top-1 right-1 p-0.5 text-secondary"
+                            aria-label={`Remove ${getLabel(name)} from comparison.`}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
                       </CustomTooltip>
 
                       <div className="absolute bottom-1 right-1 p-0.5">
@@ -156,7 +170,7 @@ export function ComparisonTray({
                       </p>
                       <p className="text-md text-secondary">Total Pulls</p>
                       <TrendIndicator trend={stats.trend} size="sm" />
-                    </button>
+                    </div>
                   </CustomTooltip>
                 )
               })}
