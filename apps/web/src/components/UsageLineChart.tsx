@@ -15,19 +15,18 @@ interface DotProps {
   cx?: number
   cy?: number
   stroke?: string
-  seriesIndex: number
+  IconShape: React.ElementType
 }
 
 const CustomizedDot = (props: DotProps) => {
-  const { cx, cy, stroke, seriesIndex } = props
-  const IconComponent = ICON_SHAPES[seriesIndex % ICON_SHAPES.length]
+  const { cx, cy, stroke, IconShape } = props
   if (cx === undefined || cy === undefined) {
     return null
   }
 
   return (
     <g transform={`translate(${cx - 8}, ${cy - 8})`}>
-      <IconComponent color={stroke} fill={stroke} size={16} />
+      <IconShape color={stroke} fill={stroke} size={16} />
     </g>
   )
 }
@@ -41,6 +40,7 @@ interface Series {
   name: string
   data: ChartPoint[]
   color?: string
+  IconShape?: React.ElementType
 }
 
 interface Props {
@@ -108,7 +108,11 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
             strokeWidth={2}
             dot={
               isComparison ? (
-                <CustomizedDot seriesIndex={index} />
+                <CustomizedDot
+                  IconShape={
+                    s.IconShape || ICON_SHAPES[index % LINE_COLORS.length]
+                  }
+                />
               ) : (
                 { r: 2, fill: accent }
               )

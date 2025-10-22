@@ -182,6 +182,7 @@ export function ComparisonTray({
                   name: getLabel(item.name),
                   data: item.stats.chart_data,
                   color: item.color,
+                  IconShape: item.IconShape,
                 }))}
                 isComparison={true}
               />
