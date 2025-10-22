@@ -25,8 +25,8 @@ const CustomizedDot = (props: DotProps) => {
   }
 
   return (
-    <g transform={`translate(${cx - 8}, ${cy - 8})`}>
-      <IconShape color={stroke} fill={stroke} size={16} />
+    <g transform={`translate(${cx - 7}, ${cy - 7})`}>
+      <IconShape color={stroke} fill={stroke} size={14} />
     </g>
   )
 }
@@ -89,10 +89,20 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
         <YAxis fontSize={12} tickLine={false} stroke={secondary} />
         <Tooltip
           contentStyle={{
-            backdropFilter: 'blur(5px)',
+            backdropFilter: 'blur(15px)',
             border: `1px solid ${secondary}`,
             borderRadius: '8px',
             backgroundColor: toolTipBackground,
+          }}
+          itemSorter={(item) => (item.value as number) * -1}
+          labelStyle={{
+            fontWeight: 'bold',
+            paddingBottom: '4px',
+            borderBottom: `1px solid ${secondary}`,
+          }}
+          itemStyle={{
+            fontWeight: 'bold',
+            paddingBottom: '1px',
           }}
         />
 
