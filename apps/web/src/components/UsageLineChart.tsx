@@ -16,17 +16,27 @@ interface DotProps {
   cy?: number
   stroke?: string
   IconShape: React.ElementType
+  datapointCount: number
 }
 
 const CustomizedDot = (props: DotProps) => {
-  const { cx, cy, stroke, IconShape } = props
+  const { cx, cy, stroke, IconShape, datapointCount } = props
   if (cx === undefined || cy === undefined) {
     return null
   }
 
+  let iconSize = 8
+  if (datapointCount <= 15) {
+    iconSize = 14
+  } else if (datapointCount <= 30) {
+    iconSize = 10
+  }
+
+  const offset = iconSize / 2
+
   return (
-    <g transform={`translate(${cx - 7}, ${cy - 7})`}>
-      <IconShape color={stroke} fill={stroke} size={14} />
+    <g transform={`translate(${cx - offset}, ${cy - offset})`}>
+      <IconShape color={stroke} fill={stroke} size={iconSize} />
     </g>
   )
 }
@@ -74,6 +84,8 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
     )
   }, [series])
 
+  const datapointCount = transformedData.length
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={transformedData}>
@@ -119,6 +131,7 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
             dot={
               isComparison ? (
                 <CustomizedDot
+                  datapointCount={datapointCount}
                   IconShape={
                     s.IconShape || ICON_SHAPES[index % LINE_COLORS.length]
                   }
