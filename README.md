@@ -56,11 +56,9 @@ podman-compose up -d
 pnpm install
 ```
 
-### 2. create `/apps/web/.env` to allow forwarding of requests to API and synchronize config:
+### 2. create `/apps/web/.env` to allow forwarding of requests to API:
 ```
 VITE_API_PROXY_TARGET="http://localhost:8000"
-VITE_API_EXPORT_MAX_DAYS="30"
-VITE_API_ALL_OPERATORS_CATALOG="All Operators"
 ```
 
 ### 3. run web and API:
