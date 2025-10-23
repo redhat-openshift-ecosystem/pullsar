@@ -75,7 +75,7 @@ export function ItemStatsCard({
   }
 
   return (
-    <CustomTooltip content={cardTooltipText}>
+    <CustomTooltip content={cardTooltipText} disabled={!linkTo}>
       <div
         role={linkTo ? 'button' : undefined}
         tabIndex={linkTo ? 0 : undefined}
@@ -88,11 +88,11 @@ export function ItemStatsCard({
       >
         <div className="flex items-center gap-3">
           <div className="flex flex-grow items-center gap-2 min-w-0">
-            <CustomTooltip content={`${hideOrShowText} details.`}>
-              <div
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <CustomTooltip content={`${hideOrShowText} details.`}>
                 <button
                   onClick={() => {
                     setIsExpanded(!isExpanded)
@@ -106,8 +106,8 @@ export function ItemStatsCard({
                     <ChevronRight className="w-8 h-8 text-secondary" />
                   )}
                 </button>
-              </div>
-            </CustomTooltip>
+              </CustomTooltip>
+            </div>
 
             <div className="text-left">
               <Title />
@@ -122,11 +122,11 @@ export function ItemStatsCard({
               <ItemStats stats={stats} layout="desktop" />
             </div>
 
-            <CustomTooltip content={addOrRemoveComparisonText()}>
-              <div
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <CustomTooltip content={addOrRemoveComparisonText()}>
                 <button
                   className={`p-2 rounded-full cursor-pointer
               ${isSelected ? 'bg-bg-remove hover:bg-bg-remove/80 text-trend-down' : 'bg-bg-add hover:bg-bg-add/60 text-accent'}`}
@@ -143,8 +143,8 @@ export function ItemStatsCard({
                     <PlusCircle className="w-8 h-8 md:w-10 md:h-10" />
                   )}
                 </button>
-              </div>
-            </CustomTooltip>
+              </CustomTooltip>
+            </div>
           </div>
         </div>
 

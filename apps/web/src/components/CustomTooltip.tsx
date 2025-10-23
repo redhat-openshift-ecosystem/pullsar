@@ -1,22 +1,24 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 interface CustomTooltipProps {
   children: React.ReactNode
   content: React.ReactNode
+  disabled?: boolean
 }
 
-export function CustomTooltip({ children, content }: CustomTooltipProps) {
+export function CustomTooltip({
+  children,
+  content,
+  disabled,
+}: CustomTooltipProps) {
+  if (disabled) {
+    return children
+  }
+
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent>{content}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent>{content}</TooltipContent>
+    </Tooltip>
   )
 }
