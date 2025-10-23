@@ -54,9 +54,6 @@ jobs:
       - name: Run tests for all apps
         run: pnpm test
 
-      - name: Build all apps
-        run: pnpm build
-
   set-image-suffix:
     name: Generate image suffix
     runs-on: ubuntu-latest
@@ -103,7 +100,7 @@ jobs:
           
           echo "Building and pushing image: ${IMAGE_TAG}"
           
-          podman build -f ./apps/${{ matrix.service }}/Containerfile -t ${IMAGE_TAG} .
+          podman build -f ./apps/${{ matrix.service }}/Containerfile --no-cache -t ${IMAGE_TAG} .
           podman push ${IMAGE_TAG}
 
   deploy-stage:

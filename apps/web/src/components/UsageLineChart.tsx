@@ -9,7 +9,37 @@ import {
   YAxis,
 } from 'recharts'
 import { useTheme } from '../contexts/theme-context'
-import { formatDate, LINE_COLORS } from '../lib/utils'
+import { formatDate, ICON_SHAPES, LINE_COLORS } from '../lib/utils'
+
+interface DotProps {
+  cx?: number
+  cy?: number
+  stroke?: string
+  IconShape: React.ElementType
+  datapointCount: number
+}
+
+const CustomizedDot = (props: DotProps) => {
+  const { cx, cy, stroke, IconShape, datapointCount } = props
+  if (cx === undefined || cy === undefined) {
+    return null
+  }
+
+  let iconSize = 8
+  if (datapointCount <= 15) {
+    iconSize = 14
+  } else if (datapointCount <= 30) {
+    iconSize = 10
+  }
+
+  const offset = iconSize / 2
+
+  return (
+    <g transform={`translate(${cx - offset}, ${cy - offset})`}>
+      <IconShape color={stroke} fill={stroke} size={iconSize} />
+    </g>
+  )
+}
 
 interface ChartPoint {
   date: string
@@ -20,6 +50,7 @@ interface Series {
   name: string
   data: ChartPoint[]
   color?: string
+  IconShape?: React.ElementType
 }
 
 interface Props {
@@ -53,6 +84,8 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
     )
   }, [series])
 
+  const datapointCount = transformedData.length
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={transformedData}>
@@ -68,10 +101,20 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
         <YAxis fontSize={12} tickLine={false} stroke={secondary} />
         <Tooltip
           contentStyle={{
-            backdropFilter: 'blur(5px)',
+            backdropFilter: 'blur(15px)',
             border: `1px solid ${secondary}`,
             borderRadius: '8px',
             backgroundColor: toolTipBackground,
+          }}
+          itemSorter={(item) => (item.value as number) * -1}
+          labelStyle={{
+            fontWeight: 'bold',
+            paddingBottom: '4px',
+            borderBottom: `1px solid ${secondary}`,
+          }}
+          itemStyle={{
+            fontWeight: 'bold',
+            paddingBottom: '1px',
           }}
         />
 
@@ -85,7 +128,18 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
               (isComparison ? LINE_COLORS[index % LINE_COLORS.length] : accent)
             }
             strokeWidth={2}
-            dot={isComparison ? false : { r: 2, fill: accent }}
+            dot={
+              isComparison ? (
+                <CustomizedDot
+                  datapointCount={datapointCount}
+                  IconShape={
+                    s.IconShape || ICON_SHAPES[index % LINE_COLORS.length]
+                  }
+                />
+              ) : (
+                { r: 2, fill: accent }
+              )
+            }
           />
         ))}
       </LineChart>

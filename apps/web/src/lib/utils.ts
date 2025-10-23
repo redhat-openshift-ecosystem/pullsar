@@ -1,4 +1,16 @@
 import { clsx, type ClassValue } from 'clsx'
+import {
+  Circle,
+  Cross,
+  Crown,
+  Diamond,
+  Heart,
+  Landmark,
+  Square,
+  Star,
+  Swords,
+  Triangle,
+} from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 
 // comparison chart colors
@@ -13,6 +25,20 @@ export const LINE_COLORS = [
   '#f97316', // orange
   '#84cc16', // lime
   '#06b6d4', // cyan
+]
+
+// comparison chart dot shapes
+export const ICON_SHAPES = [
+  Circle,
+  Square,
+  Triangle,
+  Diamond,
+  Star,
+  Heart,
+  Crown,
+  Cross,
+  Swords,
+  Landmark,
 ]
 
 export function cn(...inputs: ClassValue[]) {

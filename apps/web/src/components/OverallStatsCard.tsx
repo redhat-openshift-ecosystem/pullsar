@@ -39,6 +39,12 @@ export const OverallStatsCard = ({
     void navigate({ to: '/dashboard', search: true })
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleCardClick()
+    }
+  }
+
   if (isLoading || overallData === undefined) {
     return loadingSkeleton()
   }
@@ -47,8 +53,12 @@ export const OverallStatsCard = ({
 
   return (
     <div
-      className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden hover:cursor-pointer"
+      role="button"
+      tabIndex={0}
+      className="bg-card/50 border border-border rounded-lg p-3 overflow-hidden hover:cursor-pointer w-full text-left"
       onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
+      aria-label="Go to operator usage dashboard."
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
         <div>

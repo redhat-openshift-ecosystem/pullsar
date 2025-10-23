@@ -6,6 +6,7 @@ import { useOcpVersions } from '../hooks/useOcpVersions'
 import type { DashboardPageSearchParams } from '../lib/schemas'
 import { Link, Outlet, useNavigate, useSearch } from '@tanstack/react-router'
 import { useSortTypes } from '../hooks/useSortTypes'
+import { CustomTooltip } from '../components/CustomTooltip'
 
 export function DashboardPage() {
   const currentSearch: DashboardPageSearchParams = useSearch({
@@ -78,6 +79,8 @@ export function DashboardPage() {
     })
   }
 
+  const headerTooltipText = 'Go to Home page.'
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex text-left mb-5 md:mt-7">
@@ -86,24 +89,27 @@ export function DashboardPage() {
           strokeWidth={1}
         />
 
-        <Link
-          to="/"
-          className="hover:cursor-pointer"
-          search={() => ({
-            ...currentSearch,
-            search_query: undefined,
-            sort_type: undefined,
-            is_desc: undefined,
-            page: undefined,
-          })}
-        >
-          <h1 className="text-2xl font-extrabold text-text-header sm:text-4xl md:text-5xl text-shadow-lg">
-            Pullsar Dashboard
-          </h1>
-          <p className="sm:mt-4 max-w-2xl text-lg sm:text-2xl text-secondary">
-            Operator Usage Overview
-          </p>
-        </Link>
+        <CustomTooltip content={headerTooltipText}>
+          <Link
+            to="/"
+            className="hover:cursor-pointer"
+            search={() => ({
+              ...currentSearch,
+              search_query: undefined,
+              sort_type: undefined,
+              is_desc: undefined,
+              page: undefined,
+            })}
+            aria-label={headerTooltipText}
+          >
+            <h1 className="text-2xl font-extrabold text-text-header sm:text-4xl md:text-5xl text-shadow-lg">
+              Pullsar Dashboard
+            </h1>
+            <p className="sm:mt-4 max-w-2xl text-lg sm:text-2xl text-secondary">
+              Operator Usage Overview
+            </p>
+          </Link>
+        </CustomTooltip>
       </div>
 
       <Filters
