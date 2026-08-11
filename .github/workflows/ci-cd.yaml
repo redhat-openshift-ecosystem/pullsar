@@ -14,19 +14,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86  # v6.0.10
 
       - name: Set up Node.js with pnpm caching
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: '24'
           cache: 'pnpm'
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1.4.1
+        uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263  # v1.4.2
 
       - name: Install Kerberos development libraries for worker
         run: sudo apt-get update && sudo apt-get install -y libkrb5-dev
@@ -61,7 +61,7 @@ jobs:
       image_suffix: ${{ steps.vars.outputs.image_suffix }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Generate image suffix
         id: vars
@@ -82,12 +82,12 @@ jobs:
         service: [worker, api, web]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Log in to Quay.io
-        uses: redhat-actions/podman-login@v1
+        uses: redhat-actions/podman-login@50c2d9a331bb67c8fdab99b86455fad05e2e3252  # v2.0
         with:
           registry: quay.io
           username: ${{ secrets.QUAY_USERNAME }}
@@ -112,12 +112,12 @@ jobs:
       (github.ref == 'refs/heads/main' && github.event_name == 'push')
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Install Ansible requirements
         run: |
           pipx inject ansible-core openshift kubernetes
       - name: Deploy to stage
-        uses: dawidd6/action-ansible-playbook@v4
+        uses: dawidd6/action-ansible-playbook@126642a1c6ce512da255ef2b41e8ee90f0077474  # v9
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
@@ -135,12 +135,12 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Install Ansible requirements
         run: |
           pipx inject ansible-core openshift kubernetes
       - name: Deploy to production
-        uses: dawidd6/action-ansible-playbook@v4
+        uses: dawidd6/action-ansible-playbook@126642a1c6ce512da255ef2b41e8ee90f0077474  # v9
         with:
           playbook: playbooks/deploy.yml
           directory: ./ansible
