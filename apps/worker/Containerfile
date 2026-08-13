@@ -2,13 +2,21 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
+ARG OPM_VERSION=v1.72.0
+ARG OPM_SHA256=b81b337baf851698a96b70fc5d419b6f239a8856c4f598df65b225d56c39fff6
+
 RUN apt-get update && apt-get install -y curl jq build-essential libkrb5-dev && \
-    curl -L https://github.com/operator-framework/operator-registry/releases/download/v1.33.0/linux-amd64-opm -o /usr/local/bin/opm && \
+    curl -L "https://github.com/operator-framework/operator-registry/releases/download/${OPM_VERSION}/linux-amd64-opm" \
+      -o /usr/local/bin/opm && \
+    echo "${OPM_SHA256}  /usr/local/bin/opm" | sha256sum -c - && \
     chmod +x /usr/local/bin/opm && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY ./apps/worker/certs/2022-IT-Root-CA.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
+
+# since version v1.53 of OPM it is required to have defined policy.json
+COPY ./apps/worker/policy.json /etc/containers/policy.json
 
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 

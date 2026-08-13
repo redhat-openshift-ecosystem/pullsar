@@ -30,8 +30,10 @@ spec:
                 name: quay-api-tokens
 
             env:
-            - name: REGISTRY_AUTH_FILE
-              value: /etc/worker-secrets/auth.json
+            # OPM 1.53+ (containers/image) expects a Docker-style auth layout:
+            # DOCKER_CONFIG/config.json
+            - name: DOCKER_CONFIG
+              value: /etc/worker-secrets
             - name: CLIENT_CERT_PATH
               value: /etc/certs/tls.crt
             - name: CLIENT_KEY_PATH
@@ -49,6 +51,9 @@ spec:
           - name: auth-file-volume
             secret:
               secretName: worker-registry-auth
+              items:
+              - key: auth.json
+                path: config.json
           - name: service-account-cert-volume
             secret:
               secretName: pullsar-sa-cert
