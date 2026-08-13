@@ -7,26 +7,23 @@ authors = [{name = "Jakub Durkac", email = "jakubdurkac@gmail.com"}]
 license = {text = "Apache-2.0"}
 readme = "README.md"
 packages = [{include = "app", from = "src"}]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
-fastapi = "^0.116.1"
-uvicorn = "^0.35.0"
+fastapi = "^0.141.1"
+uvicorn = "^0.52.2"
 psycopg2-binary = "^2.9.10"
 dotenv = "^0.9.9"
-numpy = "^2.3.3"
+numpy = "^2.5.1"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.12.1"
-pytest = "^8.4.1"
-mypy = "^1.16.1"
+ruff = "^0.15.22"
+pytest = "^9.1.1"
+mypy = "^2.3.0"
 tox = "^4.27.0"
-pytest-cov = "^6.2.1"
+pytest-cov = "^7.1.0"
 types-psycopg2 = "^2.9.21.20250516"
-
-[tool.poetry.scripts]
-test = "tox"
