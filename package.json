@@ -1,21 +1,20 @@
 {
-  "name": "pullsar",
-  "private": true,
-  "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "test": "turbo run test",
-    "lint": "turbo run lint",
-
-    "api:dev": "pnpm --filter api dev",
-    "web:dev": "pnpm --filter web dev",
-	"worker:run": "cd apps/worker && poetry run pullsar"
-  },
+	"name": "pullsar",
+	"private": true,
+	"scripts": {
+		"dev": "turbo run dev",
+		"build": "turbo run build",
+		"test": "turbo run test",
+		"lint": "turbo run lint",
+		"api:dev": "pnpm --filter api dev",
+		"web:dev": "pnpm --filter web dev",
+		"worker:run": "cd apps/worker && poetry run pullsar"
+	},
 	"dependencies": {
-		"pnpm": "^10.13.1"
+		"pnpm": "^10.34.5"
 	},
 	"devDependencies": {
-		"turbo": "^2.5.5"
+		"turbo": "^2.10.9"
 	},
-	"packageManager": "pnpm@10.13.1"
+	"packageManager": "pnpm@10.34.5"
 }

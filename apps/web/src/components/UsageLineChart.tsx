@@ -79,8 +79,7 @@ export const UsageLineChart = ({ series, isComparison = false }: Props) => {
     })
     return Array.from(dataMap.values()).sort(
       (a, b) =>
-        new Date(a.date as string).getTime() -
-        new Date(b.date as string).getTime()
+        new Date(String(a.date)).getTime() - new Date(String(b.date)).getTime()
     )
   }, [series])
 

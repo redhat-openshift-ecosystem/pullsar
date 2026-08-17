@@ -25,6 +25,7 @@ cd pullsar
 
 ### 2. install dependencies:
 ```
+cd apps/worker/
 poetry install
 ```
 
@@ -63,23 +64,41 @@ podman-compose up -d
 
 ### 2. run script, e.g.:
 ```
+cd apps/worker/
 poetry run pullsar --catalog-image registry.redhat.io/redhat/community-operator-index:v4.18 --log-days 7
 ```
 
 ## Options
 ```
-usage: pullsar [-h] [--dry-run] [--debug] [--log-days LOG_DAYS] --catalog-image IMAGE [RENDERED_JSON_FILE] [IMAGE [RENDERED_JSON_FILE] ...]
+usage: pullsar [-h] [--dry-run] [--debug] [--log-days LOG_DAYS]
+               (--catalog-image IMAGE [RENDERED_JSON_FILE] [IMAGE [RENDERED_JSON_FILE] ...] |
+               --catalog-base-image CATALOGS_BASE)
 
-Script for retrieving latest pull counts for all the operators and their versions defined in the input operators catalogs (catalog images or pre-rendered catalog JSON files).
+Script for retrieving latest pull counts for all the operators and their
+versions defined in the input operators catalogs (catalog images or pre-
+rendered catalog JSON files).
 
 options:
   -h, --help            show this help message and exit
   --dry-run, --test     run the script without saving any data to the database
   --debug               makes logs more verbose
-  --log-days LOG_DAYS   number of completed past days to include logs from (default: 7)
+  --log-days LOG_DAYS   number of completed past days to include logs from
+                        (default: 7)
   --catalog-image IMAGE [RENDERED_JSON_FILE] [IMAGE [RENDERED_JSON_FILE] ...]
-                        operators catalog, e.g. '<CATALOG_IMAGE_PULLSPEC>:<OCP_VERSION>' to be rendered with 'opm' and used in database entry (keeping track of each operator's source
-                        catalogs). To skip render, provide optional second argument, a path to a pre-rendered catalog JSON file. Option is repeatable.
+                        operators catalog, e.g.
+                        '<CATALOG_IMAGE_PULLSPEC>:<OCP_VERSION>' to be
+                        rendered with 'opm' and used in database entry
+                        (keeping track of each operator's source catalogs). To
+                        skip render, provide optional second argument, a path
+                        to a pre-rendered catalog JSON file. Option is
+                        repeatable.
+  --catalog-base-image CATALOGS_BASE
+                        operators catalog without specified version, e.g.
+                        '<CATALOG_IMAGE_PULLSPEC>' to be rendered with 'opm'
+                        and used in database entry (keeping track of each
+                        operator's source catalogs). All supported OCP
+                        versions of that catalog willbe looked up via Pyxis
+                        API and processed. Option is repeatable.
 ```
 
 ## License

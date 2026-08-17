@@ -50,6 +50,9 @@ podman-compose up -d
 - serves web static files at root `localhost:8080`
 - REST API at both `localhost:8000/v1/` and `localhost:8080/api/v1/`
 
+### 5. run worker:
+- to run worker, see [worker setup](./apps/worker/README.md)
+
 ## For developers, test API and web with pnpm:
 ### 1. install dependencies:
 ```
@@ -71,22 +74,6 @@ pnpm dev
 ### 4. run tests:
 ```
 pnpm test
-```
-
-## Run worker. See [worker setup](./apps/worker/README.md):
-```
-pnpm worker:run -- --help
-```
-
-## Build worker using Containerfile:
-### 1. build image:
-```
-podman build -t pullsar-worker:1.0 -f ./apps/worker/Containerfile .
-```
-
-### 2. run worker:
-```
-podman run --rm --env-file .env pullsar-worker:1.0 poetry run pullsar --help
 ```
 
 ## License
