@@ -13,7 +13,7 @@ requires-python = ">=3.12"
 dependencies = [
     "requests (>=2.32.4,<3.0.0)",
     "dotenv (>=0.9.9,<0.10.0)",
-    "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "psycopg2-binary (>=2.9.13,<3.0.0)",
     "requests-kerberos (>=0.15.0,<0.16.0)"
 ]
 
@@ -22,14 +22,14 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.15.22"
-pytest = "^9.1.1"
-mypy = "^2.3.0"
-tox = "^4.27.0"
+ruff = "^0.17.3"
+pytest = "^9.2.0"
+mypy = "^2.4.1"
+tox = "^4.67.5"
 pytest-cov = "^7.1.0"
-types-requests = "^2.32.4.20250611"
-pytest-mock = "^3.14.1"
-types-psycopg2 = "^2.9.21.20250516"
+types-requests = "^2.33.0.20261030"
+pytest-mock = "^3.17.0"
+types-psycopg2 = "^2.9.21.20261030"
 
 [[tool.mypy.overrides]]
 module = "requests_kerberos.*"
