@@ -14,16 +14,16 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
-fastapi = "^0.141.1"
-uvicorn = "^0.52.2"
-psycopg2-binary = "^2.9.10"
+fastapi = "^0.162.0"
+uvicorn = "^0.54.0"
+psycopg2-binary = "^2.9.13"
 dotenv = "^0.9.9"
-numpy = "^2.5.1"
+numpy = "^2.5.4"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.15.22"
-pytest = "^9.1.1"
-mypy = "^2.3.0"
-tox = "^4.27.0"
+ruff = "^0.17.3"
+pytest = "^9.2.0"
+mypy = "^2.4.1"
+tox = "^4.67.5"
 pytest-cov = "^7.1.0"
-types-psycopg2 = "^2.9.21.20250516"
+types-psycopg2 = "^2.9.21.20261030"
